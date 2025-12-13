@@ -679,7 +679,6 @@ def prettify(
         sparql + " " * is_prefix,
         parser,
         skip_empty=True,
-        collapse_single=True,
         is_prefix=is_prefix,
     )
 
@@ -692,11 +691,18 @@ def prettify(
     assert indent > 0, "indent step must be positive"
     current_indent = 0
     s = ""
+    last = None
 
     def _pretty(parse: dict) -> bool:
         nonlocal current_indent
         nonlocal s
+        nonlocal last
         newline = False
+
+        if parse["name"] == "(" or (last and last["name"] == "("):
+            s = s.rstrip()
+        elif parse["name"] == ")":
+            s = s.rstrip()
 
         if "value" in parse:
             if parse["name"] in ["UNION", "MINUS"]:
@@ -717,7 +723,7 @@ def prettify(
 
         else:
             for i, child in enumerate(parse["children"]):
-                if i > 0 and not newline and child["name"] != "(":
+                if i > 0 and not newline:  # and child["name"] != "(":
                     s += " "
 
                 newline = _pretty(child)
@@ -729,15 +735,17 @@ def prettify(
             "PrefixDecl",
             "BaseDecl",
             "TriplesBlock",
+            "GraphPatternNotTriples",
             "GroupClause",
             "HavingClause",
             "OrderClause",
             "LimitClause",
             "OffsetClause",
-            "GraphPatternNotTriples",
         ]:
             s += "\n" + " " * current_indent
             newline = True
+
+        last = parse
 
         return newline
 
