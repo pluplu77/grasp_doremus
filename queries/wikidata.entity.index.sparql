@@ -11,8 +11,7 @@ SELECT DISTINCT ?id ?value ?tags WHERE {
   {
     SELECT ?id (MAX(?sitelinks) AS ?score) WHERE {
       ?id rdf:type wikibase:Item .
-      ?id rdfs:label ?label .
-      FILTER(LANG(?label) = "{LANG}")
+      ?id @{LANG}@rdfs:label ?label .
 
       MINUS {
         ?id wdt:P31/wdt:P279* wd:Q17442446
@@ -24,13 +23,11 @@ SELECT DISTINCT ?id ?value ?tags WHERE {
 
   {
     # Get label
-    ?id rdfs:label ?value .
-    FILTER(LANG(?value) = "{LANG}")
+    ?id @{LANG}@rdfs:label ?value .
     BIND("main" AS ?tags)
   } UNION {
     # Get aliases
-    ?id skos:altLabel ?value .
-    FILTER(LANG(?value) = "{LANG}")
+    ?id @{LANG}@skos:altLabel ?value .
   }
 }
 ORDER BY DESC(?score) ?id DESC(?tags)

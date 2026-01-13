@@ -8,7 +8,7 @@ from search_rdf.model import TextEmbeddingModel
 from universal_ml_utils.logging import get_logger
 from universal_ml_utils.ops import flatten
 
-from grasp.manager.utils import load_data_and_normalizer
+from grasp.manager.utils import load_data
 from grasp.utils import get_index_dir
 
 
@@ -22,7 +22,7 @@ def build_index(
     embedding_batch_size: int = 256,
     embedding_dim: int | None = None,
 ) -> None:
-    data, _ = load_data_and_normalizer(index_dir)
+    data = load_data(index_dir)
 
     out_dir = os.path.join(index_dir, index_type)
     if os.path.exists(out_dir) and not overwrite:

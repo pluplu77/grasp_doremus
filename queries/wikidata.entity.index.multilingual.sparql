@@ -13,29 +13,21 @@ SELECT DISTINCT ?id ?value ?tags WHERE {
       ?id rdf:type wikibase:Item .
 
       {
-        ?id rdfs:label ?l .
-        FILTER(LANG(?l) = "en")
+        ?id @en@rdfs:label ?l .
       } UNION {
-        ?id rdfs:label ?l.
-        FILTER(LANG(?l) = "fr")
+        ?id @fr@rdfs:label ?l.
       } UNION {
-        ?id rdfs:label ?l.
-        FILTER(LANG(?l) = "de")
+        ?id @de@rdfs:label ?l.
       } UNION {
-        ?id rdfs:label ?l.
-        FILTER(LANG(?l) = "es")
+        ?id @es@rdfs:label ?l.
       } UNION {
-        ?id rdfs:label ?l.
-        FILTER(LANG(?l) = "it")
+        ?id @pt@rdfs:label ?l.
       } UNION {
-        ?id rdfs:label ?l.
-        FILTER(LANG(?l) = "pt")
+        ?id @pt@rdfs:label ?l.
       } UNION {
-        ?id rdfs:label ?l.
-        FILTER(LANG(?l) = "nl")
+        ?id @nl@rdfs:label ?l.
       } UNION {
-        ?id rdfs:label ?l.
-        FILTER(LANG(?l) = "ru")
+        ?id @ru@rdfs:label ?l.
       }
 
       MINUS {
@@ -49,13 +41,11 @@ SELECT DISTINCT ?id ?value ?tags WHERE {
   OPTIONAL {
     {
       # Get label
-      ?id rdfs:label ?value .
-      FILTER(LANG(?value) = "{LANG}")
+      ?id @{LANG}@rdfs:label ?value .
       BIND("main" AS ?tags)
     } UNION {
       # Get aliases
-      ?id skos:altLabel ?value .
-      FILTER(LANG(?value) = "{LANG}")
+      ?id @{LANG}@skos:altLabel ?value .
     }
   }
 }
