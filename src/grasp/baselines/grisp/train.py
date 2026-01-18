@@ -230,6 +230,13 @@ def main(args: argparse.Namespace) -> None:
         f"Trainable parameters: {trainable / 1e6:.2f}M ({trainable / total:.2%})"
     )
 
+    if config.materialized and config.num_workers > 0:
+        logger.warning(
+            "Materialized datasets cannot be used with multiple workers. "
+            "Setting num_workers to 0."
+        )
+        config.num_workers = 0
+
     train_data, val_data = load_datasets(config, tokenizer, logger)
     collator = GRISPCollator(
         tokenizer.pad_token_id,  # type: ignore
