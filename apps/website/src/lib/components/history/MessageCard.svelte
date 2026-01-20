@@ -101,6 +101,16 @@
   }
 
   @media (max-width: 720px) {
+    .message-card__header {
+      flex-wrap: wrap;
+    }
+
+    .message-card__meta {
+      flex-shrink: 1;
+      width: 100%;
+      justify-content: flex-start;
+    }
+
     .message-card__meta :global(.meta-group) {
       flex-wrap: wrap;
       gap: var(--spacing-xs);
