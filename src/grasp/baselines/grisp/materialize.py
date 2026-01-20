@@ -5,7 +5,7 @@ import random
 from search_rdf.model import TextEmbeddingModel
 from tqdm import tqdm
 from universal_ml_utils.io import dump_jsonl
-from universal_ml_utils.logging import get_logger, setup_logging
+from universal_ml_utils.logging import setup_logging
 
 from grasp.baselines.grisp.data import (
     GRISPMaterializedSample,

@@ -16,7 +16,7 @@ from transformers import (
     Trainer,
     TrainingArguments,
 )
-from transformers.integrations.integration_utils import NeptuneCallback
+from transformers.integrations.integration_utils import WandbCallback
 from universal_ml_utils.configuration import load_config
 from universal_ml_utils.logging import get_logger
 
@@ -209,9 +209,6 @@ def load_datasets(
 
 
 def main(args: argparse.Namespace) -> None:
-    assert "NEPTUNE_PROJECT" in os.environ, "NEPTUNE_PROJECT env var not set"
-    assert "NEPTUNE_API_TOKEN" in os.environ, "NEPTUNE_API_TOKEN env var not set"
-
     logger = get_logger("GRISP TRAIN", args.log_level)
 
     config = GRISPTrainConfig(**load_config(args.config))
@@ -288,6 +285,14 @@ def main(args: argparse.Namespace) -> None:
         dataloader_prefetch_factor=4 if config.num_workers > 0 else None,
     )
 
+    callbacks: list = [EarlyStoppingCallback(max(10, config.num_epochs // 10))]
+
+    wandb_project = os.environ.get("WANDB_PROJECT")
+    if wandb_project is not None:
+        # log gradient histograms
+        os.environ["WANDB_WATCH"] = "gradients"
+        callbacks.append(WandbCallback())
+
     trainer = Trainer(
         model=model,
         processing_class=tokenizer,
@@ -295,16 +300,7 @@ def main(args: argparse.Namespace) -> None:
         train_dataset=train_data,
         eval_dataset=val_data,
         data_collator=collator,
-        callbacks=[
-            NeptuneCallback(
-                name=run_name,
-                base_namespace="grisp",
-                tags=["grisp", "training"],
-            ),
-            EarlyStoppingCallback(
-                early_stopping_patience=max(10, config.num_epochs // 10),
-            ),
-        ],
+        callbacks=callbacks,
     )
 
     trainer.train()
