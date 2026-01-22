@@ -1035,7 +1035,6 @@ def format_alternatives(alternatives: dict[ObjType, list[Alternative]], k: int) 
 
     for obj_type, alts in alternatives.items():
         if len(alts) == 0:
-            fm.append(f"No {obj_type.value} items found")
             continue
 
         top_k_string = "\n".join(
