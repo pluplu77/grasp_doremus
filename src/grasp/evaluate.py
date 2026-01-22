@@ -101,11 +101,15 @@ def evaluate_f1(
     parser = load_sparql_parser()
     prefixes = load_kg_prefixes(kg, endpoint)
 
-    def fix(sparql: str) -> str:
+    def fix(sparql: str) -> str | None:
         if not fix_prefixes:
             return sparql
 
-        return fix_sparql_prefixes(sparql, parser, prefixes)
+        try:
+            return fix_sparql_prefixes(sparql, parser, prefixes)
+        except Exception as e:
+            logger.warning(f"Error fixing prefixes:\n{e}\n\nSPARQL:\n{sparql}")
+            return None
 
     evaluation_file = get_evaluation_file(prediction_file)
     predictions, evaluations = load_predictions_and_evaluations(
@@ -138,8 +142,8 @@ def evaluate_f1(
             if not retry_failed or not is_invalid_evaluation(evaluation):
                 continue
 
-        sparql = inputs[id].sparql
-        target_result, target_err = get_result_or_error(fix(sparql), endpoint, timeout)
+        sparql = fix(inputs[id].sparql) or inputs[id].sparql
+        target_result, target_err = get_result_or_error(sparql, endpoint, timeout)
         evaluations[id] = {
             "target": {
                 "err": target_err,
@@ -152,13 +156,13 @@ def evaluate_f1(
             continue
 
         output = pred["output"]
-        sparql = None if output is None else output["sparql"]
+        sparql = None if output is None else fix(output["sparql"])
 
         score = 0.0
         pred_err = "No prediction"
         pred_result = None
         if sparql is not None:
-            pred_result, pred_err = get_result_or_error(fix(sparql), endpoint, timeout)
+            pred_result, pred_err = get_result_or_error(sparql, endpoint, timeout)
 
         if pred_result is not None:
             score = f1_score(pred_result, target_result, exact_after)
