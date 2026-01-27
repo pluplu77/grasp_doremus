@@ -4,22 +4,26 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT DISTINCT ?id ?value ?type WHERE {
   {
     VALUES ?id { {IDS} }
-    ?id @en@fb:type.object.name ?value
+    ?id fb:type.object.name ?value
+    FILTER(LANG(?value) = "en")
     BIND("label" AS ?type)
   } UNION {
     VALUES ?id { {IDS} }
-    ?id @en@fb:common.topic.alias ?value
+    ?id fb:common.topic.alias ?value
+    FILTER(LANG(?value) = "en")
     BIND("alias" AS ?type)
   } UNION {
     VALUES ?id { {IDS} }
     ?id fb:type.property.schema ?schema_ .
-    ?schema_ @en@rdfs:label ?schema
+    ?schema_ rdfs:label ?schema
+    FILTER(LANG(?schema) = "en")
     BIND(CONCAT("is part of schema ", ?schema) AS ?value)
     BIND("info" AS ?type)
   } UNION {
     VALUES ?id { {IDS} }
     ?id fb:type.property.expected_type ?typ_ .
-    ?typ_ @en@rdfs:label ?typ
+    ?typ_ rdfs:label ?typ
+    FILTER(LANG(?typ) = "en")
     BIND(CONCAT("links to type ", ?typ) AS ?value)
     BIND("info" AS ?type)
   }

@@ -8,6 +8,7 @@ from urllib.parse import quote_plus, urlparse, urlunparse
 
 import requests
 from grammar_utils.parse import LR1Parser
+from requests.exceptions import JSONDecodeError
 
 from grasp.sparql.types import AskResult, Binding, Position, SelectResult
 
@@ -833,28 +834,31 @@ def execute(
 
         except requests.RequestException as e:
             # try to get qlever exception
-            try:
+            status = None
+            body = None
+            qlever_ex = None
+            if e.response is not None:
                 status = e.response.status_code  # type: ignore
-                body = e.response.json()  # type: ignore
-            except Exception:
-                status = None
-                body = None
+                try:
+                    body = e.response.json()  # type: ignore
+                    qlever_ex = body["exception"] if "exception" in body else None
+                except JSONDecodeError:
+                    body = e.response.text
 
             client_error = status and int(status / 100) == 4
-            qlever_ex = body["exception"] if body and "exception" in body else None
 
             # immediately return on client error
             if client_error and qlever_ex:
                 raise requests.RequestException(qlever_ex) from e
             elif client_error:
-                raise e
+                raise requests.RequestException(body) from e if body else e
             # retry on server error if not last retry
             elif i < max_retries - 1:
                 continue
             elif qlever_ex:
                 raise requests.RequestException(qlever_ex) from e
             else:
-                raise e
+                raise requests.RequestException(body) from e if body else e
 
     raise requests.RequestException(f"Maximum retries ({max_retries}) reached")
 

@@ -7,20 +7,24 @@ SELECT DISTINCT ?id ?value ?type WHERE {
   # Get additional information
   {
     VALUES ?id { {IDS} }
-    ?id @en@fb:type.object.name ?value
+    ?id fb:type.object.name ?value
+    FILTER(LANG(?value) = "en")
     BIND("label" AS ?type)
   } UNION {
     VALUES ?id { {IDS} }
-    ?id @en@fb:common.topic.alias ?value
+    ?id fb:common.topic.alias ?value
+    FILTER(LANG(?value) = "en")
     BIND("alias" AS ?type)
   } UNION {
     VALUES ?id { {IDS} }
-    ?id @en@fb:common.topic.description ?value
+    ?id fb:common.topic.description ?value
+    FILTER(LANG(?value) = "en")
     BIND("info" AS ?type)
   } UNION {
     VALUES ?id { {IDS} }
     ?id fb:common.topic.notable_types ?typ_ .
-    ?typ_ @en@fb:type.object.name ?typ
+    ?typ_ fb:type.object.name ?typ
+    FILTER(LANG(?typ) = "en")
     BIND(CONCAT("has type ", ?typ) AS ?value)
     BIND("info" AS ?type)
   } UNION {

@@ -772,14 +772,14 @@ def parse_args() -> argparse.Namespace:
 
 
 def main(args: argparse.Namespace) -> None:
+    setup_logging(args.log_level)
+    logger = get_logger("GRISP DATA", args.log_level)
+
     manager = load_kg_manager(
         KgConfig(kg=args.knowledge_graph, endpoint=args.endpoint),
         skip_caches=True,
     )
     manager.set_info_retrieval(enable=False)
-
-    setup_logging(args.log_level)
-    logger = get_logger("GRISP DATA", args.log_level)
 
     if os.path.exists(args.output_file) and not args.overwrite:
         raise FileExistsError(

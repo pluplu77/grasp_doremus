@@ -96,6 +96,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Overwrite the output file if it exists",
     )
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        default="INFO",
+        help="Logging level",
+    )
     return parser.parse_args()
 
 
@@ -123,7 +129,7 @@ def materialize_sample(
 
 def main(args: argparse.Namespace) -> None:
     # to show info from kg manager
-    setup_logging("INFO")
+    setup_logging(args.log_level)
 
     if os.path.exists(args.output_file) and not args.overwrite:
         raise FileExistsError(
