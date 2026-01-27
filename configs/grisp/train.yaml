@@ -4,7 +4,7 @@ knowledge_graph:
   kg: env(KG:wikidata)
   endpoint: env(ENDPOINT:null)
 
-model: env(MODEL:google/gemma-3-1b-it)
+model: env(MODEL:Qwen/Qwen2.5-7B-Instruct)
 overwrite_chat_template: env(OVERWRITE_CHAT_TEMPLATE:false)
 
 train_files:

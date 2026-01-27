@@ -563,7 +563,7 @@ def prepare_selection(
     alternatives = manager.get_selection_alternatives(
         query,
         # None means search in the full index corresponding to the obj_type
-        {item.obj_type: None},
+        {item.obj_type: None if item.is_entity_or_property else []},
         k,
     )
     alternatives = alternatives.get(item.obj_type, [])

@@ -883,20 +883,17 @@ class KgManager:
     ) -> dict[ObjType, Any]:
         output = {}
         # entities can be subjects and objects
-        add_entities = position in [Position.SUBJECT, Position.OBJECT]
-        if add_entities:
+        if position == Position.SUBJECT or position == Position.OBJECT:
             # None (full index) by default
             output[ObjType.ENTITY] = None
 
         # properties can only be properties
-        add_properties = position == Position.PROPERTY
-        if add_properties:
+        if position == Position.PROPERTY:
             # None (full index) by default
             output[ObjType.PROPERTY] = None
 
         # literals can only be objects
-        add_literals = position == Position.OBJECT
-        if add_literals:
+        if position == Position.OBJECT:
             # empty by default
             output[ObjType.LITERAL] = []
 

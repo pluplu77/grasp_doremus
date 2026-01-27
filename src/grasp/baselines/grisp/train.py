@@ -16,7 +16,6 @@ from transformers import (
     Trainer,
     TrainingArguments,
 )
-from transformers.integrations.integration_utils import WandbCallback
 from universal_ml_utils.configuration import load_config
 from universal_ml_utils.logging import get_logger
 
@@ -276,7 +275,7 @@ def main(args: argparse.Namespace) -> None:
         num_train_epochs=config.num_epochs,
         seed=config.seed,
         bf16=True,
-        report_to="none",
+        report_to="wandb" if os.environ.get("WANDB_PROJECT") else None,
         run_name=run_name,
         metric_for_best_model="eval_loss",
         gradient_checkpointing=config.gradient_checkpointing,
@@ -285,14 +284,6 @@ def main(args: argparse.Namespace) -> None:
         dataloader_prefetch_factor=4 if config.num_workers > 0 else None,
     )
 
-    callbacks: list = [EarlyStoppingCallback(max(10, config.num_epochs // 10))]
-
-    wandb_project = os.environ.get("WANDB_PROJECT")
-    if wandb_project is not None:
-        # log gradient histograms
-        os.environ["WANDB_WATCH"] = "gradients"
-        callbacks.append(WandbCallback())
-
     trainer = Trainer(
         model=model,
         processing_class=tokenizer,
@@ -300,7 +291,9 @@ def main(args: argparse.Namespace) -> None:
         train_dataset=train_data,
         eval_dataset=val_data,
         data_collator=collator,
-        callbacks=callbacks,
+        callbacks=[
+            EarlyStoppingCallback(max(10, config.num_epochs // 10)),
+        ],
     )
 
     trainer.train()
