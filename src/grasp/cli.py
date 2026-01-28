@@ -4,6 +4,7 @@ import os
 import random
 import sys
 
+from search_rdf.model import TextEmbeddingModel
 from tqdm import tqdm
 from universal_ml_utils.configuration import load_config
 from universal_ml_utils.io import (
@@ -35,7 +36,7 @@ from grasp.notes import (
 )
 from grasp.server import serve
 from grasp.tasks import Task, default_input_field
-from grasp.tasks.examples import ExampleIndex, load_example_indices
+from grasp.tasks.examples import ExampleIndex, load_example_indices, task_to_index
 from grasp.utils import (
     get_available_knowledge_graphs,
     is_invalid_output,
@@ -493,6 +494,13 @@ def parse_args() -> argparse.Namespace:
         default=256,
         help="Batch size for building the example index",
     )
+    example_parser.add_argument(
+        "--emb-model",
+        type=str,
+        default="Qwen/Qwen3-Embedding-0.6B",
+        help="Embedding model to use when building examples index",
+    )
+    add_task_arg(example_parser)
     add_overwrite_arg(example_parser)
 
     parser.add_argument(
@@ -774,9 +782,12 @@ def main():
         evaluate_grasp(args)
 
     elif args.command == "examples":
-        ExampleIndex.build(
+        model = TextEmbeddingModel(args.emb_model)
+        index = task_to_index(args.task)
+        index.build(
             args.examples_file,
             args.output_dir,
+            model,
             args.batch_size,
             args.overwrite,
             args.log_level,

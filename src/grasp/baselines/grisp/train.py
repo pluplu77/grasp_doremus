@@ -240,6 +240,9 @@ def main(args: argparse.Namespace) -> None:
         args.log_level,
     )
 
+    logger.info(f"Train dataset size: {len(train_data):,} samples")  # type: ignore
+    logger.info(f"Validation dataset size: {len(val_data):,} samples")  # type: ignore
+
     run_name = os.path.basename(args.output_dir)
 
     os.makedirs(args.output_dir, exist_ok=True)

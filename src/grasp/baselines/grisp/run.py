@@ -385,7 +385,7 @@ def find_alternatives(
     except Exception as e:
         logger.warning(f"Error autocompleting SPARQL prefix: {e}")
         # select all triples as fallback
-        autocomp_sparql = "SELECT * WHERE {{ ?s ?p ?o }} LIMIT 0"
+        autocomp_sparql = "SELECT * WHERE { ?s ?p ?o } LIMIT 0"
         query_type = "select"
         # if autocompletion fails, we are typically at a property
         position = Position.PROPERTY
