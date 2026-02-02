@@ -1,3 +1,5 @@
+import { base } from '$app/paths';
+
 export const APP_COLORS = Object.freeze({
   uniBlue: '#344A9A',
   uniDarkBlue: '#000149',
@@ -20,11 +22,7 @@ export const BRAND_LINKS = Object.freeze({
   data: 'https://ad-publications.cs.uni-freiburg.de/grasp/'
 });
 
-export const BACKEND_CONFIG = Object.freeze({
-  hostAndPort: 'grasp.cs.uni-freiburg.de',
-  secure: true,
-  baseURL: '/api'
-});
+export const getApiBase = () => `${base}/api`;
 
 export const TASKS = Object.freeze([
   {
@@ -39,12 +37,12 @@ export const TASKS = Object.freeze([
     tooltip:
       'Answer questions by retrieving relevant information from knowledge graphs.'
   },
-  {
-    id: 'cea',
-    name: 'Cell Entity Annotation',
-    tooltip:
-      'Upload a CSV table to annotate each cell with corresponding knowledge graph entities.'
-  }
+  // {
+  //   id: 'cea',
+  //   name: 'Cell Entity Annotation',
+  //   tooltip:
+  //     'Upload a CSV table to annotate each cell with corresponding knowledge graph entities.'
+  // }
 ]);
 
 export const QLEVER_HOSTS = Object.freeze([
@@ -53,14 +51,11 @@ export const QLEVER_HOSTS = Object.freeze([
   'qlever.dev'
 ]);
 
-export const endpointFor = (path) => {
-  const protocol = BACKEND_CONFIG.secure ? 'https' : 'http';
-  return `${protocol}://${BACKEND_CONFIG.hostAndPort}${BACKEND_CONFIG.baseURL}${path}`;
-};
+export const endpointFor = (path) => `${getApiBase()}${path}`;
 
 export const wsEndpoint = () => {
-  const protocol = BACKEND_CONFIG.secure ? 'wss' : 'ws';
-  return `${protocol}://${BACKEND_CONFIG.hostAndPort}${BACKEND_CONFIG.baseURL}/live`;
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${wsProtocol}//${window.location.host}${getApiBase()}/live`;
 };
 
 export const configEndpoint = () => endpointFor('/config');
@@ -69,5 +64,5 @@ export const saveSharedStateEndpoint = () => endpointFor('/save');
 export const loadSharedStateEndpoint = (id) => endpointFor(`/load/${encodeURIComponent(id)}`);
 export const sharePathForId = (id) => {
   const trimmed = typeof id === 'string' ? id.trim() : '';
-  return trimmed ? `/share/${trimmed}` : '';
+  return trimmed ? `${base}/share/${trimmed}` : '';
 };
