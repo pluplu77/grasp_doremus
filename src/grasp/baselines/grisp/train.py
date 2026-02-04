@@ -66,7 +66,7 @@ class GRISPTrainConfig(BaseModel):
     weight_decay: float = 0.01
     warmup_ratio: float = 0.05
     batch_size: int = 8
-    num_epochs: int = 1
+    num_epochs: int | float = 1
     gradient_accumulation_steps: int = 1
     gradient_checkpointing: bool = False
     seed: int = 22
@@ -258,6 +258,11 @@ def main(args: argparse.Namespace) -> None:
     total_steps = steps_per_epoch * config.num_epochs
     eval_steps = max(1, min(steps_per_epoch, total_steps // 10))
 
+    report_to = None
+    if os.environ.get("WANDB_PROJECT"):
+        os.environ["WANDB_NAME"] = run_name
+        report_to = "wandb"
+
     training_args = TrainingArguments(
         output_dir=args.output_dir,
         do_train=True,
@@ -278,7 +283,7 @@ def main(args: argparse.Namespace) -> None:
         num_train_epochs=config.num_epochs,
         seed=config.seed,
         bf16=True,
-        report_to="wandb" if os.environ.get("WANDB_PROJECT") else None,
+        report_to=report_to,
         run_name=run_name,
         metric_for_best_model="eval_loss",
         gradient_checkpointing=config.gradient_checkpointing,
@@ -296,7 +301,7 @@ def main(args: argparse.Namespace) -> None:
         eval_dataset=val_data,
         data_collator=collator,
         callbacks=[
-            EarlyStoppingCallback(max(10, config.num_epochs // 10)),
+            EarlyStoppingCallback(max(10, round(config.num_epochs / 10))),
         ],
     )
 
