@@ -14,7 +14,7 @@ from universal_ml_utils.io import (
     load_text,
 )
 from universal_ml_utils.logging import get_logger, setup_logging
-from universal_ml_utils.ops import extract_field
+from universal_ml_utils.ops import consume_generator, extract_field
 
 from grasp.build import build_indices, get_data
 from grasp.build.cache import build_caches
@@ -605,15 +605,17 @@ def run_grasp(args: argparse.Namespace) -> None:
             ):
                 continue
 
-        *_, output = generate(
-            args.task,
-            ipt,
-            config,
-            managers,
-            kg_notes,
-            notes,
-            example_indices=example_indices,
-            logger=logger,
+        output = consume_generator(
+            generate(
+                args.task,
+                ipt,
+                config,
+                managers,
+                kg_notes,
+                notes,
+                example_indices=example_indices,
+                logger=logger,
+            )
         )
 
         output["id"] = id

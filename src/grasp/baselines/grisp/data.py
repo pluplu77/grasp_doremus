@@ -119,6 +119,10 @@ class Skeleton:
         self.identifiers: list[str] = []
 
     @property
+    def nl_sparql(self) -> str:
+        return self.sparql_encoded.decode()
+
+    @property
     def replaced(self) -> int:
         return len(self.selections)
 

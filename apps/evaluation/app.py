@@ -821,10 +821,10 @@ def show_predictions_view(available_data):
         new_format = "output" in output
         if new_format:
             sparql_query = (output["output"] or {}).get(
-                "sparql", "No SPARQL query found"
+                "sparql", "No SPARQL query generated or found"
             )
         else:
-            sparql_query = output.get("sparql", "No SPARQL query found")
+            sparql_query = output.get("sparql", "No SPARQL query generated or found")
 
         st.code(prettify_sparql(sparql_query), language="sparql")
 

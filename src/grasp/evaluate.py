@@ -420,7 +420,7 @@ def evaluate_with_judge(
             formatted = [
                 candidates[i]["output"]["formatted"]
                 if candidates[i].get("output") is not None
-                else "No SPARQL query generated/found"
+                else "No SPARQL query generated or found"
                 for i in indices
             ]
 

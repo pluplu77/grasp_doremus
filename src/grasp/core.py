@@ -2,7 +2,7 @@ import json
 import time
 from copy import deepcopy
 from logging import Logger
-from typing import Any, Iterator
+from typing import Any, Generator
 
 from litellm.exceptions import Timeout
 from search_rdf.model import TextEmbeddingModel
@@ -136,7 +136,8 @@ def generate(
     past_messages: list[Message] | None = None,
     past_known: set[str] | None = None,
     logger: Logger = get_logger("GRASP"),
-) -> Iterator[dict]:
+    yield_output: bool = False,
+) -> Generator[dict, None, dict]:
     if task != "sparql-qa":
         # disable examples for tasks other than sparql-qa
         # to avoid errors due to missing implementations
@@ -397,7 +398,7 @@ def generate(
     logger.info(format_message(out_msg))
 
     end = time.perf_counter()
-    yield {
+    output = {
         "type": "output",
         "task": task,
         "output": output,
@@ -406,3 +407,8 @@ def generate(
         "messages": [message.model_dump(exclude_defaults=True) for message in messages],
         "known": list(known),
     }
+
+    if yield_output:
+        yield output
+
+    return output

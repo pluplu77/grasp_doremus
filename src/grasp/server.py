@@ -13,7 +13,7 @@ from fastapi import WebSocketDisconnect
 from pydantic import BaseModel, Field, conlist
 from universal_ml_utils.io import dump_json, load_json
 from universal_ml_utils.logging import get_logger
-from universal_ml_utils.ops import partition_by
+from universal_ml_utils.ops import consume_generator, partition_by
 
 from grasp.configs import ServerConfig
 from grasp.core import generate, load_notes, setup
@@ -191,17 +191,19 @@ def serve(config: ServerConfig, log_level: int | str | None = None) -> None:
 
             def run_generate() -> dict:
                 try:
-                    *_, output = generate(
-                        request.task,
-                        request.input,
-                        config,
-                        sel_managers,
-                        kg_notes[request.task],
-                        notes[request.task],
-                        example_indices[request.task],
-                        past_messages,
-                        past_known,
-                        logger,
+                    output = consume_generator(
+                        generate(
+                            request.task,
+                            request.input,
+                            config,
+                            sel_managers,
+                            kg_notes[request.task],
+                            notes[request.task],
+                            example_indices[request.task],
+                            past_messages,
+                            past_known,
+                            logger,
+                        )
                     )
                 except ValueError as exc:
                     raise RuntimeError("No output produced") from exc
@@ -331,6 +333,7 @@ def serve(config: ServerConfig, log_level: int | str | None = None) -> None:
                             past_messages,
                             past_known,
                             logger,
+                            yield_output=True,
                         )
 
                         for output in generator:
