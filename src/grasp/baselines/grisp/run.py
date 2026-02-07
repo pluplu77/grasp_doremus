@@ -457,7 +457,9 @@ def select_iris_left_to_right(
 
     while True:
         if time.perf_counter() - start > cfg.selection_max_time:
-            raise RuntimeError("Exceeded maximum time for GRISP selection")
+            yield {"type": "fail", "reason": "timeout"}
+            logger.debug("Selection process timed out, abandoning skeleton")
+            return None
 
         if skeleton.done:
             if not cfg.check_empty:
