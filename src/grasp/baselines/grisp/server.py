@@ -1,7 +1,10 @@
+import argparse
 import asyncio
 import json
+import os
 import threading
 import time
+from logging import INFO, FileHandler, Logger
 from typing import Any
 
 import uvicorn
@@ -25,6 +28,22 @@ from grasp.manager import load_kg_manager
 active_connections = 0
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Serve GRISP model over HTTP/WebSocket")
+    parser.add_argument(
+        "config",
+        type=str,
+        help="Path to GRISP server configuration YAML",
+    )
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        default="INFO",
+        help="Logging level",
+    )
+    return parser.parse_args()
+
+
 class GRISPServerConfig(GRISPRunConfig):
     run_directory: str
     selection_run: str | None = None
@@ -34,6 +53,7 @@ class GRISPServerConfig(GRISPRunConfig):
     max_connections: int = 10
     max_generation_time: int = 300
     max_idle_time: int = 300
+    log_outputs: str | None = None
 
 
 class Request(BaseModel):
@@ -43,6 +63,15 @@ class Request(BaseModel):
 def serve(config: GRISPServerConfig, log_level: int | str | None = None) -> None:
     app = FastAPI()
     logger = get_logger("GRISP SERVER", log_level)
+    if config.log_outputs is not None:
+        os.makedirs(os.path.dirname(config.log_outputs), exist_ok=True)
+        output_logger = Logger("GRISP JSONL OUTPUTS")
+        output_logger.addHandler(
+            FileHandler(config.log_outputs, mode="a", encoding="utf-8")
+        )
+        output_logger.setLevel(INFO)
+    else:
+        output_logger = None
 
     app.add_middleware(
         CORSMiddleware,
@@ -155,6 +184,9 @@ def serve(config: GRISPServerConfig, log_level: int | str | None = None) -> None
                     detail=f"Failed to handle request:\n{exc}",
                 )
 
+            if output_logger is not None:
+                output_logger.info(json.dumps(output))
+
             return output
 
         finally:
@@ -262,6 +294,9 @@ def serve(config: GRISPServerConfig, log_level: int | str | None = None) -> None
                                 await websocket.send_json({"error": msg})
                                 break
 
+                            if payload.get("type") == "output" and output_logger is not None:
+                                output_logger.info(json.dumps(payload))
+
                             await websocket.send_json(payload)
                             ack = await websocket.receive_json()
                             last_active = time.perf_counter()
@@ -305,3 +340,12 @@ def serve(config: GRISPServerConfig, log_level: int | str | None = None) -> None
             logger.info(f"{client} disconnected ({active_connections=:,})")
 
     uvicorn.run(app, host="0.0.0.0", port=config.port)
+
+
+def main(args: argparse.Namespace) -> None:
+    config = GRISPServerConfig(**load_config(args.config))
+    serve(config, args.log_level)
+
+
+if __name__ == "__main__":
+    main(parse_args())
