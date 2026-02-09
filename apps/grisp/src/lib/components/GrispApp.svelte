@@ -4,6 +4,7 @@
   import StepCard from './StepCard.svelte';
   import OutputCard from './OutputCard.svelte';
   import SparqlBlock from './SparqlBlock.svelte';
+  import examples from '../examples.json';
 
   let question = '';
   let connectionStatus = 'initial';
@@ -13,6 +14,8 @@
   let socket;
   let kg = '';
   let textareaEl;
+  let examplesOpen = false;
+  let examplesButtonEl;
 
   // generation state
   let steps = [];
@@ -62,10 +65,16 @@
   onMount(async () => {
     await initialize();
     autoResize();
+    if (typeof document !== 'undefined') {
+      document.addEventListener('click', handleClickOutside);
+    }
   });
 
   onDestroy(() => {
     cleanupSocket();
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('click', handleClickOutside);
+    }
   });
 
   async function initialize() {
@@ -229,6 +238,24 @@
     const newHeight = Math.min(textareaEl.scrollHeight, 200); // max 200px
     textareaEl.style.height = `${newHeight}px`;
   }
+
+  function toggleExamples() {
+    examplesOpen = !examplesOpen;
+  }
+
+  function handleExampleSelect(index) {
+    if (index >= 0 && index < examples.length) {
+      question = examples[index].question;
+      autoResize();
+      examplesOpen = false;
+    }
+  }
+
+  function handleClickOutside(event) {
+    if (examplesOpen && examplesButtonEl && !examplesButtonEl.contains(event.target)) {
+      examplesOpen = false;
+    }
+  }
 </script>
 
 <section class="app-shell">
@@ -259,6 +286,33 @@
           disabled={!connected || running}
         ></textarea>
         <div class="input-actions">
+          {#if examples.length > 0}
+            <div class="examples-dropdown" bind:this={examplesButtonEl}>
+              <button
+                type="button"
+                class="icon-button icon-button--secondary"
+                on:click={toggleExamples}
+                aria-label="Examples"
+                title="Example questions"
+              >
+                <span aria-hidden="true">☰</span>
+              </button>
+              {#if examplesOpen}
+                <div class="examples-menu">
+                  {#each examples as example, i (i)}
+                    <button
+                      type="button"
+                      class="example-item"
+                      on:click={() => handleExampleSelect(i)}
+                    >
+                      <div class="example-label">{example.label}</div>
+                      <div class="example-question">{example.question}</div>
+                    </button>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          {/if}
           <button
             type="button"
             class="icon-button icon-button--primary"
@@ -468,7 +522,7 @@
     padding: var(--spacing-lg);
     box-shadow: var(--shadow-sm);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .input-section::after {
@@ -503,6 +557,63 @@
     to {
       background-position: 200% 0;
     }
+  }
+
+  .examples-dropdown {
+    position: relative;
+  }
+
+  .examples-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 280px;
+    max-width: 400px;
+    max-height: 40vh;
+    overflow-y: auto;
+    background: var(--surface-base);
+    border: 1px solid rgba(52, 74, 154, 0.25);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+  }
+
+  .example-item {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .example-item:last-child {
+    border-bottom: none;
+  }
+
+  .example-item:hover {
+    background: rgba(52, 74, 154, 0.08);
+  }
+
+  .example-item:focus {
+    outline: none;
+    background: rgba(52, 74, 154, 0.12);
+  }
+
+  .example-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-uni-blue);
+    margin-bottom: 0.25rem;
+  }
+
+  .example-question {
+    font-size: 0.8rem;
+    color: var(--text-subtle);
+    line-height: 1.3;
   }
 
   .input-row {
@@ -601,6 +712,16 @@
     background: rgba(52, 74, 154, 0.35);
     color: rgba(255, 255, 255, 0.8);
     box-shadow: none;
+  }
+
+  .icon-button--secondary {
+    background: rgba(52, 74, 154, 0.08);
+    color: var(--color-uni-blue);
+    border: 1px solid rgba(52, 74, 154, 0.2);
+  }
+
+  .icon-button--secondary:not(:disabled):hover {
+    background: rgba(52, 74, 154, 0.12);
   }
 
   .icon-button--clear {

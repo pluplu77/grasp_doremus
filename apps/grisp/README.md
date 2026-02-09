@@ -17,6 +17,21 @@ npm install
 
 This installs all required dependencies including markdown rendering libraries (marked, dompurify, highlight.js).
 
+## Configuring Examples
+
+Example questions are defined in `src/lib/examples.json`. You can customize these by editing the JSON file:
+
+```json
+[
+  {
+    "label": "Short descriptive label",
+    "question": "The full question text that will be inserted"
+  }
+]
+```
+
+The examples dropdown will automatically populate with these entries.
+
 ## Development
 
 ```bash
