@@ -10,14 +10,15 @@ from grasp.manager import KgManager, format_kgs
 from grasp.model import Message, ToolCall
 from grasp.tasks.sparql_qa.examples import (
     SparqlQaExampleIndex,
-    find_random_examples,
-    find_similar_examples,
+)
+from grasp.tasks.sparql_qa.examples import (
+    call_function as call_example_function,
 )
 from grasp.tasks.sparql_qa.examples import (
     functions as example_functions,
 )
 from grasp.tasks.utils import format_sparql_result, prepare_sparql_result
-from grasp.utils import FunctionCallException, format_list, format_notes
+from grasp.utils import format_list, format_notes
 
 
 def system_information() -> str:
@@ -150,30 +151,15 @@ def call_function(
     elif fn_name == "cancel":
         return "Stopping"
 
-    elif fn_name == "find_examples" and example_indices is not None:
-        return find_random_examples(
+    else:
+        return call_example_function(
+            config,
             managers,
-            example_indices,
-            fn_args["kg"],
-            config.num_examples,
+            fn_name,
+            fn_args,
             known,
-            config.result_max_rows,
-            config.result_max_columns,
-        )
-
-    elif fn_name == "find_similar_examples" and example_indices is not None:
-        return find_similar_examples(
-            managers,
             example_indices,
-            fn_args["kg"],
-            fn_args["question"],
-            config.num_examples,
-            known,
-            config.result_max_rows,
-            config.result_max_columns,
         )
-
-    raise FunctionCallException(f"Unknown function: {fn_name}")
 
 
 class AnswerModel(BaseModel):

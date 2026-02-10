@@ -122,7 +122,7 @@ class ExampleIndex:
 
 
 def task_to_index(task: str) -> Type[ExampleIndex]:
-    if task == "sparql-qa":
+    if task == "sparql-qa" or task == "general-qa":
         from grasp.tasks.sparql_qa.examples import SparqlQaExampleIndex
 
         return SparqlQaExampleIndex

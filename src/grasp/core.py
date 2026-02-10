@@ -138,8 +138,8 @@ def generate(
     logger: Logger = get_logger("GRASP"),
     yield_output: bool = False,
 ) -> Generator[dict, None, dict]:
-    if task != "sparql-qa":
-        # disable examples for tasks other than sparql-qa
+    if task != "sparql-qa" and task != "general-qa":
+        # disable examples for tasks other than sparql-qa and general-qa
         # to avoid errors due to missing implementations
         config = deepcopy(config)
         config.force_examples = None
@@ -311,6 +311,12 @@ def generate(
                 )
             except Exception as e:
                 result = f"Call to function {tool_call.name} returned an error:\n{e}"
+
+                # log full tracback for debugging
+                # import traceback
+                #
+                # traceback_str = "".join(traceback.format_exc())
+                # logger.error(f"Full traceback:\n{traceback_str}")
 
             tool_call.result = result
 

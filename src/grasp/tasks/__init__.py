@@ -18,6 +18,7 @@ from grasp.tasks.exploration import input as exploration_input
 from grasp.tasks.exploration import output as exploration_output
 from grasp.tasks.exploration import rules as exploration_rules
 from grasp.tasks.exploration import system_information as exploration_system_information
+from grasp.tasks.general_qa import functions as general_qa_functions
 from grasp.tasks.general_qa import output as general_qa_output
 from grasp.tasks.general_qa import rules as general_qa_rules
 from grasp.tasks.general_qa import system_information as general_qa_system_information
@@ -95,9 +96,8 @@ def task_functions(
     if task == "sparql-qa":
         return sparql_qa_functions(managers, config)
     elif task == "general-qa":
-        # general qa has no additional functions
-        # and does not support examples
-        return None
+        # general has example function borrowed from sparql-qa
+        return general_qa_functions(config)
     elif task == "cea":
         # cea supports no examples
         return cea_functions(managers)
@@ -207,7 +207,7 @@ def task_output(
 
 
 def task_to_sample(task: str) -> Type[Sample]:
-    if task == "sparql-qa":
+    if task == "sparql-qa" or task == "general-qa":
         return SparqlQaSample
     elif task == "cea":
         return CeaSample

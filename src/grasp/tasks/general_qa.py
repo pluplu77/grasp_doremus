@@ -1,4 +1,18 @@
+from typing import Any
+
+from grasp.configs import GraspConfig
+from grasp.functions import TaskFunctions
+from grasp.manager import KgManager
 from grasp.model import Message, Response
+from grasp.tasks.sparql_qa.examples import (
+    SparqlQaExampleIndex,
+)
+from grasp.tasks.sparql_qa.examples import (
+    call_function as sparql_qa_example_call_function,
+)
+from grasp.tasks.sparql_qa.examples import (
+    functions as sparql_qa_example_functions,
+)
 
 
 def system_information() -> str:
@@ -18,6 +32,30 @@ identified entities and properties. You may need to refine or rethink your \
 current plan based on the query results and go back to step 2 if needed, \
 possibly multiple times.
 4. Output your final answer to the question and stop."""
+
+
+def functions(config: GraspConfig) -> TaskFunctions:
+    fns = sparql_qa_example_functions(config)
+    return fns, call_function
+
+
+def call_function(
+    config: GraspConfig,
+    managers: list[KgManager],
+    fn_name: str,
+    fn_args: dict,
+    known: set[str],
+    state: Any | None = None,
+    example_indices: dict[str, SparqlQaExampleIndex] | None = None,
+) -> str:
+    return sparql_qa_example_call_function(
+        config,
+        managers,
+        fn_name,
+        fn_args,
+        known,
+        example_indices,
+    )
 
 
 def rules() -> list[str]:

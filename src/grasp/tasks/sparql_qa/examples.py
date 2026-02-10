@@ -106,6 +106,41 @@ Currently, examples are available for the following knowledge graphs:
     return [fn]
 
 
+def call_function(
+    config: GraspConfig,
+    managers: list[KgManager],
+    fn_name: str,
+    fn_args: dict,
+    known: set[str],
+    example_indices: dict[str, SparqlQaExampleIndex] | None = None,
+) -> str:
+    if fn_name == "find_examples" and example_indices is not None:
+        return find_random_examples(
+            managers,
+            example_indices,
+            fn_args["kg"],
+            config.num_examples,
+            known,
+            config.result_max_rows,
+            config.result_max_columns,
+        )
+
+    elif fn_name == "find_similar_examples" and example_indices is not None:
+        return find_similar_examples(
+            managers,
+            example_indices,
+            fn_args["kg"],
+            fn_args["question"],
+            config.num_examples,
+            known,
+            config.result_max_rows,
+            config.result_max_columns,
+        )
+
+    else:
+        raise ValueError(f"Unknown function {fn_name}")
+
+
 def format_examples(
     kg: str,
     managers: list[KgManager],
