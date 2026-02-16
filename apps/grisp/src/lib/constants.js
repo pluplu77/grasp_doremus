@@ -1,5 +1,4 @@
 /* global __API_BASE__ __COPYRIGHT__ */
-import { base } from '$app/paths';
 
 /**
  * Copyright text, set at build time via the COPYRIGHT env var.
@@ -14,20 +13,25 @@ export const COPYRIGHT = __COPYRIGHT__;
  *   API_BASE=http://localhost:6790         (direct, dev)
  *   API_BASE=https://example.com/my/api    (custom prefix)
  *
- * Relative paths are prefixed with BASE_PATH, so BASE_PATH=/v1 + API_BASE=/api
- * results in /v1/api. Absolute URLs are used as-is.
+ * Relative paths (including the default /api) are stripped of leading slashes
+ * so that the browser resolves them relative to the current page URL.
+ * This lets a single build work at any mount point (e.g. "/" and "/grisp/").
  */
-const RAW_API_BASE = __API_BASE__.replace(/\/+$/, '');
-const API_BASE = /^https?:\/\//.test(RAW_API_BASE) ? RAW_API_BASE : `${base}${RAW_API_BASE}`;
+const RAW = __API_BASE__.replace(/\/+$/, '');
+const isAbsoluteUrl = /^https?:\/\//.test(RAW);
+const API_BASE = isAbsoluteUrl ? RAW : RAW.replace(/^\/+/, '');
 
 export const getApiBase = () => API_BASE;
 
 export const wsEndpoint = () => {
-  if (/^https?:\/\//.test(API_BASE)) {
+  if (isAbsoluteUrl) {
     return API_BASE.replace(/^http/, 'ws') + '/live';
   }
-  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${wsProtocol}//${window.location.host}${API_BASE}/live`;
+  // Resolve the relative API path against the current page URL
+  // to build an absolute WebSocket URL.
+  const resolved = new URL(API_BASE, window.location.href);
+  const wsProtocol = resolved.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${wsProtocol}//${resolved.host}${resolved.pathname}/live`;
 };
 
 export const configEndpoint = () => `${API_BASE}/config`;

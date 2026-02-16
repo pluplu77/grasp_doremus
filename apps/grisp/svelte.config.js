@@ -3,11 +3,12 @@ import adapter from '@sveltejs/adapter-static';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   kit: {
-    adapter: adapter({
-      fallback: 'index.html'
-    }),
+    adapter: adapter(),
     paths: {
-      base: process.env.BASE_PATH || ''
+      relative: true
+    },
+    prerender: {
+      handleHttpError: 'warn'
     }
   }
 };

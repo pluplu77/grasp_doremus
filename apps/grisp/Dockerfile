@@ -1,6 +1,5 @@
 FROM node:22-alpine AS build
 WORKDIR /app
-ARG BASE_PATH=""
 ARG API_BASE="/api"
 ARG COPYRIGHT="University of Freiburg"
 
@@ -8,7 +7,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN BASE_PATH=$BASE_PATH API_BASE=$API_BASE COPYRIGHT=$COPYRIGHT npm run build
+RUN API_BASE=$API_BASE COPYRIGHT=$COPYRIGHT npm run build
 
 FROM nginx:1.27-alpine-slim
 RUN rm -rf /usr/share/nginx/html/*
