@@ -1,13 +1,12 @@
 FROM node:22-alpine AS build
 WORKDIR /app
-ARG BASE_PATH=""
 ARG API_BASE="/api"
 
 COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN BASE_PATH=$BASE_PATH API_BASE=$API_BASE npm run build
+RUN API_BASE=$API_BASE npm run build
 
 FROM nginx:1.27-alpine-slim
 RUN rm -rf /usr/share/nginx/html/*

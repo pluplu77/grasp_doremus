@@ -12,18 +12,41 @@
     loadSharedStateEndpoint,
     sharePathForId
   } from '../constants.js';
-  import { base } from '$app/paths';
-  import { replaceState } from '$app/navigation';
-
-  export let loadId = null;
-  export let initialSelectedKgs = null;
-  export let initialTask = null;
-
   const VALID_TASK_IDS = new Set(TASKS.map((task) => task.id));
-  const initialKgSeed = sanitizeInitialKgs(initialSelectedKgs);
-  const initialTaskSeed = isValidTaskId(initialTask) ? initialTask : null;
+
+  // Read route parameters from the query string (set by nginx redirects).
+  // e.g. ?share=abc123, ?kgs=wikidata+gptkb, ?task=sparql-qa
+  function readQueryParams() {
+    if (typeof window === 'undefined') return { loadId: null, kgs: [], task: null };
+    const params = new URLSearchParams(window.location.search);
+    // Check query param first (?share=abc123), then path (/share/abc123).
+    const shareMatch = window.location.pathname.match(/\/share\/([^/]+)\/?$/);
+    const shareId = params.get('share')?.trim() || (shareMatch ? decodeURIComponent(shareMatch[1]) : null);
+    // KGs: check query param first, then path (if served from a KG URL).
+    // The meta tag is injected by nginx to distinguish KG paths from the mount point.
+    const rawKgs = params.get('kgs')?.trim() || '';
+    let kgs = rawKgs
+      ? rawKgs.split(',').map(s => decodeURIComponent(s.trim())).filter(Boolean)
+      : [];
+    if (kgs.length === 0 && document.querySelector('meta[name="grasp-kg-path"]')) {
+      const lastSegment = window.location.pathname.replace(/\/+$/, '').split('/').pop();
+      if (lastSegment) {
+        kgs = lastSegment.split('+').map(s => decodeURIComponent(s.trim())).filter(Boolean);
+      }
+    }
+    const taskParam = params.get('task')?.trim() || null;
+    return {
+      loadId: shareId,
+      kgs,
+      task: isValidTaskId(taskParam) ? taskParam : null
+    };
+  }
+
+  const queryParams = readQueryParams();
+  const initialKgSeed = sanitizeInitialKgs(queryParams.kgs);
+  const initialTaskSeed = queryParams.task;
   const hasRouteProvidedSelections =
-    initialKgSeed.length > 0 || Boolean(initialTaskSeed) || Boolean(loadId);
+    initialKgSeed.length > 0 || Boolean(initialTaskSeed) || Boolean(queryParams.loadId);
   const shouldSkipStoredSelections = hasRouteProvidedSelections;
 
 const STORAGE_KEYS = {
@@ -49,7 +72,7 @@ function getSessionStorage() {
 
 let composerValue = '';
 let histories = [];
-let task = initialTaskSeed ?? TASKS[0].id;
+let task = initialTaskSeed || TASKS[0].id;
 let knowledgeGraphs = new Map();
 let past = null;
 let connectionStatus = 'initial';
@@ -63,7 +86,7 @@ let running = false;
   let composerOffset = 0;
   const COMPOSER_OFFSET_BUFFER = 0;
   let pendingCancelSignal = false;
-  let pendingLoadId = loadId;
+  let pendingLoadId = queryParams.loadId;
   let lastInputRecord = null;
   let urlSelectedKgs = initialKgSeed.length ? [...initialKgSeed] : null;
   let urlSelectedTask = initialTaskSeed;
@@ -99,6 +122,7 @@ let running = false;
       sharedLoadAttempted = true;
       sharedLoadSucceeded = await applySharedStateFromServer(pendingLoadId);
       pendingLoadId = null;
+      scheduleUrlReset();
     }
 
     if (!sharedLoadAttempted || sharedLoadSucceeded) {
@@ -639,32 +663,26 @@ let running = false;
     setTimeout(async () => {
       pendingUrlReset = false;
       try {
-        const normalizedBase = normalizeBasePath(base);
-        const targetPath = normalizedBase || '/';
-        const currentPath = window.location.pathname;
-        const samePath =
-          currentPath === targetPath ||
-          (targetPath !== '/' && currentPath === `${targetPath}/`);
-        const hasExtras =
-          window.location.search !== '' || window.location.hash !== '';
-        if (samePath && !hasExtras) {
-          return;
-        }
         await tick();
-        replaceState('/', {});
+        let cleanUrl = window.location.pathname;
+        // Strip /share/... from the path.
+        cleanUrl = cleanUrl.replace(/\/share\/.*$/, '/');
+        // Strip KG path segment if served from a KG URL.
+        const kgMeta = document.querySelector('meta[name="grasp-kg-path"]');
+        if (kgMeta) {
+          cleanUrl = cleanUrl.replace(/\/[^/]+\/?$/, '/');
+          kgMeta.remove();
+        }
+        cleanUrl = cleanUrl.replace(/\/+$/, '') + '/';
+        history.replaceState({}, '', cleanUrl);
+        // Remove the <base> tag injected by nginx for /share/ URLs,
+        // so subsequent fetch() calls resolve relative to the new URL.
+        const baseTag = document.querySelector('base[href="../"]');
+        if (baseTag) baseTag.remove();
       } catch (error) {
         console.warn('Failed to reset URL to root', error);
       }
     }, 0);
-  }
-
-  function normalizeBasePath(value) {
-    if (typeof value !== 'string' || !value.trim()) {
-      return '';
-    }
-    const trimmed = value.trim().replace(/\/+$/, '');
-    if (!trimmed) return '';
-    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   }
 
   function reloadPage() {

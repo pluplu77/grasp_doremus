@@ -1,4 +1,4 @@
-import { base } from '$app/paths';
+/* global __API_BASE__ */
 
 export const APP_COLORS = Object.freeze({
   uniBlue: '#344A9A',
@@ -18,11 +18,9 @@ export const BRAND_LINKS = Object.freeze({
   systemPaper: 'https://ad-publications.cs.uni-freiburg.de/ISWC_grasp_demo_WB_2025.pdf',
   entityLinkingPaper:
     'https://ad-publications.cs.uni-freiburg.de/SEMTAB_entity_linking_grasp_WB_2025.pdf',
-  evaluation: 'https://grasp.cs.uni-freiburg.de/evaluate/',
+  evaluation: 'evaluate',
   data: 'https://ad-publications.cs.uni-freiburg.de/grasp/'
 });
-
-/* global __API_BASE__ */
 
 /**
  * API base URL, set at build time via the API_BASE env var.
@@ -31,11 +29,13 @@ export const BRAND_LINKS = Object.freeze({
  *   API_BASE=http://localhost:6789         (direct, dev)
  *   API_BASE=https://example.com/my/api    (custom prefix)
  *
- * Relative paths are prefixed with BASE_PATH, so BASE_PATH=/v1 + API_BASE=/api
- * results in /v1/api. Absolute URLs are used as-is.
+ * Relative paths (including the default /api) are stripped of leading slashes
+ * so that the browser resolves them relative to the current page URL.
+ * This lets a single build work at any mount point (e.g. "/" and "/test/").
  */
-const RAW_API_BASE = __API_BASE__.replace(/\/+$/, '');
-const API_BASE = /^https?:\/\//.test(RAW_API_BASE) ? RAW_API_BASE : `${base}${RAW_API_BASE}`;
+const RAW = __API_BASE__.replace(/\/+$/, '');
+const isAbsoluteUrl = /^https?:\/\//.test(RAW);
+const API_BASE = isAbsoluteUrl ? RAW : RAW.replace(/^\/+/, '');
 
 export const getApiBase = () => API_BASE;
 
@@ -66,14 +66,15 @@ export const QLEVER_HOSTS = Object.freeze([
   'qlever.dev'
 ]);
 
-export const endpointFor = (path) => `${getApiBase()}${path}`;
+export const endpointFor = (path) => `${API_BASE}${path}`;
 
 export const wsEndpoint = () => {
-  if (/^https?:\/\//.test(API_BASE)) {
+  if (isAbsoluteUrl) {
     return API_BASE.replace(/^http/, 'ws') + '/live';
   }
-  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${wsProtocol}//${window.location.host}${API_BASE}/live`;
+  const resolved = new URL(API_BASE, window.location.href);
+  const wsProtocol = resolved.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${wsProtocol}//${resolved.host}${resolved.pathname}/live`;
 };
 
 export const configEndpoint = () => endpointFor('/config');
@@ -83,6 +84,8 @@ export const loadSharedStateEndpoint = (id) => endpointFor(`/load/${encodeURICom
 export const sharePathForId = (id) => {
   const trimmed = typeof id === 'string' ? id.trim() : '';
   if (!trimmed) return '';
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  return `${origin}${base}/share/${trimmed}`;
+  if (typeof window === 'undefined') return '';
+  // Generate /share/:id path — nginx redirects this to /?share=:id
+  const base = window.location.pathname.replace(/\/+$/, '');
+  return `${window.location.origin}${base}/share/${trimmed}`;
 };
