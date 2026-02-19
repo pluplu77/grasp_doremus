@@ -2,7 +2,7 @@ import os
 import time
 from pathlib import Path
 
-from search_rdf import Data, EmbeddingIndex, KeywordIndex
+from search_rdf import Data, EmbeddingIndex, KeywordIndex, FuzzyIndex
 from universal_ml_utils.io import dump_json, load_json
 from universal_ml_utils.logging import get_logger
 
@@ -12,7 +12,7 @@ from grasp.sparql.utils import find_longest_prefix, get_endpoint, load_qlever_pr
 from grasp.sparql.types import ObjType
 from grasp.utils import get_index_dir
 
-SearchIndex = KeywordIndex | EmbeddingIndex
+SearchIndex = KeywordIndex | EmbeddingIndex | FuzzyIndex
 
 
 def load_data(index_dir: str) -> Data:
@@ -42,6 +42,8 @@ def load_index(
 
     if index_type == "keyword":
         index_cls = KeywordIndex
+    elif index_type == "fuzzy":
+        index_cls = FuzzyIndex
     elif index_type == "embedding":
         index_cls = EmbeddingIndex
         load_kwargs["embedding_path"] = os.path.join(index_dir, "embedding.safetensors")
@@ -228,6 +230,14 @@ def describe_index(index: SearchIndex | str) -> tuple[str, str]:
         desc = "Retrieves items by overlap between their label words and \
 the query keywords. The query keywords can match label words exactly or \
 as prefixes. No special query operators like AND/OR are supported."
+
+    elif index == "fuzzy":
+        title = "Fuzzy keyword index"
+        desc = "Retrieves items by overlap between their label words and \
+the query keywords. The query keywords must not match label words exactly, but \
+some fuzziness is allowed. The longer a query keyword is, the more it can deviate \
+from a label word and still be considered a match, though it will also contribute \
+less to the overall score. No special query operators like AND/OR are supported."
 
     elif index == "embedding":
         title = "Embedding index"

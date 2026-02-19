@@ -27,7 +27,7 @@ dependencies = [
   "scipy>=1.15.0",
   "universal-ml-utils>=0.1.5",
   "grammar-utils>=0.1.4",
-  "search-rdf>=0.1.0",
+  "search-rdf>=0.2.0",
   # server
   "fastapi>=0.115.0",
   "uvicorn>=0.30.0",
@@ -38,7 +38,7 @@ dependencies = [
 # if you want to rebuild the benchmark datasets, see scripts/prepare_benchmark.py,
 # scripts/extract_uniprot_examples.py, and scripts/fix_uniprot_examples.py
 data = ["datasets>=3.3.0", "beautifulsoup4>=4.12.0"]
-grisp = ["transformers>=4.50.0", "wandb>=0.24.0", "peft>=0.15.0"]
+grisp = ["transformers>=5", "wandb>=0.24.0", "peft>=0.15.0"]
 
 [project.scripts]
 "grasp" = "grasp.cli:main"

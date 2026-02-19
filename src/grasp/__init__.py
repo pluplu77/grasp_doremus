@@ -43,25 +43,25 @@ except metadata.PackageNotFoundError:
 
 
 # Patch for endpoints requiring Basic Auth
-# import os
-# from functools import wraps
-#
-# from grasp.sparql import utils
-#
-# original_execute = utils.execute
-#
-# if os.path.exists("auth.txt"):
-#     print("Found auth.txt, will use it for Basic Auth")
-#     with open("auth.txt", "r") as f:
-#         lines = f.read().splitlines()
-#         USER = lines[0]
-#         PASSWD = lines[1]
-#
-#     print(f"Patching SPARQL execute to add Basic Auth headers with {USER}/{PASSWD}")
-#
-#     @wraps(original_execute)
-#     def patched_execute(*args, **kwargs):
-#         kwargs["auth"] = (USER, PASSWD)
-#         return original_execute(*args, **kwargs)
-#
-#     utils.execute = patched_execute
+import os
+from functools import wraps
+
+from grasp.sparql import utils
+
+original_execute = utils.execute
+
+if os.path.exists("auth.txt"):
+    print("Found auth.txt, will use it for Basic Auth")
+    with open("auth.txt", "r") as f:
+        lines = f.read().splitlines()
+        USER = lines[0]
+        PASSWD = lines[1]
+
+    print(f"Patching SPARQL execute to add Basic Auth headers with {USER}/{PASSWD}")
+
+    @wraps(original_execute)
+    def patched_execute(*args, **kwargs):
+        kwargs["auth"] = (USER, PASSWD)
+        return original_execute(*args, **kwargs)
+
+    utils.execute = patched_execute

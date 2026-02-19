@@ -6,7 +6,7 @@ from pydantic import BaseModel, conlist
 class KgConfig(BaseModel):
     kg: str
     endpoint: str | None = None
-    entities_type: str = "keyword"
+    entities_type: str = "fuzzy"
     properties_type: str = "embedding"
     notes_file: str | None = None
     example_index: str | None = None
@@ -83,7 +83,10 @@ class ServerConfig(GraspConfig):
     max_generation_time: int = 300
     max_idle_time: int = 300
     log_outputs: str | None = None
+    log_file: str | None = None
     share: str | None = None
+    rate_limit: int | None = None
+    rate_limit_window: int = 60
 
 
 class NotesConfig(GraspConfig):

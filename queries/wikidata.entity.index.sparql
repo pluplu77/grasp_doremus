@@ -10,15 +10,14 @@ SELECT DISTINCT ?id ?value ?tags WHERE {
   # Get ids and their score
   {
     SELECT ?id (MAX(?sitelinks) AS ?score) WHERE {
-      # VALUES ?types { wikibase:Item wikibase:Property }
-      # ?id rdf:type ?types .
       ?id @{LANG}@rdfs:label ?label .
 
       MINUS {
-        ?id wdt:P31/wdt:P279* wd:Q17442446
+        VALUES ?exclude { wikibase:Lexeme wikibase:Sense }
+        ?id rdf:type ?exclude
       }
 
-      OPTIONAL { ?id ^schema:about/wikibase:sitelinks ?sitelinks }
+      OPTIONAL { ?id wikibase:sitelinks ?sitelinks }
     } GROUP BY ?id
   }
 

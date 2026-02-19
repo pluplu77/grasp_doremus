@@ -404,14 +404,14 @@ def parse_args() -> argparse.Namespace:
     index_parser.add_argument(
         "--entities-type",
         type=str,
-        choices=["keyword", "embedding"],
-        default="keyword",
+        choices=["keyword", "fuzzy", "embedding"],
+        default="fuzzy",
         help="Type of entity index to build",
     )
     index_parser.add_argument(
         "--properties-type",
         type=str,
-        choices=["keyword", "embedding"],
+        choices=["keyword", "fuzzy", "embedding"],
         default="embedding",
         help="Type of property index to build",
     )

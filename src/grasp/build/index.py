@@ -3,7 +3,7 @@ import time
 from logging import Logger
 
 from safetensors.numpy import save_file
-from search_rdf import Data, EmbeddingIndex, KeywordIndex
+from search_rdf import Data, EmbeddingIndex, FuzzyIndex, KeywordIndex
 from search_rdf.model import TextEmbeddingModel
 from universal_ml_utils.logging import get_logger
 from universal_ml_utils.ops import flatten
@@ -37,6 +37,9 @@ def build_index(
 
     if index_type == "keyword":
         KeywordIndex.build(data, index_dir)
+
+    elif index_type == "fuzzy":
+        FuzzyIndex.build(data, index_dir)
 
     elif index_type == "embedding":
         assert embedding_model is not None, (

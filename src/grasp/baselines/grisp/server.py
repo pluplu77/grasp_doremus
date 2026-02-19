@@ -210,13 +210,13 @@ def serve(config: GRISPServerConfig, log_level: int | str | None = None) -> None
 
         active_connections += 1
         logger.info(f"{client} connected ({active_connections=:,})")
-        last_active = time.perf_counter()
+        last_active = time.monotonic()
 
         async def idle_checker():
             nonlocal last_active
             while True:
                 await asyncio.sleep(min(5, config.max_idle_time))
-                if time.perf_counter() - last_active <= config.max_idle_time:
+                if time.monotonic() - last_active <= config.max_idle_time:
                     continue
                 msg = f"Connection closed due to inactivity after {config.max_idle_time:,} seconds"
                 logger.info(f"{client}: {msg}")
@@ -228,7 +228,7 @@ def serve(config: GRISPServerConfig, log_level: int | str | None = None) -> None
         try:
             while True:
                 data = await websocket.receive_json()
-                last_active = time.perf_counter()
+                last_active = time.monotonic()
                 try:
                     request = Request(**data)
                 except Exception:
@@ -279,14 +279,14 @@ def serve(config: GRISPServerConfig, log_level: int | str | None = None) -> None
                         ).result()
 
                 producer = asyncio.create_task(asyncio.to_thread(run_generate))
-                start_time = time.perf_counter()
+                start_time = time.monotonic()
 
                 try:
                     while True:
                         kind, payload = await queue.get()
 
                         if kind == "data":
-                            current_time = time.perf_counter()
+                            current_time = time.monotonic()
                             if current_time - start_time > config.max_generation_time:
                                 msg = f"Generation hit time limit of {config.max_generation_time:,} seconds"
                                 logger.warning(msg)
@@ -299,7 +299,7 @@ def serve(config: GRISPServerConfig, log_level: int | str | None = None) -> None
 
                             await websocket.send_json(payload)
                             ack = await websocket.receive_json()
-                            last_active = time.perf_counter()
+                            last_active = time.monotonic()
 
                             if ack.get("cancel", False):
                                 logger.info(f"Generation cancelled by {client}")

@@ -5,7 +5,7 @@ import tempfile
 import time
 from typing import Any, Iterable
 
-from search_rdf import Data, KeywordIndex
+from search_rdf import Data, FuzzyIndex
 from search_rdf.model import TextEmbeddingModel
 from universal_ml_utils.logging import get_logger
 from universal_ml_utils.table import generate_table
@@ -802,6 +802,7 @@ class KgManager:
 
     def get_temporary_index_alternatives(
         self,
+        obj_type: ObjType,
         items: list[tuple[str, str, list[str]]],
         query: str | None = None,
         k: int = 10,
@@ -842,20 +843,28 @@ class KgManager:
             Data.build_from_items(data_items, data_dir)
             data = Data.load(data_dir)
 
-            # use a keyword index here because it is faster to build
+            # use a fuzzy index here because it is faster to build
             # and query
-            KeywordIndex.build(data, index_dir)
-            index = KeywordIndex.load(data, index_dir)
+            FuzzyIndex.build(data, index_dir)
+            index = FuzzyIndex.load(data, index_dir)
 
             alternatives = []
             matches = index.search(query, k=k)
             for id, *_ in matches:
-                identifier = data.identifier(id)
+                identifier = short_identifier = data.identifier(id)
+                assert identifier is not None, "should not happen"
+
+                if obj_type == ObjType.LITERAL:
+                    # for literals, clip the identifier to make it more readable
+                    short_identifier = clip(identifier)
+                else:
+                    short_identifier = self.format_iri(identifier)
+
                 identifier, label, infos = items_map[identifier]
                 alternatives.append(
                     Alternative(
                         identifier=identifier,
-                        short_identifier=self.format_iri(identifier),
+                        short_identifier=short_identifier,
                         label=label,
                         infos=infos,
                     )
@@ -1013,6 +1022,7 @@ class KgManager:
                 continue
 
             alternatives[obj_type] = self.get_temporary_index_alternatives(
+                obj_type,
                 search_items[obj_type],
                 search_query,
                 k,
