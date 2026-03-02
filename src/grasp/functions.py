@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 
 import validators
 from universal_ml_utils.ops import partition_by
@@ -24,32 +24,14 @@ from grasp.sparql.types import (
 from grasp.sparql.utils import find_all, parse_string
 from grasp.utils import FunctionCallException
 
+if TYPE_CHECKING:
+    from grasp.tasks.base import GraspTask
+
 # maximum number of results for constraining with sub indices
 MAX_RESULTS = 131072
 # minimum score for similarity search index
 MIN_SCORE = 0.5
 
-
-# a function gets the config, kg manager, function name, function arguments,
-# known entities and properties, and an optional state object and example indices;
-# it return a string observation and the updated additional state object
-TaskHandler = Callable[
-    [
-        GraspConfig,
-        list[KgManager],
-        str,
-        dict,
-        set[str],
-        Any | None,
-        dict | None,
-    ],
-    str,
-]
-
-
-# tuple of function definitions as JSON schema, and a handler for executing the
-# functions
-TaskFunctions = tuple[list[dict], TaskHandler]
 
 
 def kg_functions(managers: list[KgManager], fn_set: str) -> list[dict]:
@@ -401,7 +383,7 @@ def call_function(
     fn_name: str,
     fn_args: dict,
     known: set[str],
-    task_handler: TaskHandler | None = None,
+    task: "GraspTask | None" = None,
     task_state: Any = None,
     example_indices: dict | None = None,
 ) -> str:
@@ -498,16 +480,8 @@ def call_function(
             min_score=MIN_SCORE,
         )
 
-    elif task_handler is not None:
-        return task_handler(
-            config,
-            managers,
-            fn_name,
-            fn_args,
-            known,
-            task_state,
-            example_indices,
-        )
+    elif task is not None:
+        return task.call_function(fn_name, fn_args, known, task_state, example_indices)
 
     else:
         raise ValueError(f"Unknown function {fn_name}")
