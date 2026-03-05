@@ -33,7 +33,6 @@ MAX_RESULTS = 131072
 MIN_SCORE = 0.5
 
 
-
 def kg_functions(managers: list[KgManager], fn_set: str) -> list[dict]:
     assert fn_set in [
         "base",
