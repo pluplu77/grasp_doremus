@@ -38,8 +38,8 @@ def kg_functions(managers: list[KgManager], fn_set: str) -> list[dict]:
         "base",
         "search",
         "search_extended",
-        "search_autocomplete",
-        "search_constrained",
+        "search_filter",
+        "search_constraints",
         "all",
     ], f"Unknown function set {fn_set}"
     kgs = [manager.kg for manager in managers]
@@ -249,12 +249,10 @@ search_object_of_property(kg="wikidata", property="wdt:P106", query="football")"
             ]
         )
 
-    if fn_set in ["search_autocomplete", "all"]:
+    if fn_set in ["search_filter", "all"]:
         fns.append(
             {
-                "name": "search"
-                if fn_set == "search_autocomplete"
-                else "search_autocomplete",
+                "name": "search_with_filter",
                 "description": """\
 Search for knowledge graph items in a context-sensitive way by specifying a constraining \
 SPARQL query together with a search query. The SPARQL query must be a SELECT query \
@@ -266,11 +264,11 @@ properties otherwise.
 
 For example, to search for Albert Einstein at the subject position in \
 Wikidata, do the following:
-search(kg="wikidata", sparql="SELECT * WHERE { ?search ?p ?o }", query="albert einstein")
+search_with_filter(kg="wikidata", sparql="SELECT * WHERE { ?search ?p ?o }", query="albert einstein")
 
 Or to search for properties of Albert Einstein related to his birth in \
 Wikidata, do the following:
-search(kg="wikidata", sparql="SELECT * WHERE { wd:Q937 ?search ?o }", query="birth")""",
+search_with_filter(kg="wikidata", sparql="SELECT * WHERE { wd:Q937 ?search ?o }", query="birth")""",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -295,12 +293,10 @@ search(kg="wikidata", sparql="SELECT * WHERE { wd:Q937 ?search ?o }", query="bir
             }
         )
 
-    if fn_set in ["search_constrained", "all"]:
+    if fn_set in ["search_constraints", "all"]:
         fns.append(
             {
-                "name": "search"
-                if fn_set == "search_constrained"
-                else "search_constrained",
+                "name": "search_with_constraints",
                 "description": """\
 Search for knowledge graph items at a particular position (subject, property, or object) \
 with optional constraints. If constraints are provided, they are used to limit the search \
@@ -309,11 +305,11 @@ given knowledge graph internally if the position is subject or object, and the i
 otherwise.
 
 For example, to search for the subject Albert Einstein in Wikidata, do the following:
-search(kg="wikidata", position="subject", query="albert einstein")
+search_with_constraints(kg="wikidata", position="subject", query="albert einstein")
 
 Or to search for properties of Albert Einstein related to his birth in Wikidata, \
 do the following:
-search(kg="wikidata", position="property", query="birth", \
+search_with_constraints(kg="wikidata", position="property", query="birth", \
 constraints={"subject": "wd:Q937"})""",
                 "parameters": {
                     "type": "object",
@@ -429,7 +425,7 @@ def call_function(
         )
 
     elif fn_name == "search_property_of_entity":
-        return search_constrained(
+        return search_with_constraints(
             managers,
             fn_args["kg"],
             "property",
@@ -441,7 +437,7 @@ def call_function(
         )
 
     elif fn_name == "search_object_of_property":
-        return search_constrained(
+        return search_with_constraints(
             managers,
             fn_args["kg"],
             "object",
@@ -452,10 +448,8 @@ def call_function(
             min_score=MIN_SCORE,
         )
 
-    elif (
-        fn_name == "search" and config.fn_set == "search_constrained"
-    ) or fn_name == "search_constrained":
-        return search_constrained(
+    elif fn_name == "search_with_constraints":
+        return search_with_constraints(
             managers,
             fn_args["kg"],
             fn_args["position"],
@@ -466,10 +460,8 @@ def call_function(
             min_score=MIN_SCORE,
         )
 
-    elif (
-        fn_name == "search" and config.fn_set == "search_autocomplete"
-    ) or fn_name == "search_autocomplete":
-        return search_autocomplete(
+    elif fn_name == "search_with_filter":
+        return search_with_filter(
             managers,
             fn_args["kg"],
             fn_args["sparql"],
@@ -911,7 +903,7 @@ SELECT ?s ?p ?o WHERE {{
     )
 
 
-def search_constrained(
+def search_with_constraints(
     managers: list[KgManager],
     kg: str,
     position: str,
@@ -1018,7 +1010,7 @@ def format_alternatives(alternatives: dict[ObjType, list[Alternative]], k: int) 
     return "\n\n".join(fm)
 
 
-def search_autocomplete(
+def search_with_filter(
     managers: list[KgManager],
     kg: str,
     sparql: str,
