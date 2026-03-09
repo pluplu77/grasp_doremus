@@ -11,7 +11,7 @@ and run our fine-tuned models for Freebase and Wikidata.
 
 ## Installation
 
-See the [main README](../../../README.md) for installation instructions
+See the [main README](../../../../README.md) for installation instructions
 of GRASP. Then make sure you have the GRISP extension installed as well:
 
 ```bash
