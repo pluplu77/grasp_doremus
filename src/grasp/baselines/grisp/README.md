@@ -30,7 +30,7 @@ is provided [`here`](../../../../configs/grisp/train.yaml).
 We will show a running example with the WikiWebQuestions dataset for
 Wikidata. Make sure that you have set up the corresponding GRASP
 indices for the knowledge graph you want to work with before
-starting with the steps below. Again, see the [main README](../../../README.md)
+starting with the steps below. Again, see the [main README](../../../../README.md)
 for instructions on how to do this.
 
 1: Prepare your data in jsonl format
