@@ -6,7 +6,7 @@ in a generate-then-retrieve fashion. The retrieval is performed
 iteratively using search and list-wise re-ranking, and guided by
 the model's own generated SPARQL skeletons and the knowledge graph structure.
 
-You can also [download](https://ad-publications.cs.uni-freiburg.de/grisp/runs)
+You can also [download](https://ad-publications.cs.uni-freiburg.de/grisp/)
 and run our fine-tuned models for Freebase and Wikidata.
 
 ## Installation
