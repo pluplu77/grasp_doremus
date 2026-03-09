@@ -264,11 +264,11 @@ properties otherwise.
 
 For example, to search for Albert Einstein at the subject position in \
 Wikidata, do the following:
-search_with_filter(kg="wikidata", sparql="SELECT * WHERE { ?search ?p ?o }", query="albert einstein")
+search_with_filter(kg="wikidata", sparql="SELECT ?search WHERE { ?search ?p ?o }", query="albert einstein")
 
 Or to search for properties of Albert Einstein related to his birth in \
 Wikidata, do the following:
-search_with_filter(kg="wikidata", sparql="SELECT * WHERE { wd:Q937 ?search ?o }", query="birth")""",
+search_with_filter(kg="wikidata", sparql="SELECT ?search WHERE { wd:Q937 ?search ?o }", query="birth")""",
                 "parameters": {
                     "type": "object",
                     "properties": {
