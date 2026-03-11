@@ -4,6 +4,7 @@ from itertools import chain
 from typing import TYPE_CHECKING, Any, Iterable
 
 import validators
+from search_rdf import EmbeddingIndex
 from universal_ml_utils.ops import partition_by
 
 from grasp.configs import GraspConfig
@@ -16,7 +17,6 @@ from grasp.sparql.types import (
     AskResult,
     Binding,
     ObjType,
-    Position,
     Selection,
     SelectResult,
     SelectRow,
@@ -29,8 +29,17 @@ if TYPE_CHECKING:
 
 # maximum number of results for constraining with sub indices
 MAX_RESULTS = 131072
-# minimum score for similarity search index
-MIN_SCORE = 0.5
+
+
+def _has_modality(managers: list[KgManager], modality: str) -> bool:
+    for manager in managers:
+        for name in manager.index_names:
+            index = manager.index(name)
+            if isinstance(index, EmbeddingIndex):
+                modalities = index.modality or ["text"]
+                if modality in modalities:
+                    return True
+    return False
 
 
 def kg_functions(managers: list[KgManager], fn_set: str) -> list[dict]:
@@ -52,6 +61,9 @@ def kg_functions(managers: list[KgManager], fn_set: str) -> list[dict]:
             if name not in seen:
                 all_index_names.append(name)
                 seen.add(name)
+
+    # check if any index supports image queries
+    has_image = _has_modality(managers, "image")
 
     fns = [
         {
@@ -129,6 +141,43 @@ list(kg="wikidata", property="wdt:P19")""",
     )
 
     if fn_set in ["search", "search_extended", "all"]:
+        search_entity_props = {
+            "kg": {
+                "type": "string",
+                "enum": kgs,
+                "description": "The knowledge graph to search",
+            },
+            "query": {
+                "type": "string",
+                "description": "The search query",
+            },
+        }
+        search_entity_required = ["kg", "query"]
+
+        search_property_props = {
+            "kg": {
+                "type": "string",
+                "enum": kgs,
+                "description": "The knowledge graph to search",
+            },
+            "query": {
+                "type": "string",
+                "description": "The search query",
+            },
+        }
+        search_property_required = ["kg", "query"]
+
+        if has_image:
+            query_type_prop = {
+                "type": "string",
+                "enum": ["text", "image"],
+                "description": 'How to interpret the query string. "text" for text search, "image" for an image URL.',
+            }
+            search_entity_props["query_type"] = query_type_prop
+            search_entity_required.append("query_type")
+            search_property_props["query_type"] = dict(query_type_prop)
+            search_property_required.append("query_type")
+
         fns.extend(
             [
                 {
@@ -143,18 +192,8 @@ do the following:
 search_entity(kg="wikidata", query="albert einstein")""",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "kg": {
-                                "type": "string",
-                                "enum": kgs,
-                                "description": "The knowledge graph to search",
-                            },
-                            "query": {
-                                "type": "string",
-                                "description": "The search query",
-                            },
-                        },
-                        "required": ["kg", "query"],
+                        "properties": search_entity_props,
+                        "required": search_entity_required,
                         "additionalProperties": False,
                     },
                     "strict": True,
@@ -170,18 +209,8 @@ For example, to search for properties related to birth in Wikidata, do the follo
 search_property(kg="wikidata", query="birth")""",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "kg": {
-                                "type": "string",
-                                "enum": kgs,
-                                "description": "The knowledge graph to search",
-                            },
-                            "query": {
-                                "type": "string",
-                                "description": "The search query",
-                            },
-                        },
-                        "required": ["kg", "query"],
+                        "properties": search_property_props,
+                        "required": search_property_required,
                         "additionalProperties": False,
                     },
                     "strict": True,
@@ -190,6 +219,51 @@ search_property(kg="wikidata", query="birth")""",
         )
 
     if fn_set in ["search_extended", "all"]:
+        search_prop_of_ent_props = {
+            "kg": {
+                "type": "string",
+                "enum": kgs,
+                "description": "The knowledge graph to search",
+            },
+            "entity": {
+                "type": "string",
+                "description": "The entity to search properties for",
+            },
+            "query": {
+                "type": "string",
+                "description": "The search query",
+            },
+        }
+        search_prop_of_ent_required = ["kg", "entity", "query"]
+
+        search_obj_of_prop_props = {
+            "kg": {
+                "type": "string",
+                "enum": kgs,
+                "description": "The knowledge graph to search",
+            },
+            "property": {
+                "type": "string",
+                "description": "The property to search objects for",
+            },
+            "query": {
+                "type": "string",
+                "description": "The search query",
+            },
+        }
+        search_obj_of_prop_required = ["kg", "property", "query"]
+
+        if has_image:
+            query_type_prop = {
+                "type": "string",
+                "enum": ["text", "image"],
+                "description": 'How to interpret the query string. "text" for text search, "image" for an image URL.',
+            }
+            search_prop_of_ent_props["query_type"] = query_type_prop
+            search_prop_of_ent_required.append("query_type")
+            search_obj_of_prop_props["query_type"] = dict(query_type_prop)
+            search_obj_of_prop_required.append("query_type")
+
         fns.extend(
             [
                 {
@@ -204,22 +278,8 @@ in Wikidata, do the following:
 search_property_of_entity(kg="wikidata", entity="wd:Q937", query="birth")""",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "kg": {
-                                "type": "string",
-                                "enum": kgs,
-                                "description": "The knowledge graph to search",
-                            },
-                            "entity": {
-                                "type": "string",
-                                "description": "The entity to search properties for",
-                            },
-                            "query": {
-                                "type": "string",
-                                "description": "The search query",
-                            },
-                        },
-                        "required": ["kg", "entity", "query"],
+                        "properties": search_prop_of_ent_props,
+                        "required": search_prop_of_ent_required,
                         "additionalProperties": False,
                     },
                     "strict": True,
@@ -235,22 +295,8 @@ For example, to search for football jobs in Wikidata, do the following:
 search_object_of_property(kg="wikidata", property="wdt:P106", query="football")""",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "kg": {
-                                "type": "string",
-                                "enum": kgs,
-                                "description": "The knowledge graph to search",
-                            },
-                            "property": {
-                                "type": "string",
-                                "description": "The property to search objects for",
-                            },
-                            "query": {
-                                "type": "string",
-                                "description": "The search query",
-                            },
-                        },
-                        "required": ["kg", "property", "query"],
+                        "properties": search_obj_of_prop_props,
+                        "required": search_obj_of_prop_required,
                         "additionalProperties": False,
                     },
                     "strict": True,
@@ -259,6 +305,36 @@ search_object_of_property(kg="wikidata", property="wdt:P106", query="football")"
         )
 
     if fn_set in ["search_filter", "all"]:
+        search_filter_props = {
+            "kg": {
+                "type": "string",
+                "enum": kgs,
+                "description": "The knowledge graph to search",
+            },
+            "index": {
+                "type": "string",
+                "enum": all_index_names,
+                "description": "The index to search in",
+            },
+            "sparql": {
+                "type": "string",
+                "description": "The SPARQL query with ?search variable",
+            },
+            "query": {
+                "type": "string",
+                "description": "The search query",
+            },
+        }
+        search_filter_required = ["kg", "index", "sparql", "query"]
+
+        if has_image:
+            search_filter_props["query_type"] = {
+                "type": "string",
+                "enum": ["text", "image"],
+                "description": 'How to interpret the query string. "text" for text search, "image" for an image URL.',
+            }
+            search_filter_required.append("query_type")
+
         fns.append(
             {
                 "name": "search_with_filter",
@@ -278,27 +354,8 @@ Wikidata, do the following:
 search_with_filter(kg="wikidata", index="property", sparql="SELECT DISTINCT ?p WHERE { wd:Q937 ?p ?o }", query="birth")""",
                 "parameters": {
                     "type": "object",
-                    "properties": {
-                        "kg": {
-                            "type": "string",
-                            "enum": kgs,
-                            "description": "The knowledge graph to search",
-                        },
-                        "index": {
-                            "type": "string",
-                            "enum": all_index_names,
-                            "description": "The index to search in",
-                        },
-                        "sparql": {
-                            "type": "string",
-                            "description": "The SPARQL query with ?search variable",
-                        },
-                        "query": {
-                            "type": "string",
-                            "description": "The search query",
-                        },
-                    },
-                    "required": ["kg", "index", "sparql", "query"],
+                    "properties": search_filter_props,
+                    "required": search_filter_required,
                     "additionalProperties": False,
                 },
                 "strict": True,
@@ -306,6 +363,64 @@ search_with_filter(kg="wikidata", index="property", sparql="SELECT DISTINCT ?p W
         )
 
     if fn_set in ["search_constraints", "all"]:
+        search_constraints_props = {
+            "kg": {
+                "type": "string",
+                "enum": kgs,
+                "description": "The knowledge graph to search",
+            },
+            "index": {
+                "type": "string",
+                "enum": all_index_names,
+                "description": "The index to search in",
+            },
+            "position": {
+                "type": "string",
+                "enum": ["subject", "property", "object"],
+                "description": "The position/type of item to look for",
+            },
+            "query": {
+                "type": "string",
+                "description": "The search query",
+            },
+            "constraints": {
+                "type": ["object", "null"],
+                "description": "Constraints for the search, \
+can be null if there are none",
+                "properties": {
+                    "subject": {
+                        "type": ["string", "null"],
+                        "description": "IRI for constraining the subject (null if not constrained)",
+                    },
+                    "property": {
+                        "type": ["string", "null"],
+                        "description": "IRI for constraining the property (null if not constrained)",
+                    },
+                    "object": {
+                        "type": ["string", "null"],
+                        "description": "IRI or literal for constraining the object (null if not constrained)",
+                    },
+                },
+                "required": ["subject", "property", "object"],
+                "additionalProperties": False,
+            },
+        }
+        search_constraints_required = [
+            "kg",
+            "index",
+            "position",
+            "query",
+            "constraints",
+        ]
+
+        if has_image:
+            search_constraints_props["query_type"] = {
+                "type": "string",
+                "enum": ["text", "image"],
+                "description": 'How to interpret the query string. "text" for text search, "image" for an image URL.',
+            }
+            search_constraints_required.append("query_type")
+
         fns.append(
             {
                 "name": "search_with_constraints",
@@ -325,49 +440,8 @@ search_with_constraints(kg="wikidata", index="property", position="property", qu
 constraints={"subject": "wd:Q937"})""",
                 "parameters": {
                     "type": "object",
-                    "properties": {
-                        "kg": {
-                            "type": "string",
-                            "enum": kgs,
-                            "description": "The knowledge graph to search",
-                        },
-                        "index": {
-                            "type": "string",
-                            "enum": all_index_names,
-                            "description": "The index to search in",
-                        },
-                        "position": {
-                            "type": "string",
-                            "enum": ["subject", "property", "object"],
-                            "description": "The position/type of item to look for",
-                        },
-                        "query": {
-                            "type": "string",
-                            "description": "The search query",
-                        },
-                        "constraints": {
-                            "type": ["object", "null"],
-                            "description": "Constraints for the search, \
-can be null if there are none",
-                            "properties": {
-                                "subject": {
-                                    "type": ["string", "null"],
-                                    "description": "IRI for constraining the subject (null if not constrained)",
-                                },
-                                "property": {
-                                    "type": ["string", "null"],
-                                    "description": "IRI for constraining the property (null if not constrained)",
-                                },
-                                "object": {
-                                    "type": ["string", "null"],
-                                    "description": "IRI or literal for constraining the object (null if not constrained)",
-                                },
-                            },
-                            "required": ["subject", "property", "object"],
-                            "additionalProperties": False,
-                        },
-                    },
-                    "required": ["kg", "index", "position", "query", "constraints"],
+                    "properties": search_constraints_props,
+                    "required": search_constraints_required,
                     "additionalProperties": False,
                 },
                 "strict": True,
@@ -428,7 +502,7 @@ def call_function(
             fn_args["query"],
             config.search_top_k,
             known,
-            min_score=MIN_SCORE,
+            fn_args.get("query_type", "text"),
         )
 
     elif fn_name == "search_property":
@@ -438,7 +512,7 @@ def call_function(
             fn_args["query"],
             config.search_top_k,
             known,
-            min_score=MIN_SCORE,
+            fn_args.get("query_type", "text"),
         )
 
     elif fn_name == "search_property_of_entity":
@@ -450,8 +524,8 @@ def call_function(
             {"subject": fn_args["entity"]},
             config.search_top_k,
             known,
-            index="property",
-            min_score=MIN_SCORE,
+            "property",
+            fn_args.get("query_type", "text"),
         )
 
     elif fn_name == "search_object_of_property":
@@ -463,8 +537,8 @@ def call_function(
             {"property": fn_args["property"]},
             config.search_top_k,
             known,
-            index="entity",
-            min_score=MIN_SCORE,
+            "entity",
+            fn_args.get("query_type", "text"),
         )
 
     elif fn_name == "search_with_constraints":
@@ -476,8 +550,8 @@ def call_function(
             fn_args.get("constraints"),
             config.search_top_k,
             known,
-            index=fn_args.get("index", "entity"),
-            min_score=MIN_SCORE,
+            fn_args.get("index", "entity"),
+            fn_args.get("query_type", "text"),
         )
 
     elif fn_name == "search_with_filter":
@@ -488,8 +562,8 @@ def call_function(
             fn_args["query"],
             config.search_top_k,
             known,
-            index=fn_args.get("index", "entity"),
-            min_score=MIN_SCORE,
+            fn_args.get("index", "entity"),
+            fn_args.get("query_type", "text"),
         )
 
     elif task is not None:
@@ -505,6 +579,7 @@ def search_entity(
     query: str,
     k: int,
     known: set[str],
+    query_type: str = "text",
     **search_kwargs: Any,
 ) -> str:
     manager, _ = find_manager(managers, kg)
@@ -513,6 +588,7 @@ def search_entity(
         "entity",
         query=query,
         k=k,
+        query_type=query_type,
         **search_kwargs,
     )
 
@@ -529,6 +605,7 @@ def search_property(
     query: str,
     k: int,
     known: set[str],
+    query_type: str = "text",
     **search_kwargs: Any,
 ) -> str:
     manager, _ = find_manager(managers, kg)
@@ -537,6 +614,7 @@ def search_property(
         "property",
         query=query,
         k=k,
+        query_type=query_type,
         **search_kwargs,
     )
 
@@ -933,6 +1011,7 @@ def search_with_constraints(
     k: int,
     known: set[str],
     index: str = "entity",
+    query_type: str = "text",
     max_results: int = MAX_RESULTS,
     **search_kwargs: Any,
 ) -> str:
@@ -940,9 +1019,7 @@ def search_with_constraints(
 
     # validate index vs position
     if index == "property":
-        assert position == "property", (
-            "index='property' requires position='property'"
-        )
+        assert position == "property", "index='property' requires position='property'"
     elif position == "property":
         # position=property implies property index
         index = "property"
@@ -1018,6 +1095,7 @@ search index due to an error:
         query,
         k,
         identifier_map,
+        query_type=query_type,
         **search_kwargs,
     )
 
@@ -1050,6 +1128,7 @@ def search_with_filter(
     k: int,
     known: set[str],
     index: str = "entity",
+    query_type: str = "text",
     max_results: int = MAX_RESULTS,
     **search_kwargs: Any,
 ) -> str:
@@ -1076,6 +1155,7 @@ search index due to an error:
         query,
         k=k,
         identifier_map=identifier_map,
+        query_type=query_type,
         **search_kwargs,
     )
 
@@ -1084,3 +1164,4 @@ search index due to an error:
     update_known_from_alts(known, alternatives, normalizer)
 
     return info + format_index_alternatives(alternatives, index, k)
+

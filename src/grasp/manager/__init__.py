@@ -17,11 +17,12 @@ from grasp.manager.utils import (
     EmbeddingModel,
     Index,
     SearchIndex,
+    load_image_from_url,
     format_index_meta,
     get_embedding_model_key,
     load_embedding_model,
-    load_kg_caches,
     load_kg_indices,
+    load_kg_info_caches,
     load_kg_info_sparqls,
     load_kg_normalizers,
     load_kg_prefixes,
@@ -479,17 +480,42 @@ class KgManager:
             matched_label=matched_via,
         )
 
-    def _embed_query(self, index: EmbeddingIndex, query: str) -> list[float]:
+    def _embed_query(
+        self,
+        index: EmbeddingIndex,
+        query: str,
+        query_type: str = "text",
+    ) -> list[float]:
         model_key = get_embedding_model_key(index)
         model = self.embedding_models[model_key]
-        if isinstance(model, SentenceTransformerModel):
-            return model.embed([query])[0].tolist()
-        elif isinstance(model, OpenClipModel):
-            return model.embed_text([query])[0].tolist()
-        elif isinstance(model, HuggingFaceImageModel):
-            raise NotImplementedError("Image embedding model cannot embed text query")
+
+        if query_type == "text":
+            if isinstance(model, SentenceTransformerModel):
+                return model.embed([query])[0].tolist()
+            elif isinstance(model, OpenClipModel):
+                return model.embed_text([query])[0].tolist()
+            elif isinstance(model, HuggingFaceImageModel):
+                raise ValueError("Image embedding model does not support text queries")
+            else:
+                raise ValueError(f"Unsupported embedding model type: {type(model)}")
+
+        elif query_type == "image":
+            image = load_image_from_url(query)
+            if isinstance(model, OpenClipModel):
+                return model.embed_image([image])[0].tolist()
+            elif isinstance(model, HuggingFaceImageModel):
+                return model.embed([image])[0].tolist()
+            elif isinstance(model, SentenceTransformerModel):
+                raise ValueError(
+                    "SentenceTransformer model does not support image queries"
+                )
+            else:
+                raise ValueError(f"Unsupported embedding model type: {type(model)}")
+
         else:
-            raise ValueError(f"Unsupported embedding model type: {type(model)}")
+            raise ValueError(
+                f"Unsupported query_type '{query_type}', expected 'text' or 'image'"
+            )
 
     def search_index(
         self,
@@ -497,6 +523,7 @@ class KgManager:
         query: str | None = None,
         k: int = 10,
         identifier_map: dict[str, list[str]] | None = None,
+        query_type: str = "text",
         **search_kwargs: Any,
     ) -> list[Alternative]:
         index = self.index(index_name)
@@ -518,7 +545,7 @@ class KgManager:
             if index.index_type == "embedding":
                 kwargs["min_score"] = search_kwargs.get("min_score")
                 assert isinstance(index, EmbeddingIndex)
-                embedding = self._embed_query(index, query)
+                embedding = self._embed_query(index, query, query_type)
                 kwargs["embedding"] = embedding
             else:
                 kwargs["query"] = query
@@ -811,7 +838,7 @@ def load_kg_manager(
 
     ent_cache = prop_cache = None
     if not skip_caches:
-        ent_cache, prop_cache = load_kg_caches(cfg.kg)
+        ent_cache, prop_cache = load_kg_info_caches(cfg.kg)
 
     return KgManager(
         cfg.kg,

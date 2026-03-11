@@ -760,7 +760,7 @@ def execute(
                 endpoint,
                 headers={
                     "Accept": "application/sparql-results+json",
-                    "User-Agent": "grasp-bot",
+                    "User-Agent": "grasp-rdf",
                 },
                 data={"query": sparql},
                 timeout=request_timeout,

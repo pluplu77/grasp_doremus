@@ -1,8 +1,12 @@
+import logging
 import os
 import time
 from dataclasses import dataclass
-from pathlib import Path
+from io import BytesIO
 
+import numpy as np
+import requests
+from PIL import Image
 from search_rdf import Data, EmbeddingIndex, FuzzyIndex, KeywordIndex
 from search_rdf.model import (
     HuggingFaceImageModel,
@@ -10,7 +14,7 @@ from search_rdf.model import (
     SentenceTransformerModel,
 )
 from universal_ml_utils.configuration import load_config
-from universal_ml_utils.io import dump_json, load_json
+from universal_ml_utils.io import dump_json, load_json, load_text
 from universal_ml_utils.logging import get_logger
 
 from grasp.manager.cache import Cache
@@ -40,10 +44,7 @@ def load_data(index_dir: str) -> Data:
     return data
 
 
-def load_index(
-    index_dir: str,
-    index_type: str,
-) -> SearchIndex | None:
+def load_index(index_dir: str, index_type: str) -> SearchIndex | None:
     logger = get_logger("KG INDEX LOADING")
     start = time.perf_counter()
 
@@ -60,7 +61,7 @@ def load_index(
         index_cls = KeywordIndex
     elif index_type == "fuzzy":
         index_cls = FuzzyIndex
-    elif index_type == "embedding" or index_type == "embedding-with-data":
+    elif index_type == "embedding":
         index_cls = EmbeddingIndex
         load_kwargs["embedding_path"] = os.path.join(index_dir, "embedding.safetensors")
     else:
@@ -79,20 +80,52 @@ def load_index(
     return index
 
 
-def load_entity_index(
-    kg: str,
-    index_type: str,
-) -> SearchIndex | None:
+def load_entity_index(kg: str, index_type: str) -> SearchIndex | None:
     index_dir = os.path.join(get_index_dir(kg), "entities")
     return load_index(index_dir, index_type)
 
 
-def load_property_index(
-    kg: str,
-    index_type: str,
-) -> SearchIndex | None:
+def load_property_index(kg: str, index_type: str) -> SearchIndex | None:
     index_dir = os.path.join(get_index_dir(kg), "properties")
     return load_index(index_dir, index_type)
+
+
+def load_info_sparql(
+    index_dir: str,
+    logger: logging.Logger | None = None,
+) -> str | None:
+    info_sparql_path = os.path.join(index_dir, "info.sparql")
+    if os.path.exists(info_sparql_path):
+        if logger is not None:
+            logger.debug(f"Loaded info.sparql from {index_dir}")
+        return load_text(info_sparql_path)
+
+    if logger is not None:
+        logger.debug(f"No info.sparql found at {index_dir}")
+    return None
+
+
+def load_info_cache(
+    index_dir: str,
+    logger: logging.Logger | None = None,
+) -> Cache | None:
+    cache_dir = os.path.join(index_dir, "info.cache", "db")
+    if not os.path.exists(cache_dir):
+        if logger is not None:
+            logger.debug(f"No info cache found at {cache_dir}")
+        return None
+
+    try:
+        start = time.perf_counter()
+        cache = Cache.load(cache_dir)
+        end = time.perf_counter()
+        if logger is not None:
+            logger.debug(f"Loaded cache from {cache_dir} in {end - start:.2f}s")
+        return cache
+    except Exception as e:
+        if logger is not None:
+            logger.warning(f"Failed to load cache from {cache_dir}: {e}")
+        return None
 
 
 def load_other_indices(kg: str, indices: list[str]) -> dict[str, Index]:
@@ -109,32 +142,26 @@ def load_other_indices(kg: str, indices: list[str]) -> dict[str, Index]:
     for cfg in config["indices"]:
         name = cfg["name"]
         if name not in indices:
+            logger.debug(
+                f"Skipping index {name} as it's not in the specified indices list"
+            )
             continue
 
         desc = cfg.get("description", "No description provided")
 
         sub_index_dir = os.path.join(base_index_dir, name)
+
+        # normalize embedding index type, which is called embedding-with-data
+        # in search-rdf, but embedding in the search-rdf python interface
+        if cfg["type"].startswith("embedding"):
+            cfg["type"] = "embedding"
+
         index = load_index(sub_index_dir, cfg["type"])
         if index is None:
             continue
 
-        # load optional info.sparql
-        info_sparql_path = os.path.join(sub_index_dir, "info.sparql")
-        info_sparql: str | None = None
-        if os.path.exists(info_sparql_path):
-            info_sparql = Path(info_sparql_path).read_text()
-            logger.debug(f"Loaded info.sparql for sub-index '{name}'")
-
-        # load optional cache
-        cache_dir = os.path.join(sub_index_dir, "info.cache", "db")
-        info_cache: Cache | None = None
-        try:
-            info_cache: Cache | None = Cache.load(cache_dir)
-            logger.debug(f"Loaded cache for sub-index '{name}' from {cache_dir}")
-        except Exception as e:
-            logger.warning(
-                f"Failed to load cache for sub-index '{name}' from {cache_dir}: {e}"
-            )
+        info_sparql = load_info_sparql(sub_index_dir, logger)
+        info_cache = load_info_cache(sub_index_dir, logger)
 
         others[name] = Index(desc, index, info_sparql, info_cache)
 
@@ -185,14 +212,14 @@ def load_kg_normalizers(kg: str) -> tuple[Normalizer, Normalizer]:
 
 def load_kg_prefixes(kg: str, endpoint: str | None = None) -> dict[str, str]:
     kg_index_dir = get_index_dir(kg)
-    prefix_file = Path(kg_index_dir, "prefixes.json")
-    if prefix_file.exists():
-        prefixes = load_json(prefix_file.as_posix())
+    prefix_file = os.path.join(kg_index_dir, "prefixes.json")
+    if os.path.exists(prefix_file):
+        prefixes = load_json(prefix_file)
     else:
         try:
             prefixes = load_qlever_prefixes(endpoint or get_endpoint(kg))
             # save for future use
-            dump_json(prefixes, prefix_file.as_posix(), indent=2)
+            dump_json(prefixes, prefix_file, indent=2)
         except Exception:
             prefixes = {}
 
@@ -211,51 +238,18 @@ def load_kg_prefixes(kg: str, endpoint: str | None = None) -> dict[str, str]:
 
 
 def load_kg_info_sparqls(kg: str) -> tuple[str | None, str | None]:
+    logger = get_logger("KG INFO SPARQL LOADING")
     kg_index_dir = get_index_dir(kg)
-    ent_info_file = Path(kg_index_dir, "entities", "info.sparql")
-    prop_info_file = Path(kg_index_dir, "properties", "info.sparql")
-
-    if ent_info_file.exists():
-        ent_info = ent_info_file.read_text()
-    else:
-        ent_info = None
-
-    if prop_info_file.exists():
-        prop_info = prop_info_file.read_text()
-    else:
-        prop_info = None
-
+    ent_info = load_info_sparql(os.path.join(kg_index_dir, "entities"), logger)
+    prop_info = load_info_sparql(os.path.join(kg_index_dir, "properties"), logger)
     return ent_info, prop_info
 
 
-def load_kg_caches(kg: str) -> tuple[Cache | None, Cache | None]:
-    logger = get_logger("KG CACHE LOADING")
+def load_kg_info_caches(kg: str) -> tuple[Cache | None, Cache | None]:
+    logger = get_logger("KG INFO CACHE LOADING")
     kg_index_dir = get_index_dir(kg)
-
-    start = time.perf_counter()
-    ent_cache_dir = os.path.join(kg_index_dir, "entities", "info.cache", "db")
-    try:
-        ent_cache = Cache.load(ent_cache_dir)
-        end = time.perf_counter()
-        logger.debug(
-            f"Loading entity cache from {ent_cache_dir} took {end - start:.2f}s",
-        )
-    except Exception as e:
-        logger.warning(f"Failed to load entity cache from {ent_cache_dir}: {e}")
-        ent_cache = None
-
-    start = time.perf_counter()
-    prop_cache_dir = os.path.join(kg_index_dir, "properties", "info.cache", "db")
-    try:
-        prop_cache = Cache.load(prop_cache_dir)
-        end = time.perf_counter()
-        logger.debug(
-            f"Loading property cache from {prop_cache_dir} took {end - start:.2f}s",
-        )
-    except Exception as e:
-        logger.warning(f"Failed to load property cache from {prop_cache_dir}: {e}")
-        prop_cache = None
-
+    ent_cache = load_info_cache(os.path.join(kg_index_dir, "entities"), logger)
+    prop_cache = load_info_cache(os.path.join(kg_index_dir, "properties"), logger)
     return ent_cache, prop_cache
 
 
@@ -313,11 +307,25 @@ def find_obj_type_from_prefixes(
         return ObjType.UNKNOWN
 
 
+def load_image_from_url(url: str) -> np.ndarray:
+    try:
+        if url.startswith("file://"):
+            path = url[len("file://") :]
+            image = Image.open(path).convert("RGB")
+        else:
+            response = requests.get(url, headers={"User-Agent": "grasp-rdf"})
+            response.raise_for_status()
+            image = Image.open(BytesIO(response.content)).convert("RGB")
+        return np.array(image)
+    except Exception as e:
+        raise IOError(f"Failed to load image from {url}: {e}") from e
+
+
 def format_index_meta(index: SearchIndex) -> str:
-    """Format index type and modality metadata."""
     parts = [f'type="{index.index_type}"']
-    if isinstance(index, EmbeddingIndex) and index.modality:
-        parts.append(f"modalities=\"{'+'.join(index.modality)}\"")
+    if isinstance(index, EmbeddingIndex):
+        modalities = index.modality or ["text"]
+        parts.append(f'modalities="{"+".join(modalities)}"')
     return ", ".join(parts)
 
 
