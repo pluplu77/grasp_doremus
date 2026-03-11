@@ -141,7 +141,7 @@ def generate(
     fns = kg_functions(managers, config.fn_set)
     fns.extend(t.function_definitions())
 
-    input, task_state = t.setup(input)
+    input = t.setup(input)
     yield {"type": "input", "input": input}
 
     if notes is None:
@@ -289,7 +289,6 @@ def generate(
                     tool_call.args,
                     known,
                     t,
-                    task_state,
                     example_indices,
                 )
             except Exception as e:
@@ -332,7 +331,7 @@ def generate(
             break
 
         # get latest output
-        output = t.output(messages, task_state)
+        output = t.output(messages)
         if output is None:
             break
 
@@ -374,7 +373,7 @@ def generate(
         # reset loop detection
         last_resp_hash = None
 
-    output = t.output(messages, task_state)
+    output = t.output(messages)
 
     out_msg = Message(
         role="output",

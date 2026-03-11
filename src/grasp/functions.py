@@ -470,7 +470,6 @@ def call_function(
     fn_args: dict,
     known: set[str],
     task: "GraspTask | None" = None,
-    task_state: Any = None,
     example_indices: dict | None = None,
 ) -> str:
     if fn_name == "execute":
@@ -567,7 +566,7 @@ def call_function(
         )
 
     elif task is not None:
-        return task.call_function(fn_name, fn_args, known, task_state, example_indices)
+        return task.call_function(fn_name, fn_args, known, example_indices)
 
     else:
         raise ValueError(f"Unknown function {fn_name}")
