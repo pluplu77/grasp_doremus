@@ -19,7 +19,6 @@ from grasp.manager.utils import (
 from grasp.sparql.utils import (
     find_longest_prefix,
     get_endpoint,
-    is_iri,
     load_entity_index_sparql,
     load_property_index_sparql,
 )
@@ -177,7 +176,7 @@ def split_iri(iri: str) -> tuple[str, str]:
     if last == -1:
         return "", iri
     else:
-        return iri[:last], iri[last + 1:]
+        return iri[:last], iri[last + 1 :]
 
 
 def camel_case_split(s: str) -> str:
@@ -203,7 +202,7 @@ def get_object_name_from_id(obj_id: str, prefixes: dict[str, str]) -> str:
         _, obj_name = split_iri(obj_id)
     else:
         _, long = pfx
-        obj_name = obj_id[len(long):]
+        obj_name = obj_id[len(long) :]
 
     # url decode the object name
     return unquote_plus(obj_name)
