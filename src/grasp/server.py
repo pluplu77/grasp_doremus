@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, conlist
 from search_rdf.model import SentenceTransformerModel
 from universal_ml_utils.io import dump_json, load_json
 from universal_ml_utils.logging import get_logger
-from universal_ml_utils.ops import consume_generator, partition_by
+from universal_ml_utils.ops import partition_by
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from grasp.configs import ServerConfig
@@ -236,6 +236,8 @@ def serve(config: ServerConfig, log_level: int | str | None = None) -> None:
         active_connections += 1
         logger.info(f"{prefix} Request started ({active_connections=:,})")
 
+        stop_event = threading.Event()
+
         try:
             sel = request.knowledge_graphs
             if not sel or not all(kg in kgs for kg in sel):
@@ -254,25 +256,38 @@ def serve(config: ServerConfig, log_level: int | str | None = None) -> None:
             past_known = request.past.known if request.past else None
 
             def run_generate() -> dict:
-                try:
-                    output = consume_generator(
-                        generate(
-                            request.task,
-                            request.input,
-                            config,
-                            sel_managers,
-                            kg_notes[request.task],
-                            notes[request.task],
-                            example_indices[request.task],
-                            past_messages,
-                            past_known,
-                            logger,
-                        )
-                    )
-                except ValueError as exc:
-                    raise RuntimeError("No output produced") from exc
+                generator = generate(
+                    request.task,
+                    request.input,
+                    config,
+                    sel_managers,
+                    kg_notes[request.task],
+                    notes[request.task],
+                    example_indices[request.task],
+                    past_messages,
+                    past_known,
+                    logger,
+                )
+
+                output = None
+                for output in generator:
+                    if stop_event.is_set():
+                        break
+
+                if output is None:
+                    raise RuntimeError("No output produced")
 
                 return output
+
+            async def monitor_disconnect():
+                while not stop_event.is_set():
+                    if await http_request.is_disconnected():
+                        logger.info(f"{prefix} Client disconnected, stopping generation")
+                        stop_event.set()
+                        return
+                    await asyncio.sleep(1)
+
+            disconnect_task = asyncio.create_task(monitor_disconnect())
 
             try:
                 output = await asyncio.wait_for(
@@ -280,6 +295,7 @@ def serve(config: ServerConfig, log_level: int | str | None = None) -> None:
                     timeout=config.max_generation_time,
                 )
             except asyncio.TimeoutError:
+                stop_event.set()
                 logger.warning(
                     f"{prefix} Generation hit time limit of {config.max_generation_time:,} seconds"
                 )
@@ -297,6 +313,12 @@ def serve(config: ServerConfig, log_level: int | str | None = None) -> None:
                     status_code=500,
                     detail=f"Failed to handle request:\n{exc}",
                 )
+            finally:
+                stop_event.set()
+                disconnect_task.cancel()
+
+            if stop_event.is_set() and await http_request.is_disconnected():
+                return {}
 
             if output_logger is not None:
                 output_logger.info(json.dumps(output))
