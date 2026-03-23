@@ -1,5 +1,5 @@
 import json
-from typing import Any
+from typing import Any, Callable
 from uuid import uuid4
 
 from litellm import (
@@ -229,6 +229,9 @@ class Message(BaseModel):
     content: str | Response
 
 
+ModelFn = Callable[[list[Message], list[dict], ModelConfig], Response]
+
+
 def completions_api_messages(messages: list[Message]) -> list[dict[str, Any]]:
     msgs = []
     for message in messages:
@@ -356,7 +359,11 @@ def call_model(
     functions: list[dict],
     config: ModelConfig,
     num_retries: int = 2,
+    custom_model: ModelFn | None = None,
 ) -> Response:
+    if custom_model is not None:
+        return custom_model(messages, functions, config)
+
     if config.api is None:
         api = "responses" if config.model.startswith("openai") else "completions"
     else:

@@ -15,7 +15,7 @@ from grasp.functions import (
 )
 from grasp.manager import KgManager, format_kgs, load_kg_manager
 from grasp.manager.utils import EmbeddingModel, describe_index_type
-from grasp.model import Message, Response, call_model
+from grasp.model import Message, ModelFn, Response, call_model
 from grasp.tasks import get_task
 from grasp.tasks import rules as general_rules
 from grasp.tasks.base import GraspTask
@@ -124,6 +124,7 @@ def generate(
     past_known: set[str] | None = None,
     logger: Logger = get_logger("GRASP"),
     yield_output: bool = False,
+    custom_model: ModelFn | None = None,
 ) -> Generator[dict, None, dict]:
     if task_name != "sparql-qa" and task_name != "general-qa":
         # disable examples for tasks other than sparql-qa and general-qa
@@ -236,7 +237,7 @@ def generate(
     retries = 0
     while len(messages) - num_messages < config.max_steps:
         try:
-            response = call_model(messages, fns, config)
+            response = call_model(messages, fns, config, custom_model=custom_model)
         except Timeout:
             error = {
                 "content": "LLM API timed out",
