@@ -370,6 +370,13 @@ def parse_args() -> argparse.Namespace:
         choices=["always", "empty"],
         help="When to add a label fallback based on entity/property IDs",
     )
+    data_parser.add_argument(
+        "--format",
+        type=str,
+        default="json",
+        choices=["json", "csv", "tsv"],
+        help="Format to request from the SPARQL endpoint (default: json)",
+    )
     add_overwrite_arg(data_parser)
 
     # merge multiple knowledge graphs
@@ -688,6 +695,7 @@ def get_grasp_data(args: argparse.Namespace) -> None:
         args.overwrite,
         args.add_id_as_label,
         args.log_level,
+        args.format,
     )
 
 

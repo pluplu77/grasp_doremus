@@ -78,7 +78,7 @@ def format_literal(s: str) -> str:
 def parse_into_binding(
     input: str,
     parser: LR1Parser,
-    prefixes: dict[str, str],
+    prefixes: dict[str, str] | None = None,
 ) -> Binding | None:
     try:
         parse, _ = parse_string(
@@ -100,7 +100,7 @@ def parse_into_binding(
 
         case "PNAME_LN" | "PNAME_NS":
             pfx, name = input.split(":", 1)
-            if pfx not in prefixes:
+            if prefixes is None or pfx not in prefixes:
                 return None
 
             uri = prefixes[pfx] + name
@@ -168,7 +168,7 @@ def parse_into_binding(
                     datatype = datatype["value"][1:-1]
                 else:
                     pfx, name = datatype["value"].split(":", 1)
-                    if pfx not in prefixes:
+                    if prefixes is None or pfx not in prefixes:
                         return None
 
                     datatype = prefixes[pfx] + name
@@ -869,7 +869,7 @@ def format_iri(
         return wrap_iri(iri) if wrapped else iri
 
     short, long = longest
-    val = iri[len(long):]
+    val = iri[len(long) :]
 
     # check if no bad characters are in the short form
     # by url encoding it and checking if it is still the same

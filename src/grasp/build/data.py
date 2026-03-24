@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 from logging import Logger
@@ -20,9 +21,13 @@ from grasp.sparql.utils import (
     find_longest_prefix,
     get_endpoint,
     load_entity_index_sparql,
+    load_iri_and_literal_parser,
     load_property_index_sparql,
+    parse_into_binding,
 )
 from grasp.utils import get_index_dir, ordered_unique
+
+Binding = tuple[str, str, list[str]]  # (id, value, tags)
 
 
 def download_data(
@@ -34,6 +39,7 @@ def download_data(
     params: dict[str, str] | None = None,
     add_id_as_label: None | str = None,
     overwrite: bool = False,
+    format: str = "json",
 ) -> None:
     data_file = Path(out_dir, "data.jsonl")
     if data_file.exists() and not overwrite:
@@ -45,9 +51,19 @@ def download_data(
         f"with parameters {params or {}} and SPARQL:\n{sparql}"
     )
 
-    stream = stream_json(endpoint, sparql, params)
+    if format == "json":
+        bindings = stream_json(endpoint, sparql, params)
+    elif format == "csv":
+        bindings = stream_csv(endpoint, sparql, params)
+    elif format == "tsv":
+        bindings = stream_tsv(endpoint, sparql, logger, params)
+    else:
+        raise ValueError(
+            f"Unknown format: {format!r}, expected 'json', 'csv', or 'tsv'"
+        )
+
     dump_jsonl(
-        prepare_json_items(stream, prefixes, logger, add_id_as_label),
+        prepare_items(bindings, prefixes, add_id_as_label, logger),
         data_file.as_posix(),
     )
 
@@ -76,6 +92,7 @@ def get_data(
     overwrite: bool = False,
     add_id_as_label: str | None = None,
     log_level: str | int | None = None,
+    format: str = "json",
 ) -> None:
     logger = get_logger("GRASP DATA", log_level)
 
@@ -106,6 +123,7 @@ def get_data(
         query_params,
         add_id_as_label,
         overwrite,
+        format,
     )
     dump_text(ent_sparql, os.path.join(ent_dir, "index.sparql"))
     build_data_and_mapping(ent_dir, logger, overwrite)
@@ -123,27 +141,17 @@ def get_data(
         query_params,
         add_id_as_label="always",  # for properties we also want to search via id
         overwrite=overwrite,
+        format=format,
     )
     dump_text(prop_sparql, os.path.join(prop_dir, "index.sparql"))
     build_data_and_mapping(prop_dir, logger, overwrite)
-
-
-class Stream:
-    def __init__(self, response: requests.Response) -> None:
-        self.stream = response.iter_content(chunk_size=None)
-
-    def read(self, n: int) -> bytes:
-        if n == 0:
-            return b""
-
-        return next(self.stream, b"")
 
 
 def stream_json(
     endpoint: str,
     sparql: str,
     query_params: dict[str, str] | None = None,
-) -> Stream:
+) -> Iterator[Binding]:
     try:
         headers = {
             "Accept": "application/sparql-results+json",
@@ -159,10 +167,163 @@ def stream_json(
             stream=True,
         )
         response.raise_for_status()
-        return Stream(response)  # type: ignore
-
     except Exception as e:
         raise ValueError(f"Failed to stream SPARQL results as JSON: {e}") from e
+
+    class _StreamReader:
+        def __init__(self, response: requests.Response) -> None:
+            self.stream = response.iter_content(chunk_size=None)
+
+        def read(self, n: int) -> bytes:
+            if n == 0:
+                return b""
+            return next(self.stream, b"")
+
+    bindings = ijson.items(
+        _StreamReader(response),
+        "results.bindings.item",
+        multiple_values=True,
+    )
+
+    for binding in bindings:
+        id = binding["id"]["value"]
+        value = binding["value"]["value"] if "value" in binding else ""
+
+        tag_binding = binding.get("tag", binding.get("tags", None))
+        if tag_binding is not None:
+            tags = tag_binding["value"].split(",")
+        else:
+            tags = []
+
+        yield id, value, tags
+
+
+def stream_csv(
+    endpoint: str,
+    sparql: str,
+    query_params: dict[str, str] | None = None,
+) -> Iterator[Binding]:
+    try:
+        headers = {
+            "Accept": "text/csv",
+            "Content-Type": "application/sparql-query",
+            "User-Agent": "grasp-data-bot",
+        }
+
+        response = requests.post(
+            endpoint,
+            data=sparql,
+            params=query_params,
+            headers=headers,
+            stream=True,
+        )
+        response.raise_for_status()
+    except Exception as e:
+        raise ValueError(f"Failed to stream SPARQL results as CSV: {e}") from e
+
+    lines = response.iter_lines(decode_unicode=True)
+    reader = csv.DictReader(lines)
+
+    for row in reader:
+        id = row["id"]
+        value = row.get("value", "") or ""
+
+        tag_value = row.get("tag", row.get("tags", None))
+        if tag_value:
+            tags = tag_value.split(",")
+        else:
+            tags = []
+
+        yield id, value, tags
+
+
+def stream_tsv(
+    endpoint: str,
+    sparql: str,
+    logger: Logger,
+    query_params: dict[str, str] | None = None,
+) -> Iterator[Binding]:
+    try:
+        headers = {
+            "Accept": "text/tab-separated-values",
+            "Content-Type": "application/sparql-query",
+            "User-Agent": "grasp-data-bot",
+        }
+
+        response = requests.post(
+            endpoint,
+            data=sparql,
+            params=query_params,
+            headers=headers,
+            stream=True,
+        )
+        response.raise_for_status()
+    except Exception as e:
+        raise ValueError(f"Failed to stream SPARQL results as TSV: {e}") from e
+
+    parser = load_iri_and_literal_parser()
+    lines = response.iter_lines(decode_unicode=True)
+
+    # first line is header with ?var names
+    header_line = next(lines, None)
+    if header_line is None:
+        return
+    columns = [col.lstrip("?") for col in header_line.split("\t")]
+
+    for line in lines:
+        if not line:
+            continue
+
+        cells = line.split("\t")
+        if len(cells) != len(columns):
+            logger.warning(
+                f"Skipping malformed line with {len(cells):,} values for "
+                f"{len(columns):,} columns: {line[:100]}..."
+            )
+            continue
+
+        row = dict(zip(columns, cells))
+
+        id_cell = row.get("id", "")
+        if not id_cell:
+            continue
+
+        id_binding = parse_into_binding(id_cell, parser)
+        if id_binding is None:
+            logger.warning(
+                f"Failed to parse id {id_cell} as IRI or literal, skipping row"
+            )
+            continue
+
+        id = id_binding.value
+
+        value_cell = row.get("value", "")
+        if value_cell:
+            value_binding = parse_into_binding(value_cell, parser)
+            if value_binding is None or value_binding.typ != "literal":
+                logger.warning(
+                    f"Failed to parse value {value_cell} as literal, skipping row"
+                )
+                continue
+
+            value = value_binding.value
+        else:
+            value = ""
+
+        tag_cell = row.get("tag", row.get("tags", ""))
+        if tag_cell:
+            tag_binding = parse_into_binding(tag_cell, parser)
+            if tag_binding is None or tag_binding.typ != "literal":
+                logger.warning(
+                    f"Failed to parse tag {tag_cell} as literal, skipping row"
+                )
+                continue
+
+            tags = tag_binding.value.split(",")
+        else:
+            tags = []
+
+        yield id, value, tags
 
 
 def split_iri(iri: str) -> tuple[str, str]:
@@ -231,41 +392,29 @@ def split_at_punctuation(s: str) -> Iterator[str]:
         yield s[start:]
 
 
-def prepare_json_items(
-    stream: Stream,
+def prepare_items(
+    bindings: Iterator[Binding],
     prefixes: dict[str, str],
-    logger: Logger,
     add_id_as_label: None | str = None,
+    logger: Logger | None = None,
 ) -> Iterator[dict]:
-    # iteratore over bindings with ijson
-    bindings = ijson.items(stream, "results.bindings.item")
-
     # collect all labels for an id (which are consecutive in the stream)
     last_id = None
     fields = []
-    for num, binding in enumerate(bindings, start=1):
-        if num % 1_000_000 == 0:
+    for num, (id, value, tags) in enumerate(bindings, start=1):
+        if logger and num % 1_000_000 == 0:
             logger.info(f"Processed {num:,} bindings so far")
 
-        logger.debug(f"Processing binding #{num:,}:\n{json.dumps(binding, indent=2)}")
-
-        id = binding["id"]["value"]
-        value = binding["value"]["value"] if "value" in binding else ""
-
-        tag_binding = binding.get("tag", binding.get("tags", None))
-        if tag_binding is not None:
-            tags = tag_binding["value"].split(",")
-        else:
-            tags = []
-
-        # use plain IRI as identifier
+        if logger:
+            logger.debug(
+                f"Processing binding #{num:,}: id={id}, value={value}, tags={tags}"
+            )
 
         if last_id is not None and id != last_id:
             # yield previous item
             if add_id_as_label == "always" or (
                 add_id_as_label == "empty" and not fields
             ):
-                # add label from id
                 fields.append(
                     {
                         "type": "text",
@@ -286,12 +435,10 @@ def prepare_json_items(
             fields.append({"type": "text", "value": value, "tags": tags})
 
     if last_id is None:
-        # only happens if there are no bindings
         return
 
     # dont forget final item
     if add_id_as_label == "always" or (add_id_as_label == "empty" and not fields):
-        # add label from id
         fields.append(
             {
                 "type": "text",
