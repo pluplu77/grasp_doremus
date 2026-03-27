@@ -6,7 +6,7 @@ from pydantic import BaseModel, ValidationError
 
 from grasp.configs import GraspConfig
 from grasp.functions import find_manager
-from grasp.manager import KgManager, format_kgs
+from grasp.manager import KgManager, format_kg_notes, format_kgs
 from grasp.model import Message, ToolCall
 from grasp.tasks.base import FeedbackTask, GraspTask
 from grasp.tasks.sparql_qa.examples import (
@@ -423,13 +423,16 @@ You are a question answering assistant providing feedback on the \
 output of a SPARQL-based question answering system for a given user question.
 
 The system has access to the following knowledge graphs:
-{format_kgs(managers, kg_notes)}
+{format_kgs(managers) if managers else "None"}
+
+The system was provided the following knowledge graph specific notes:
+{format_kg_notes(kg_notes) if kg_notes else "None"}
 
 The system was provided the following notes across all knowledge graphs:
-{format_notes(notes)}
+{format_notes(notes) if notes else "None"}
 
 The system was provided the following rules to follow:
-{format_list(rules())}
+{format_list(rules()) if rules() else "None"}
 
 There are two possible cases:
 
@@ -502,7 +505,12 @@ class SparqlQaTask(GraspTask, FeedbackTask):
         example_indices: dict | None,
     ) -> str:
         return call_function(
-            self.config, self.managers, fn_name, fn_args, known, example_indices=example_indices
+            self.config,
+            self.managers,
+            fn_name,
+            fn_args,
+            known,
+            example_indices=example_indices,
         )
 
     def done(self, fn_name: str) -> bool:

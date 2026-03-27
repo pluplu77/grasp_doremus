@@ -170,6 +170,8 @@ def call_function(
     if kg is None:
         notes_to_use = notes
     else:
+        if kg not in kg_notes:
+            kg_notes[kg] = []
         notes_to_use = kg_notes[kg]
 
     if fn_name == "add_note":

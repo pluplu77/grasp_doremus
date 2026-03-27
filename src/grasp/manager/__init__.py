@@ -225,19 +225,19 @@ class KgManager:
                     formatted = self.format_iri(identifier)
 
                     # for uri check whether it is in one of the datasets
-                    obj_type = ObjType.ENTITY
-                    norm = self.normalize(identifier, obj_type)
+                    index = "entity"
+                    norm = self.normalize(identifier, index)
 
-                    if norm is None or self.label(norm[0], obj_type) is None:
-                        obj_type = ObjType.PROPERTY
-                        norm = self.normalize(identifier, obj_type)
+                    if norm is None or self.get_label(norm[0], index) is None:
+                        index = "property"
+                        norm = self.normalize(identifier, index)
 
                     # still not found, just output the formatted iri
-                    if norm is None or self.label(norm[0], obj_type) is None:
+                    if norm is None or self.get_label(norm[0], index) is None:
                         formatted_row.append(formatted)
                         continue
 
-                    label = self.label(norm[0], obj_type)
+                    label = self.get_label(norm[0], index)
                     assert label is not None, "should not happen"
                     formatted = f"{clip(label)} ({formatted})"
                     formatted_row.append(formatted)
@@ -303,8 +303,13 @@ class KgManager:
     def find_longest_prefix(self, iri: str) -> tuple[str, str] | None:
         return find_longest_prefix(iri, self.prefixes)
 
-    def format_iri(self, iri: str, base_uri: str | None = None) -> str:
-        return format_iri(iri, self.prefixes, base_uri)
+    def format_iri(
+        self,
+        iri: str,
+        base_uri: str | None = None,
+        wrap: bool = False,
+    ) -> str:
+        return format_iri(iri, self.iri_literal_parser, self.prefixes, base_uri, wrap)
 
     def fix_prefixes(
         self,
@@ -316,13 +321,14 @@ class KgManager:
         return fix_prefixes(
             sparql,
             self.sparql_parser,
+            self.iri_literal_parser,
             self.prefixes,
             is_prefix,
             remove_known,
             sort,
         )
 
-    def normalizer(self, name: str) -> Normalizer:
+    def get_normalizer(self, name: str) -> Normalizer:
         if name == "entity":
             return self.entity_normalizer
         elif name == "property":
@@ -332,7 +338,7 @@ class KgManager:
         else:
             raise ValueError(f"Unknown index name '{name}'")
 
-    def index(self, name: str) -> SearchIndex:
+    def get_index(self, name: str) -> SearchIndex:
         if name == "entity":
             assert self.entity_index is not None, "Entity index is not loaded"
             return self.entity_index
@@ -344,7 +350,7 @@ class KgManager:
         else:
             raise ValueError(f"Unknown index name '{name}'")
 
-    def data(self, name: str) -> Data:
+    def get_data(self, name: str) -> Data:
         if name == "entity":
             assert self.entity_data is not None, "Entity data is not loaded"
             return self.entity_data
@@ -391,7 +397,7 @@ class KgManager:
         identifier: str,
         index_name: str,
     ) -> tuple[str, str | None] | None:
-        return self.normalizer(index_name).normalize(identifier)
+        return self.get_normalizer(index_name).normalize(identifier)
 
     def denormalize(
         self,
@@ -399,28 +405,23 @@ class KgManager:
         index_name: str,
         variant: str | None = None,
     ) -> str | None:
-        return self.normalizer(index_name).denormalize(identifier, variant)
+        return self.get_normalizer(index_name).denormalize(identifier, variant)
 
     def check_identifier(
         self,
         identifier: str,
         index_name: str,
     ) -> bool:
-        return self.data(index_name).id_from_identifier(identifier) is not None
+        return self.get_data(index_name).id_from_identifier(identifier) is not None
 
-    def label(
+    def get_label(
         self,
         identifier: str,
-        obj_type: ObjType,
+        index_name: str,
     ) -> str | None:
-        if obj_type == ObjType.ENTITY:
-            data = self.entity_data
-        elif obj_type == ObjType.PROPERTY:
-            data = self.property_data
-        else:
-            data = None
-
-        if data is None:
+        try:
+            data = self.get_data(index_name)
+        except Exception:
             return None
 
         id = data.id_from_identifier(identifier)
@@ -528,9 +529,9 @@ class KgManager:
         query_type: str = "text",
         **search_kwargs: Any,
     ) -> list[Alternative]:
-        index = self.index(index_name)
-        data = self.data(index_name)
-        normalizer = self.normalizer(index_name)
+        index = self.get_index(index_name)
+        data = self.get_data(index_name)
+        normalizer = self.get_normalizer(index_name)
 
         field_map = {}
 
@@ -576,7 +577,10 @@ class KgManager:
         info_sparql = self.get_info_sparql(index_name)
         info_cache = self.get_info_cache(index_name)
         infos = self.get_infos_for_identifiers(
-            identifiers, info_sparql, info_cache, data
+            identifiers,
+            info_sparql,
+            info_cache,
+            data,
         )
 
         alternatives = []
@@ -632,8 +636,8 @@ class KgManager:
             f"Got {len(result):,} candidate items for index '{index_name}'"
         )
 
-        normalizer = self.normalizer(index_name)
-        data = self.data(index_name)
+        normalizer = self.get_normalizer(index_name)
+        data = self.get_data(index_name)
 
         identifier_map: dict[str, list[str]] = {}
         for bindings in result.bindings():
@@ -712,26 +716,21 @@ class KgManager:
                 infos[identifier][typ].append(text)
 
         except Exception as e:
-            self.logger.warning(f"Failed to retrieve infos for identifiers: {e}")
+            self.logger.warning(
+                "Failed to retrieve infos for identifiers using "
+                f"info sparql: {e}\n\n{info_sparql}"
+            )
 
         return infos
 
-    def get_infos_for_identifiers_of_type(
+    def get_infos_for_identifiers_from_index(
         self,
         identifiers: Iterable[str],
-        obj_type: ObjType,
+        index_name: str,
     ) -> dict[str, dict]:
-        if obj_type == ObjType.ENTITY:
-            info_sparql = self.entity_info_sparql
-            info_cache = self.entity_cache
-            data = self.entity_data
-        elif obj_type == ObjType.PROPERTY:
-            info_sparql = self.property_info_sparql
-            info_cache = self.property_cache
-            data = self.property_data
-        else:
-            self.logger.warning(f"No info retrieval for object type '{obj_type}'")
-            return {}
+        info_sparql = self.get_info_sparql(index_name)
+        info_cache = self.get_info_cache(index_name)
+        data = self.get_data(index_name)
 
         return self.get_infos_for_identifiers(
             identifiers,
@@ -863,20 +862,17 @@ def load_kg_manager(
     )
 
 
-def format_kgs(managers: list[KgManager], kg_notes: dict[str, list[str]]) -> str:
-    if not managers:
-        return "No knowledge graphs available"
+def format_kgs(managers: list[KgManager]) -> str:
+    return format_list(format_kg(manager) for manager in managers)
 
+
+def format_kg_notes(kg_notes: dict[str, list[str]]) -> str:
     return format_list(
-        format_kg(
-            manager,
-            kg_notes.get(manager.kg, []),
-        )
-        for manager in managers
+        f'"{kg}":\n{format_list(notes, indent=2)}' for kg, notes in kg_notes.items()
     )
 
 
-def format_kg(manager: KgManager, notes: list[str]) -> str:
+def format_kg(manager: KgManager) -> str:
     msg = f'"{manager.kg}" at {manager.endpoint}'
 
     parts = []
@@ -891,16 +887,10 @@ def format_kg(manager: KgManager, notes: list[str]) -> str:
             "Properties indexed by their labels, synonyms, and identifiers"
         )
 
-    if manager.indices:
-        other_items = []
-        for name, idx in manager.indices.items():
-            other_items.append(
-                f'"{name}" ({format_index_meta(idx.index)}): {idx.description}'
-            )
-        parts.append("Other indices:\n" + format_list(other_items, indent=4))
-
-    if notes:
-        parts.append("Notes:\n" + format_list(notes, indent=4))
+    for name, idx in manager.indices.items():
+        parts.append(
+            f'"{name}" index ({format_index_meta(idx.index)}): {idx.description}'
+        )
 
     if parts:
         msg += "\n" + format_list(parts, indent=2)

@@ -11,6 +11,7 @@ from grasp.sparql.utils import (
     find_all,
     parse_into_binding,
     parse_string,
+    wrap_iri,
 )
 
 __all__ = [
@@ -160,7 +161,9 @@ def _get_item(
         if not manager.check_identifier(identifier, obj_type):
             continue
 
-        infos = manager.get_infos_for_identifiers_of_type([identifier], obj_type)
+        infos = manager.get_infos_for_identifiers_from_index(
+            [identifier], obj_type.value
+        )
         alternative = manager.build_alternative_with_infos(
             identifier,
             infos.get(identifier, {}),
@@ -189,7 +192,7 @@ def _get_item(
             if obj_type_variant:
                 variant = obj_type_variant
 
-            obj_type_infos = manager.get_infos_for_identifiers_of_type(
+            obj_type_infos = manager.get_infos_for_identifiers_from_index(
                 [identifier], obj_type
             )
             # merge infos across types

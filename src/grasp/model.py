@@ -140,9 +140,9 @@ class Response(BaseModel):
             prompt_token_ids = choice.provider_specific_fields.get("prompt_token_ids")
         # Also check response-level attributes
         if token_ids is None and hasattr(response, "token_ids"):
-            token_ids = response.token_ids
+            token_ids = response.token_ids  # type: ignore
         if prompt_token_ids is None and hasattr(response, "prompt_token_ids"):
-            prompt_token_ids = response.prompt_token_ids
+            prompt_token_ids = response.prompt_token_ids  # type: ignore
 
         return Response(
             id=id,

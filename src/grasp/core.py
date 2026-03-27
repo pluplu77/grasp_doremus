@@ -13,7 +13,7 @@ from grasp.functions import (
     call_function,
     kg_functions,
 )
-from grasp.manager import KgManager, format_kgs, load_kg_manager
+from grasp.manager import KgManager, format_kg_notes, format_kgs, load_kg_manager
 from grasp.manager.utils import EmbeddingModel, describe_index_type
 from grasp.model import Message, ModelFn, Response, call_model
 from grasp.tasks import get_task
@@ -55,30 +55,44 @@ def system_instructions(
         desc = describe_index_type(index_type)
         index_infos.append(f'"{index_type}": {desc}')
 
-    instructions = f"""\
-{task.system_information()}
+    instructions = task.system_information()
+
+    if index_infos:
+        instructions += f"""
+
+Types of knowledge graph indices:
+{format_list(index_infos)}"""
+
+    if managers:
+        instructions += f"""
 
 Available knowledge graphs:
-{format_kgs(managers, kg_notes)}
+{format_kgs(managers)}"""
 
-Index types used:
-{format_list(index_infos)}
+    if kg_notes:
+        instructions += f"""
 
-"""
+Knowledge graph specific notes:
+{format_kg_notes(kg_notes)}"""
 
     if notes:
-        instructions += f"""\
+        instructions += f"""
+
 General notes across knowledge graphs:
-{format_notes(notes)}
+{format_notes(notes)}"""
 
-"""
+    if prefixes:
+        instructions += f"""
 
-    instructions += f"""\
 SPARQL prefixes for use in function calls:
-{format_prefixes(prefixes)}
+{format_prefixes(prefixes)}"""
+
+    rules = general_rules() + task.rules()
+    if rules:
+        instructions += f"""
 
 Additional rules to follow:
-{format_list(general_rules() + task.rules())}"""
+{format_list(rules)}"""
 
     return instructions
 
@@ -95,7 +109,6 @@ def setup(config: GraspConfig) -> tuple[list[KgManager], dict[str, EmbeddingMode
 
 
 def load_notes(config: GraspConfig) -> tuple[list[str], dict[str, list[str]]]:
-    # load notes
     if config.notes_file is None:
         general_notes = []
     else:
@@ -104,7 +117,6 @@ def load_notes(config: GraspConfig) -> tuple[list[str], dict[str, list[str]]]:
     kg_notes = {}
     for kg in config.knowledge_graphs:
         if kg.notes_file is None:
-            kg_notes[kg.kg] = []
             continue
 
         kg_notes[kg.kg] = load_json(kg.notes_file)

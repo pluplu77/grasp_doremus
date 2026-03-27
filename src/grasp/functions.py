@@ -33,7 +33,7 @@ MAX_RESULTS = 131072
 def _has_modality(managers: list[KgManager], modality: str) -> bool:
     for manager in managers:
         for name in manager.index_names:
-            index = manager.index(name)
+            index = manager.get_index(name)
             if isinstance(index, EmbeddingIndex):
                 modalities = index.modality or ["text"]
                 if modality in modalities:
@@ -121,31 +121,31 @@ list(kg="wikidata", property="wdt:P19")""",
                     },
                     "subject": {
                         "type": ["string", "null"],
-                        "description": "IRI for constraining the subject (null if not constrained)",
+                        "description": "IRI for constraining the subject (null for unconstrained)",
                     },
                     "property": {
                         "type": ["string", "null"],
-                        "description": "IRI for constraining the property (null if not constrained)",
+                        "description": "IRI for constraining the property (null for unconstrained)",
                     },
                     "object": {
                         "type": ["string", "null"],
-                        "description": "IRI or literal for constraining the object (null if not constrained)",
+                        "description": "IRI or literal for constraining the object (null for unconstrained)",
                     },
                     "page": {
-                        "type": ["integer", "null"],
-                        "description": "Page number for paginating results (null or 1 for the first page)",
+                        "type": "integer",
+                        "description": "Page number (1-indexed) for paginating results (default should be 1)",
                     },
                     "unclipped": {
-                        "type": ["boolean", "null"],
-                        "description": "If true, show full unclipped literal values (null or false to clip literals)",
+                        "type": "boolean",
+                        "description": "Whether to show full unclipped literal values (default should be false, typically only needed to inspect very long string literals)",
                     },
                 },
                 "required": [
                     "kg",
+                    "page",
                     "subject",
                     "property",
                     "object",
-                    "page",
                     "unclipped",
                 ],
                 "additionalProperties": False,
@@ -399,20 +399,19 @@ search_with_filter(kg="wikidata", index="property", sparql="SELECT DISTINCT ?p W
             },
             "constraints": {
                 "type": ["object", "null"],
-                "description": "Constraints for the search, \
-can be null if there are none",
+                "description": "Constraints for the search (null for unconstrained)",
                 "properties": {
                     "subject": {
                         "type": ["string", "null"],
-                        "description": "IRI for constraining the subject (null if not constrained)",
+                        "description": "IRI for constraining the subject (null for unconstrained)",
                     },
                     "property": {
                         "type": ["string", "null"],
-                        "description": "IRI for constraining the property (null if not constrained)",
+                        "description": "IRI for constraining the property (null for unconstrained)",
                     },
                     "object": {
                         "type": ["string", "null"],
-                        "description": "IRI or literal for constraining the object (null if not constrained)",
+                        "description": "IRI or literal for constraining the object (null for unconstrained)",
                     },
                 },
                 "required": ["subject", "property", "object"],
@@ -535,11 +534,11 @@ def call_function(
             managers,
             fn_args["kg"],
             "property",
+            "property",
             fn_args["query"],
             {"subject": fn_args["entity"]},
             config.search_top_k,
             known,
-            "property",
             fn_args.get("query_type", "text"),
         )
 
@@ -547,12 +546,12 @@ def call_function(
         return search_with_constraints(
             managers,
             fn_args["kg"],
+            "entity",
             "object",
             fn_args["query"],
             {"property": fn_args["property"]},
             config.search_top_k,
             known,
-            "entity",
             fn_args.get("query_type", "text"),
         )
 
@@ -560,12 +559,12 @@ def call_function(
         return search_with_constraints(
             managers,
             fn_args["kg"],
+            fn_args["index"],
             fn_args["position"],
             fn_args["query"],
             fn_args.get("constraints"),
             config.search_top_k,
             known,
-            fn_args.get("index", "entity"),
             fn_args.get("query_type", "text"),
         )
 
@@ -573,11 +572,11 @@ def call_function(
         return search_with_filter(
             managers,
             fn_args["kg"],
+            fn_args["index"],
             fn_args["sparql"],
             fn_args["query"],
             config.search_top_k,
             known,
-            fn_args.get("index", "entity"),
             fn_args.get("query_type", "text"),
             know_before_use=config.know_before_use,
         )
@@ -609,7 +608,7 @@ def search_entity(
     )
 
     # update known items
-    normalizer = manager.normalizer("entity")
+    normalizer = manager.get_normalizer("entity")
     update_known_from_alts(known, alts, normalizer)
 
     return format_index_alternatives(alts, "entity", k)
@@ -635,7 +634,7 @@ def search_property(
     )
 
     # update known items
-    normalizer = manager.normalizer("property")
+    normalizer = manager.get_normalizer("property")
     update_known_from_alts(known, alts, normalizer)
 
     return format_index_alternatives(alts, "property", k)
@@ -839,7 +838,11 @@ def execute_sparql(
 
 def verify_iri_or_literal(input: str, position: str, manager: KgManager) -> str | None:
     # parse and resolve percent encoding in IRIs
-    binding = parse_into_binding(input, manager.iri_literal_parser, manager.prefixes)
+    binding = parse_into_binding(
+        input,
+        manager.iri_literal_parser,
+        manager.prefixes,
+    )
 
     if binding is None and has_scheme(input):
         # fallback for full IRIs given without angle brackets
@@ -860,11 +863,10 @@ def verify_iri_or_literal(input: str, position: str, manager: KgManager) -> str 
 
     if binding is None:
         return None
-
-    if binding.typ == "uri":
-        return wrap_iri(binding.value)
-
-    return binding.identifier()
+    elif binding.typ == "literal":
+        return binding.identifier()
+    else:
+        return wrap_iri(binding.identifier())
 
 
 def list_triples(
@@ -897,8 +899,8 @@ def list_triples(
                 f'Constraint "{const}" for {pos} position \
 is not a valid {expected}. IRIs can be given in prefixed form, like wd:Q937, \
 or in full form, like <http://www.wikidata.org/entity/Q937> or \
-http://www.wikidata.org/entity/Q937, and need to be properly \
-escaped, encoded, and quoted if necessary.'
+http://www.wikidata.org/entity/Q937. Make sure that special unicode \
+characters are properly escaped and literals are properly quoted.'
             )
 
         bindings.append(f"BIND({ver_const} AS ?{pos[0]})")
@@ -1031,24 +1033,17 @@ SELECT ?s ?p ?o WHERE {{
 def search_with_constraints(
     managers: list[KgManager],
     kg: str,
+    index: str,
     position: str,
     query: str,
     constraints: dict[str, str | None] | None,
     k: int,
     known: set[str],
-    index: str = "entity",
     query_type: str = "text",
     max_results: int = MAX_RESULTS,
     **search_kwargs: Any,
 ) -> str:
     manager, _ = find_manager(managers, kg)
-
-    # validate index vs position
-    if index == "property":
-        assert position == "property", "index='property' requires position='property'"
-    elif position == "property":
-        # position=property implies property index
-        index = "property"
 
     if constraints is None:
         constraints = {}
@@ -1088,8 +1083,8 @@ object should be constrained at once."
                     f'Constraint "{const}" for {pos} position \
 is not a valid {expected}. IRIs can be given in prefixed form, like wd:Q937, \
 or in full form, like <http://www.wikidata.org/entity/Q937> or \
-http://www.wikidata.org/entity/Q937, and need to be properly \
-escaped, encoded, and quoted if necessary.'
+http://www.wikidata.org/entity/Q937. Make sure that special unicode \
+characters are properly escaped and literals are properly quoted.'
                 )
 
             pos_values[pos] = ver_const
@@ -1127,7 +1122,7 @@ search index due to:
     )
 
     # update known items
-    normalizer = manager.normalizer(index)
+    normalizer = manager.get_normalizer(index)
     update_known_from_alts(known, alternatives, normalizer)
 
     return info + format_index_alternatives(alternatives, index, k)
@@ -1150,11 +1145,11 @@ def format_index_alternatives(
 def search_with_filter(
     managers: list[KgManager],
     kg: str,
+    index: str,
     sparql: str,
     query: str,
     k: int,
     known: set[str],
-    index: str = "entity",
     query_type: str = "text",
     max_results: int = MAX_RESULTS,
     know_before_use: bool = False,
@@ -1196,7 +1191,7 @@ search index due to:
     )
 
     # update known items
-    normalizer = manager.normalizer(index)
+    normalizer = manager.get_normalizer(index)
     update_known_from_alts(known, alternatives, normalizer)
 
     return info + format_index_alternatives(alternatives, index, k)

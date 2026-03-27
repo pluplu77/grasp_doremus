@@ -7,7 +7,7 @@ from typing import Any, Iterator
 from urllib.parse import urlparse, urlunparse
 
 import requests
-from grammar_utils.parse import LR1Parser
+from grammar_utils.parse import LR1Parser  # type: ignore
 from requests.exceptions import JSONDecodeError
 
 from grasp.sparql.types import AskResult, Binding, Position, SelectResult
@@ -71,7 +71,6 @@ def format_literal(s: str) -> str:
         s = s.strip('"')
     elif s.startswith("'") and s.endswith("'"):
         s = s.strip("'")
-
     return s.encode().decode("unicode_escape")
 
 
@@ -501,7 +500,8 @@ def ask_to_select(
 
 def fix_prefixes(
     sparql: str,
-    parser: LR1Parser,
+    sparql_parser: LR1Parser,
+    iri_parser: LR1Parser,
     prefixes: dict[str, str],
     is_prefix: bool = False,
     remove_known: bool = False,
@@ -509,7 +509,7 @@ def fix_prefixes(
 ) -> str:
     parse, rest = parse_string(
         sparql + " " * is_prefix,
-        parser,
+        sparql_parser,
         is_prefix=is_prefix,
     )
 
@@ -527,7 +527,7 @@ def fix_prefixes(
 
     base_decl = find(parse, "BaseDecl", last=True)
     if base_decl:
-        base_uri = base_decl["children"][1]["value"]
+        base_uri = base_decl["children"][1]["value"][1:-1]
     else:
         base_uri = None
 
@@ -537,8 +537,10 @@ def fix_prefixes(
     for iri in find_all(parse, "IRIREF", skip=skip):
         formatted = format_iri(
             iri["value"],
+            iri_parser,
             prefixes,
             base_uri=base_uri,
+            wrap=True,
         )
         if is_iri(formatted):
             continue
@@ -757,6 +759,7 @@ def execute(
             response = requests.post(
                 endpoint,
                 headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
                     "Accept": "application/sparql-results+json",
                     "User-Agent": "grasp-rdf",
                 },
@@ -853,49 +856,53 @@ def has_scheme(iri: str) -> bool:
     return "://" in iri
 
 
-def unicode_escape_iri(iri: str) -> str:
-    result = []
-    for ch in iri:
-        if ord(ch) > 127:
-            cp = ord(ch)
-            if cp <= 0xFFFF:
-                result.append(f"\\u{cp:04X}")
-            else:
-                result.append(f"\\U{cp:08X}")
-        else:
-            result.append(ch)
-    return "".join(result)
+def format_iri(
+    iri: str,
+    parser: LR1Parser,
+    prefixes: dict[str, str],
+    base_uri: str | None = None,
+    wrap: bool = False,
+) -> str:
+    try:
+        parse, _ = parse_string(
+            # need to wrap for parser
+            wrap_iri(iri) if not is_iri(iri) else iri,
+            parser,
+            skip_empty=True,
+            collapse_single=True,
+        )
+    except Exception:
+        return iri
 
+    if parse["name"] != "IRIREF":
+        # no iri, return as is
+        return iri
 
-def format_iri(iri: str, prefixes: dict[str, str], base_uri: str | None = None) -> str:
-    # strip angle brackets if present (e.g. from SPARQL parse tree IRIREF nodes)
-    wrapped = is_iri(iri)
-    if wrapped:
-        iri = iri[1:-1]
-
+    iri = parse["value"][1:-1]  # strip angle brackets
     if not has_scheme(iri):
         if base_uri is None:
             # return as-is if no base URI is given
-            return wrap_iri(iri) if wrapped else iri
+            return wrap_iri(iri) if wrap else iri
 
+        base_uri = base_uri if not is_iri(base_uri) else base_uri[1:-1]
         # resolve relative IRI against base URI
-        base = base_uri[1:-1] if is_iri(base_uri) else base_uri
-        iri = base + iri
+        iri = base_uri + iri
 
     longest = find_longest_prefix(iri, prefixes)
     if longest is None:
-        escaped = unicode_escape_iri(iri)
-        return wrap_iri(escaped) if wrapped else escaped
+        return wrap_iri(iri) if wrap else iri
 
     short, long = longest
     val = iri[len(long) :]
-    escaped_val = unicode_escape_iri(val)
-    if escaped_val != val:
-        # unicode escapes not valid in prefixed names, use full IRI
-        escaped = unicode_escape_iri(iri)
-        return wrap_iri(escaped) if wrapped else escaped
+    short_iri = short + ":" + val
 
-    return short + ":" + val
+    try:
+        # try to parse prefixed IRI to check if it is valid, if not return full IRI
+        # e.g., special characters are not as well supported in prefixed IRIs as in full IRIs
+        parse_string(short_iri, parser)
+        return short_iri
+    except Exception:
+        return wrap_iri(iri) if wrap else iri
 
 
 def load_qlever_prefixes(endpoint: str) -> dict[str, str]:

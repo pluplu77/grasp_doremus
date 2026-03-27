@@ -7,6 +7,7 @@ import yaml
 from tqdm import tqdm, trange
 from universal_ml_utils.io import dump_json, load_jsonl
 from universal_ml_utils.logging import get_logger
+from universal_ml_utils.ops import consume_generator
 
 from grasp.configs import (
     GraspConfig,
@@ -17,7 +18,7 @@ from grasp.configs import (
 )
 from grasp.core import call_model, generate, load_notes, setup
 from grasp.functions import find_manager
-from grasp.manager import KgManager
+from grasp.manager import KgManager, format_kg_notes
 from grasp.model import Message
 from grasp.notes.utils import consume_iterator, format_output, link
 from grasp.tasks import get_task
@@ -51,6 +52,7 @@ def take_notes_from_samples(
     notes, kg_notes = load_notes(config)
 
     sample_cls = get_task(task, managers, config).sample_cls()
+    assert sample_cls is not None, f"Task {task} does not support samples"
 
     assert config.seed is not None, "Seed must be set for adaptation"
 
@@ -82,14 +84,16 @@ def take_notes_from_samples(
         for kg, sample in tqdm(samples, desc="Running GRASP on samples", leave=False):
             manager, _ = find_manager(managers, kg)
 
-            *_, output = generate(
-                task,
-                sample.input(),
-                config,
-                [manager],
-                kg_notes,
-                notes,
-                logger=agent_logger,
+            output = consume_generator(
+                generate(
+                    task,
+                    sample.input(),
+                    config,
+                    [manager],
+                    kg_notes,
+                    notes,
+                    logger=agent_logger,
+                )
             )
             outputs.append(output)
 
@@ -335,10 +339,6 @@ Agent trace:
         formatted.append(content)
 
     fmt = "\n\n".join(formatted)
-    kg_specific_notes = format_list(
-        f"{kg}:\n{format_notes(kg_specific_notes, indent=2, enumerated=True)}"
-        for kg, kg_specific_notes in sorted(kg_notes.items())
-    )
 
     return f"""\
 Add to, delete from, or update the following notes (which might \
@@ -346,10 +346,10 @@ be the same notes provided to the agent) based on the given agent traces \
 below.
 
 Knowledge graph specific notes:
-{kg_specific_notes}
+{format_kg_notes(kg_notes) if kg_notes else "None"}
 
 General notes across knowledge graphs:
-{format_notes(notes, enumerated=True)}
+{format_notes(notes, enumerated=True) if notes else "None"}
 
 {fmt}"""
 
