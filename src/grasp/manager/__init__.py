@@ -340,10 +340,10 @@ class KgManager:
 
     def get_index(self, name: str) -> SearchIndex:
         if name == "entity":
-            assert self.entity_index is not None, "Entity index is not loaded"
+            assert self.entity_index is not None, "Entity index is not available"
             return self.entity_index
         elif name == "property":
-            assert self.property_index is not None, "Property index is not loaded"
+            assert self.property_index is not None, "Property index is not available"
             return self.property_index
         elif name in self.indices:
             return self.indices[name].index
@@ -352,10 +352,10 @@ class KgManager:
 
     def get_data(self, name: str) -> Data:
         if name == "entity":
-            assert self.entity_data is not None, "Entity data is not loaded"
+            assert self.entity_data is not None, "Entity data is not available"
             return self.entity_data
         elif name == "property":
-            assert self.property_data is not None, "Property data is not loaded"
+            assert self.property_data is not None, "Property data is not available"
             return self.property_data
         elif name in self.indices:
             return self.indices[name].index.data()
@@ -718,7 +718,7 @@ class KgManager:
         except Exception as e:
             self.logger.warning(
                 "Failed to retrieve infos for identifiers using "
-                f"info sparql: {e}\n\n{info_sparql}"
+                f"info sparql: {e}\n\nSPARQL:\n{info_sparql}"
             )
 
         return infos
