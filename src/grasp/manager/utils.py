@@ -210,20 +210,41 @@ def load_kg_normalizers(kg: str) -> tuple[Normalizer, Normalizer]:
     return ent_normalizer, prop_normalizer
 
 
-def load_kg_prefixes(kg: str, endpoint: str | None = None) -> dict[str, str]:
+def load_kg_info(
+    kg: str,
+    endpoint: str | None = None,
+) -> tuple[dict[str, str], str | None]:
     kg_index_dir = get_index_dir(kg)
+    info_file = os.path.join(kg_index_dir, "info.json")
     prefix_file = os.path.join(kg_index_dir, "prefixes.json")
-    if os.path.exists(prefix_file):
-        prefixes = load_json(prefix_file)
-        # compatibility: strip leading < from old-format prefix files
-        prefixes = {k: v.lstrip("<") for k, v in prefixes.items()}
+
+    # load info.json if it exists, fall back to empty
+    if os.path.exists(info_file):
+        info = load_json(info_file)
     else:
+        info = {}
+
+    description = info.get("description")
+    prefixes = info.get("prefixes", {})
+
+    # if no prefixes in info.json, try prefixes.json (legacy)
+    if not prefixes and os.path.exists(prefix_file):
+        prefixes = load_json(prefix_file)
+
+    # if still no prefixes, try to fetch from QLever endpoint
+    if not prefixes:
         try:
             prefixes = load_qlever_prefixes(endpoint or get_endpoint(kg))
-            # save for future use
-            dump_json(prefixes, prefix_file, indent=2)
         except Exception:
             prefixes = {}
+
+    # save prefixes back to info.json for future use
+    if prefixes and not info.get("prefixes"):
+        info["prefixes"] = prefixes
+        dump_json(info, info_file, indent=2)
+
+    # compatibility with IRIs: strip leading < and trailing >
+    prefixes = {k: v.lstrip("<").rstrip(">") for k, v in prefixes.items()}
 
     common_prefixes = get_common_sparql_prefixes()
     values = set(prefixes.values())
@@ -236,7 +257,7 @@ def load_kg_prefixes(kg: str, endpoint: str | None = None) -> dict[str, str]:
 
         prefixes[short] = long
 
-    return prefixes
+    return prefixes, description
 
 
 def load_kg_info_sparqls(kg: str) -> tuple[str | None, str | None]:

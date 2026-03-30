@@ -358,7 +358,6 @@ def call_model(
     messages: list[Message],
     functions: list[dict],
     config: ModelConfig,
-    num_retries: int = 2,
     custom_model: ModelFn | None = None,
 ) -> Response:
     if custom_model is not None:
@@ -382,7 +381,7 @@ def call_model(
             model=config.model,
             messages=completions_api_messages(messages),
             tools=[{"type": "function", "function": fn} for fn in functions],
-            tool_choice="auto",
+            tool_choice=config.tool_choice,
             parallel_tool_calls=config.parallel_tool_calls,
             # decoding parameters
             temperature=config.temperature,
@@ -398,7 +397,7 @@ def call_model(
             logprobs=True if request_logprobs else None,
             # drop unsupported parameters
             drop_params=True,
-            num_retries=num_retries,
+            num_retries=config.num_retries,
         )
         return Response.from_completions_api(completions_resp)
 
@@ -409,7 +408,7 @@ def call_model(
             input=responses_api_messages(messages),  # type: ignore
             include=["reasoning.encrypted_content"],
             tools=[{"type": "function", **fn} for fn in functions],  # type: ignore
-            tool_choice="auto",
+            tool_choice=config.tool_choice,  # type: ignore
             parallel_tool_calls=config.parallel_tool_calls,
             # decoding parameters
             temperature=config.temperature,
@@ -428,7 +427,7 @@ def call_model(
             # drop unsupported parameters
             drop_params=True,
             store=False,
-            num_retries=num_retries,
+            num_retries=config.num_retries,
         )
         return Response.from_responses_api(responses_resp)
 

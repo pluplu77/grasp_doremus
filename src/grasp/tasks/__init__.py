@@ -33,12 +33,11 @@ def get_task(task: str, managers: list[KgManager], config: GraspConfig) -> Grasp
 
 def rules() -> list[str]:
     return [
-        "Explain your thought process before and after each step \
-and function call.",
-        "Do not ask the user for clarification until you have made \
-an initial attempt at completing the task. When the task input is incomplete or \
+        "Explain your thought process before each step and function call.",
+        "Do not ask the user for clarification, neither on the initial input nor on \
+follow-up inputs or feedback. When the task input is incomplete or \
 ambiguous, proceed based on reasonable assumptions.",
         'Do not use "SERVICE wikibase:label { bd:serviceParam wikibase:language ..." \
-in SPARQL queries. It is unsupported by the used QLever SPARQL endpoints. \
+in SPARQL queries. It is not SPARQL standard and unsupported by most SPARQL endpoints. \
 Use rdfs:label or similar properties to get labels instead.',
     ]

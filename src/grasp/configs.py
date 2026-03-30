@@ -33,10 +33,12 @@ class ModelConfig(BaseModel):
     reasoning_summary: str | None = None
     api: str | None = None
     parallel_tool_calls: bool = False
+    tool_choice: str = "auto"
 
     # completion parameters
     max_completion_tokens: int = 8192  # 8k, leaves enough space for reasoning models
     completion_timeout: float = 120.0
+    num_retries: int = 2
 
 
 class GraspConfig(ModelConfig):
@@ -76,6 +78,7 @@ class GraspConfig(ModelConfig):
     # enable feedback loop
     feedback: bool = False
     max_feedbacks: int = 2
+    notes_only_for_feedback: bool = False
 
 
 class ServerConfig(GraspConfig):

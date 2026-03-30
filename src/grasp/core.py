@@ -144,10 +144,14 @@ def generate(
         config = deepcopy(config)
         config.force_examples = None
         logger.debug(f"Disabling examples for {task_name} task")
+    if task_name == "general-qa":
+        config = deepcopy(config)
+        config.tool_choice = "auto"
+        logger.debug("Setting tool choice to auto for general-qa task")
     if task_name == "cea":
         config = deepcopy(config)
         config.know_before_use = True
-        logger.debug("Enabling know-before-use for CEA task")
+        logger.debug("Enabling know-before-use for cea task")
 
     task = get_task(task_name, managers, config)
 
@@ -158,13 +162,19 @@ def generate(
     input = task.setup(input)
     yield {"type": "input", "input": input}
 
-    if notes is None:
-        notes = []
-    if kg_notes is None:
-        kg_notes = {}
+    feedback_notes = notes
+    feedback_kg_notes = kg_notes
+    if config.notes_only_for_feedback:
+        notes = None
+        kg_notes = None
 
     # setup messages
-    system_instruction = system_instructions(task, managers, kg_notes, notes)
+    system_instruction = system_instructions(
+        task,
+        managers,
+        kg_notes or {},
+        notes or [],
+    )
     yield {
         "type": "system",
         "config": config.model_dump(),
@@ -355,8 +365,8 @@ def generate(
             inputs = [message.content for message in messages if message.role == "user"]
             feedback = generate_feedback(
                 task,
-                kg_notes,
-                notes,
+                feedback_kg_notes or kg_notes or {},
+                feedback_notes or notes or [],
                 inputs,  # type: ignore
                 output,
                 logger,

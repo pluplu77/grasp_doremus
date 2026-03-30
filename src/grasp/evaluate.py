@@ -10,13 +10,14 @@ from universal_ml_utils.io import dump_json, load_json, load_jsonl
 from universal_ml_utils.logging import get_logger
 
 from grasp.configs import ModelConfig
-from grasp.manager.utils import load_kg_prefixes
+from grasp.manager.utils import load_kg_info
 from grasp.model import Message, call_model
 from grasp.sparql.metrics import f1_score
 from grasp.sparql.types import AskResult, SelectResult
 from grasp.sparql.utils import (
     execute,
     get_endpoint,
+    load_iri_and_literal_parser,
     load_sparql_parser,
 )
 from grasp.sparql.utils import (
@@ -99,15 +100,21 @@ def evaluate_f1(
     if endpoint is None:
         endpoint = get_endpoint(kg)
 
-    parser = load_sparql_parser()
-    prefixes = load_kg_prefixes(kg, endpoint)
+    sparql_parser = load_sparql_parser()
+    iri_literal_parser = load_iri_and_literal_parser()
+    prefixes, _ = load_kg_info(kg, endpoint)
 
     def fix(sparql: str) -> str | None:
         if not fix_prefixes:
             return sparql
 
         try:
-            return fix_sparql_prefixes(sparql, parser, prefixes)
+            return fix_sparql_prefixes(
+                sparql,
+                sparql_parser,
+                iri_literal_parser,
+                prefixes,
+            )
         except Exception as e:
             logger.warning(f"Error fixing prefixes:\n{e}\n\nSPARQL:\n{sparql}")
             return None
@@ -301,6 +308,12 @@ def evaluate_with_judge(
     log_level: str | int | None = None,
 ):
     logger = get_logger("GRASP EVALUATION", log_level)
+
+    if not judge_config.tool_choice == "required":
+        logger.warning(
+            f"Setting tool choice to 'required' for judge evaluation, overriding '{judge_config.tool_choice}'"
+        )
+        judge_config.tool_choice = "required"
 
     def group_predictions(predictions: list) -> dict:
         grouped: dict = {}

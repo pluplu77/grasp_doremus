@@ -76,7 +76,13 @@ def generate_feedback(
         logger.debug(format_message(msg))
 
     try:
+        tool_choice = task.config.tool_choice
+        task.config.tool_choice = "required"
+        logger.debug(
+            f"Setting tool choice to 'required' for feedback generation (original: '{tool_choice}')"
+        )
         response = call_model(messages, functions(), task.config)
+        task.config.tool_choice = tool_choice
     except litellm.exceptions.Timeout:
         logger.error("LLM API timed out during feedback generation")
         return None

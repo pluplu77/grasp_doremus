@@ -11,7 +11,6 @@ from grasp.sparql.utils import (
     find_all,
     parse_into_binding,
     parse_string,
-    wrap_iri,
 )
 
 __all__ = [

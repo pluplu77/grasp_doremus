@@ -13,6 +13,7 @@ top_p: env(TOP_P:1.0)
 reasoning_effort: env(REASONING_EFFORT:null)
 reasoning_summary: env(REASONING_SUMMARY:null)
 api: env(API:null)
+tool_choice: env(TOOL_CHOICE:auto)
 
 list_k: env(LIST_K:10)
 search_top_k: env(SEARCH_TOP_K:10)

@@ -25,7 +25,7 @@ from grasp.manager.utils import (
     load_kg_info_caches,
     load_kg_info_sparqls,
     load_kg_normalizers,
-    load_kg_prefixes,
+    load_kg_info,
     load_other_indices,
 )
 from grasp.sparql.types import (
@@ -76,6 +76,7 @@ class KgManager:
         prefixes: dict[str, str] | None = None,
         indices: dict[str, Index] | None = None,
         endpoint: str | None = None,
+        description: str | None = None,
     ):
         self.kg = kg
 
@@ -102,6 +103,7 @@ class KgManager:
         self.endpoint = endpoint or get_endpoint(self.kg)
 
         self.indices = indices or {}
+        self.description = description
 
         self.embedding_models: dict[str, EmbeddingModel] = {}
 
@@ -838,7 +840,7 @@ def load_kg_manager(
         )
         indices = load_other_indices(cfg.kg, cfg.indices)
 
-    prefixes = load_kg_prefixes(cfg.kg, cfg.endpoint)
+    prefixes, description = load_kg_info(cfg.kg, cfg.endpoint)
     ent_norm, prop_norm = load_kg_normalizers(cfg.kg)
     ent_info_sparql, prop_info_sparql = load_kg_info_sparqls(cfg.kg)
 
@@ -859,6 +861,7 @@ def load_kg_manager(
         prefixes,
         indices,
         cfg.endpoint,
+        description,
     )
 
 
@@ -873,7 +876,14 @@ def format_kg_notes(kg_notes: dict[str, list[str]]) -> str:
 
 
 def format_kg(manager: KgManager) -> str:
-    msg = f'"{manager.kg}" at {manager.endpoint}'
+    if manager.description and "\n" in manager.description:
+        msg = f'"{manager.kg}" at {manager.endpoint}'
+        desc_lines = manager.description.strip().split("\n")
+        msg += "\n" + "\n".join(f"  {line}" for line in desc_lines)
+    elif manager.description:
+        msg = f'"{manager.kg}" at {manager.endpoint}: {manager.description}'
+    else:
+        msg = f'"{manager.kg}" at {manager.endpoint}'
 
     parts = []
     if manager.entity_index is not None:
