@@ -3,6 +3,7 @@ import json
 import os
 import random
 import sys
+from importlib import metadata
 
 from search_rdf.model import SentenceTransformerModel
 from termcolor import colored
@@ -530,6 +531,11 @@ def parse_args() -> argparse.Namespace:
         help="Skip system, config, and functions messages",
     )
 
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {metadata.version('grasp-rdf')}",
+    )
     parser.add_argument(
         "--log-level",
         type=str,
