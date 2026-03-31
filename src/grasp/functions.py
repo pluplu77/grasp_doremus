@@ -20,7 +20,14 @@ from grasp.sparql.types import (
     SelectResult,
     SelectRow,
 )
-from grasp.sparql.utils import find_all, has_scheme, parse_string, wrap_iri
+from grasp.sparql.utils import (
+    READ_TIMEOUT,
+    REQUEST_TIMEOUT,
+    find_all,
+    has_scheme,
+    parse_string,
+    wrap_iri,
+)
 from grasp.utils import FunctionCallException
 
 if TYPE_CHECKING:
@@ -494,6 +501,8 @@ def call_function(
             config.result_max_columns,
             known,
             config.know_before_use,
+            config.sparql_request_timeout,
+            config.sparql_read_timeout,
         ).formatted  # type: ignore
 
     elif fn_name == "list":
@@ -507,6 +516,8 @@ def call_function(
             fn_args.get("unclipped") or False,
             config.list_k,
             known,
+            config.sparql_request_timeout,
+            config.sparql_read_timeout,
         )
 
     elif fn_name == "search_entity":
@@ -540,6 +551,8 @@ def call_function(
             config.search_top_k,
             known,
             fn_args.get("query_type", "text"),
+            config.sparql_request_timeout,
+            config.sparql_read_timeout,
         )
 
     elif fn_name == "search_object_of_property":
@@ -553,6 +566,8 @@ def call_function(
             config.search_top_k,
             known,
             fn_args.get("query_type", "text"),
+            config.sparql_request_timeout,
+            config.sparql_read_timeout,
         )
 
     elif fn_name == "search_with_constraints":
@@ -566,6 +581,8 @@ def call_function(
             config.search_top_k,
             known,
             fn_args.get("query_type", "text"),
+            config.sparql_request_timeout,
+            config.sparql_read_timeout,
         )
 
     elif fn_name == "search_with_filter":
@@ -578,7 +595,9 @@ def call_function(
             config.search_top_k,
             known,
             fn_args.get("query_type", "text"),
-            know_before_use=config.know_before_use,
+            config.know_before_use,
+            config.sparql_request_timeout,
+            config.sparql_read_timeout,
         )
 
     elif task is not None:
@@ -787,6 +806,8 @@ def execute_sparql(
     max_columns: int,
     known: set[str] | None = None,
     know_before_use: bool = False,
+    request_timeout: float | tuple[float, float] | None = REQUEST_TIMEOUT,
+    read_timeout: float | None = READ_TIMEOUT,
 ) -> ExecutionResult:
     manager, others = find_manager(managers, kg)
 
@@ -801,7 +822,7 @@ def execute_sparql(
         check_known(manager, sparql, known)
 
     try:
-        result = manager.execute_sparql(sparql)
+        result = manager.execute_sparql(sparql, request_timeout, read_timeout)
     except Exception as e:
         error = f"SPARQL execution failed:\n{e}"
         return ExecutionResult(sparql, error)
@@ -879,6 +900,8 @@ def list_triples(
     unclipped: bool,
     k: int,
     known: set[str],
+    request_timeout: float | tuple[float, float] | None = None,
+    read_timeout: float | None = None,
 ) -> str:
     if page < 1:
         raise FunctionCallException("Page number must be at least 1")
@@ -915,7 +938,7 @@ SELECT ?s ?p ?o WHERE {{
 }} LIMIT {MAX_RESULTS + 1}"""
 
     try:
-        result = manager.execute_sparql(sparql)
+        result = manager.execute_sparql(sparql, request_timeout, read_timeout)
     except Exception as e:
         raise FunctionCallException(f"Failed to list triples with error:\n{e}") from e
 
@@ -1040,7 +1063,8 @@ def search_with_constraints(
     k: int,
     known: set[str],
     query_type: str = "text",
-    max_results: int = MAX_RESULTS,
+    request_timeout: float | tuple[float, float] | None = None,
+    read_timeout: float | None = None,
     **search_kwargs: Any,
 ) -> str:
     manager, _ = find_manager(managers, kg)
@@ -1102,7 +1126,9 @@ SELECT DISTINCT {select_var} WHERE {{
             identifier_map = manager.get_candidate_ids(
                 index,
                 sparql,
-                max_results,
+                MAX_RESULTS,
+                request_timeout,
+                read_timeout,
             )
         except Exception as e:
             info = f"""\
@@ -1151,8 +1177,9 @@ def search_with_filter(
     k: int,
     known: set[str],
     query_type: str = "text",
-    max_results: int = MAX_RESULTS,
     know_before_use: bool = False,
+    request_timeout: float | tuple[float, float] | None = None,
+    read_timeout: float | None = None,
     **search_kwargs: Any,
 ) -> str:
     manager, others = find_manager(managers, kg)
@@ -1171,7 +1198,9 @@ def search_with_filter(
         identifier_map = manager.get_candidate_ids(
             index,
             sparql,
-            max_results,
+            MAX_RESULTS,
+            request_timeout,
+            read_timeout,
         )
     except Exception as e:
         info = f"""\

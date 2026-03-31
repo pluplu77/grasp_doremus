@@ -417,8 +417,9 @@ def find_alternatives(
                 index_name,
                 autocomp_sparql,
                 MAX_IRIS,
-                # 6 seconds to execute query
-                (3.5, 6.0),
+                # 6 seconds to execute query, 3 to read result
+                request_timeout=(3.5, 6.0),
+                read_timeout=3.0,
             )
 
             logger.debug(
@@ -482,9 +483,8 @@ def select_iris_left_to_right(
                 logger.debug(f"Checking result of final SPARQL query:\n{sparql}")
                 result = manager.execute_sparql(
                     skeleton.materialize(),
-                    # 6 seconds to execute query
+                    # 6 seconds to execute query, 3 to read result
                     request_timeout=(3.5, 6.0),
-                    # 3 seconds to read result at max
                     read_timeout=3.0,
                 )
                 logger.debug(f"Result:\n{manager.format_sparql_result(result)}")
@@ -723,6 +723,9 @@ def generate(
             [manager],
             max_rows=10,
             max_columns=10,
+            # same as for autocompletion and check
+            request_timeout=(3.5, 6.0),
+            read_timeout=3.0,
         )
         out["sparql"] = result.sparql
         out["selections"] = manager.format_selections(selections)

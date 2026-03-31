@@ -278,6 +278,11 @@ def prepare_ground_truth(
             managers,
             config.result_max_rows,
             config.result_max_columns,
+            request_timeout=(
+                config.sparql_connection_timeout,
+                config.sparql_query_timeout,
+            ),
+            read_timeout=config.sparql_read_timeout,
         )
         manager, _ = find_manager(managers, kg)
         return format_sparql_result(manager, result, selections)

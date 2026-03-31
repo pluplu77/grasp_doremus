@@ -359,6 +359,8 @@ def output(
     managers: list[KgManager],
     max_rows: int,
     max_cols: int,
+    request_timeout: tuple[float, float],
+    read_timeout: float,
 ) -> dict | None:
     answer, cancel = get_answer_or_cancel(messages)
     if answer is None and cancel is None:
@@ -400,6 +402,8 @@ def output(
             managers,
             max_rows,
             max_cols,
+            request_timeout=request_timeout,
+            read_timeout=read_timeout,
         )
         manager, _ = find_manager(managers, output["kg"])
 
@@ -521,6 +525,8 @@ class SparqlQaTask(GraspTask, FeedbackTask):
             self.managers,
             self.config.result_max_rows,
             self.config.result_max_columns,
+            self.config.sparql_request_timeout,
+            self.config.sparql_read_timeout,
         )
 
     @property

@@ -9,10 +9,7 @@ from universal_ml_utils.io import load_json
 from universal_ml_utils.logging import get_logger
 
 from grasp.configs import GraspConfig
-from grasp.functions import (
-    call_function,
-    kg_functions,
-)
+from grasp.functions import call_function, kg_functions
 from grasp.manager import KgManager, format_kg_notes, format_kgs, load_kg_manager
 from grasp.manager.utils import EmbeddingModel, describe_index_type
 from grasp.model import Message, ModelFn, Response, call_model

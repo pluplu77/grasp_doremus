@@ -749,8 +749,8 @@ def execute(
     sparql: str,
     endpoint: str,
     request_timeout: float | tuple[float, float] | None = REQUEST_TIMEOUT,
-    max_retries: int = 0,
     read_timeout: float | None = READ_TIMEOUT,
+    max_retries: int = 0,
     **kwargs: Any,
 ) -> SelectResult | AskResult:
     max_retries = max(0, max_retries)
@@ -789,9 +789,19 @@ def execute(
             if i < max_retries:
                 continue
 
+            # format timeout
+            if request_timeout is None:
+                timeout_fmt = ""
+            elif isinstance(request_timeout, tuple):
+                conn_tm, query_tm = request_timeout
+                timeout_fmt = (
+                    f" (connection_timeout={conn_tm}s, query_timeout={query_tm}s)"
+                )
+            else:
+                timeout_fmt = f" (timeout={request_timeout}s)"
+
             raise SPARQLExecuteException(
-                f"SPARQL query timed out after {request_timeout} seconds",
-                sparql,
+                f"SPARQL query timed out{timeout_fmt}", sparql
             ) from e
 
         except requests.RequestException as e:

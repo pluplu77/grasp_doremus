@@ -55,6 +55,11 @@ class GraspConfig(ModelConfig):
     # map[task_name, map[param_name, param_value]]
     task_kwargs: dict[str, dict[str, Any]] = {}
 
+    # sparql query timeouts
+    sparql_connection_timeout: float = 6.0
+    sparql_query_timeout: float = 30.0
+    sparql_read_timeout: float = 10.0
+
     # kg function parameters
     search_top_k: int = 10
     # 10 total rows, 5 top and 5 bottom
@@ -79,6 +84,10 @@ class GraspConfig(ModelConfig):
     feedback: bool = False
     max_feedbacks: int = 2
     notes_only_for_feedback: bool = False
+
+    @property
+    def sparql_request_timeout(self) -> tuple[float, float]:
+        return self.sparql_connection_timeout, self.sparql_query_timeout
 
 
 class ServerConfig(GraspConfig):

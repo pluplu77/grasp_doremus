@@ -143,9 +143,9 @@ class KgManager:
         self,
         sparql: str,
         request_timeout: float | tuple[float, float] | None = REQUEST_TIMEOUT,
+        read_timeout: float | None = READ_TIMEOUT,
         max_retries: int = 0,
         force_select_result: bool = False,
-        read_timeout: float | None = READ_TIMEOUT,
     ) -> SelectResult | AskResult:
         if force_select_result:
             # ask_to_select returns None if sparql is not an ask query
@@ -158,8 +158,8 @@ class KgManager:
             sparql,
             self.endpoint,
             request_timeout,
-            max_retries,
             read_timeout,
+            max_retries,
         )
 
     def format_sparql_result(
@@ -609,7 +609,8 @@ class KgManager:
         index_name: str,
         sparql: str,
         max_candidates: int | None = None,
-        timeout: float | tuple[float, float] | None = REQUEST_TIMEOUT,
+        request_timeout: float | tuple[float, float] | None = REQUEST_TIMEOUT,
+        read_timeout: float | None = READ_TIMEOUT,
         max_retries: int = 0,
     ) -> dict[str, list[str]]:
         typ = query_type(sparql, self.sparql_parser)
@@ -622,7 +623,7 @@ class KgManager:
         self.logger.debug(
             f"Getting candidate IDs for index '{index_name}' with {sparql}"
         )
-        result = self.execute_sparql(sparql, timeout, max_retries)
+        result = self.execute_sparql(sparql, request_timeout, read_timeout, max_retries)
 
         if not isinstance(result, SelectResult):
             raise SPARQLException("SPARQL query is not a SELECT query")
