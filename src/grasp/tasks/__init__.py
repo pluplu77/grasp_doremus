@@ -3,6 +3,7 @@ from enum import StrEnum
 from grasp.configs import GraspConfig
 from grasp.manager import KgManager
 from grasp.tasks.base import GraspTask
+from grasp.tasks.auto_setup import AutoSetupTask
 from grasp.tasks.cea import CeaTask
 from grasp.tasks.exploration import ExplorationTask
 from grasp.tasks.general_qa import GeneralQaTask
@@ -17,11 +18,19 @@ class Task(StrEnum):
     GENERAL_QA = "general-qa"
     CEA = "cea"
     WDQL = "wikidata-query-logs"
+    AUTO_SETUP = "auto-setup"
 
 
 _REGISTRY: dict[str, type[GraspTask]] = {
     cls.name: cls
-    for cls in [SparqlQaTask, GeneralQaTask, CeaTask, WdqlTask, ExplorationTask]
+    for cls in [
+        SparqlQaTask,
+        GeneralQaTask,
+        CeaTask,
+        WdqlTask,
+        ExplorationTask,
+        AutoSetupTask,
+    ]
 }
 
 

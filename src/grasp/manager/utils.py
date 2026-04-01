@@ -20,7 +20,13 @@ from universal_ml_utils.logging import get_logger
 from grasp.manager.cache import Cache
 from grasp.manager.normalizer import Normalizer, WikidataPropertyNormalizer
 from grasp.sparql.types import ObjType
-from grasp.sparql.utils import find_longest_prefix, get_endpoint, load_qlever_prefixes
+from grasp.sparql.utils import (
+    find_longest_prefix,
+    get_endpoint,
+    load_entity_index_sparql,
+    load_property_index_sparql,
+    load_qlever_prefixes,
+)
 from grasp.utils import get_index_dir
 
 SearchIndex = KeywordIndex | EmbeddingIndex | FuzzyIndex
@@ -88,6 +94,21 @@ def load_entity_index(kg: str, index_type: str) -> SearchIndex | None:
 def load_property_index(kg: str, index_type: str) -> SearchIndex | None:
     index_dir = os.path.join(get_index_dir(kg), "properties")
     return load_index(index_dir, index_type)
+
+
+def load_index_sparql(
+    index_dir: str,
+    logger: logging.Logger | None = None,
+) -> str | None:
+    index_sparql_path = os.path.join(index_dir, "index.sparql")
+    if os.path.exists(index_sparql_path):
+        if logger is not None:
+            logger.debug(f"Loaded index.sparql from {index_dir}")
+        return load_text(index_sparql_path)
+
+    if logger is not None:
+        logger.debug(f"No index.sparql found at {index_dir}")
+    return None
 
 
 def load_info_sparql(
@@ -247,17 +268,27 @@ def load_kg_info(
     prefixes = {k: v.lstrip("<").rstrip(">") for k, v in prefixes.items()}
 
     common_prefixes = get_common_sparql_prefixes()
-    values = set(prefixes.values())
+    reverse_prefixes = {v: k for k, v in prefixes.items()}
 
-    # add common prefixes that might not be covered by the
-    # specified prefixes
+    # strip prefixes already covered by the common prefixes
     for short, long in common_prefixes.items():
-        if short in prefixes or long in values:
-            continue
-
-        prefixes[short] = long
+        if short in prefixes:
+            prefixes.pop(short)
+        elif long in reverse_prefixes:
+            prefixes.pop(reverse_prefixes[long])
 
     return prefixes, description
+
+
+def load_kg_index_sparqls(kg: str) -> tuple[str, str]:
+    logger = get_logger("KG INDEX SPARQL LOADING")
+    kg_index_dir = get_index_dir(kg)
+    ent_index = load_index_sparql(os.path.join(kg_index_dir, "entities"), logger)
+    prop_index = load_index_sparql(os.path.join(kg_index_dir, "properties"), logger)
+    return (
+        ent_index or load_entity_index_sparql(),
+        prop_index or load_property_index_sparql(),
+    )
 
 
 def load_kg_info_sparqls(kg: str) -> tuple[str | None, str | None]:

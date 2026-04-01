@@ -31,6 +31,7 @@ from grasp.configs import (
 )
 from grasp.core import generate, load_notes, setup
 from grasp.evaluate import evaluate_f1, evaluate_with_judge
+from grasp.functions import find_manager
 from grasp.notes import (
     take_notes_from_exploration,
     take_notes_from_outputs,
@@ -520,6 +521,20 @@ def parse_args() -> argparse.Namespace:
     add_task_arg(example_parser)
     add_overwrite_arg(example_parser)
 
+    # auto-setup a knowledge graph
+    auto_setup_parser = subparsers.add_parser(
+        "auto-setup",
+        help="Automatically configure a knowledge graph by exploring its SPARQL endpoint",
+    )
+    add_config_arg(auto_setup_parser)
+    auto_setup_parser.add_argument(
+        "-kg",
+        "--knowledge-graph",
+        type=str,
+        default=None,
+        help="Knowledge graph to configure (required if config has multiple KGs)",
+    )
+
     # visualize trace from GRASP output
     show_parser = subparsers.add_parser(
         "show",
@@ -788,6 +803,41 @@ def show_grasp(args: argparse.Namespace) -> None:
         print(format_trace(output, skip_system=args.skip_system))
 
 
+def auto_setup_grasp(args: argparse.Namespace) -> None:
+    logger = get_logger("GRASP AUTO-SETUP", args.log_level)
+    config = GraspConfig(**load_config(args.config))
+
+    # load KG manager, gracefully handling missing indices
+    managers, _ = setup(config)
+    if not managers:
+        logger.error("No KG managers available for auto-setup")
+        return
+    elif len(managers) == 1:
+        manager = managers[0]
+    else:
+        assert args.knowledge_graph is not None, (
+            "Knowledge graph must be specified for auto-setup when config has more than one"
+        )
+        manager, _ = find_manager(managers, args.knowledge_graph)
+
+    notes, kg_notes = load_notes(config)
+
+    output = consume_generator(
+        generate(
+            "auto-setup",
+            # input must be None
+            None,
+            config,
+            [manager],
+            kg_notes,
+            notes,
+            logger=logger,
+        )
+    )
+
+    print(json.dumps(output))
+
+
 def main():
     args = parse_args()
     if args.all_loggers:
@@ -838,6 +888,9 @@ def main():
 
     elif args.command == "evaluate":
         evaluate_grasp(args)
+
+    elif args.command == "auto-setup":
+        auto_setup_grasp(args)
 
     elif args.command == "show":
         show_grasp(args)

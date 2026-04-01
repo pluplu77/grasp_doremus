@@ -11,7 +11,11 @@ from universal_ml_utils.logging import get_logger
 from grasp.configs import GraspConfig
 from grasp.functions import call_function, kg_functions
 from grasp.manager import KgManager, format_kg_notes, format_kgs, load_kg_manager
-from grasp.manager.utils import EmbeddingModel, describe_index_type
+from grasp.manager.utils import (
+    EmbeddingModel,
+    describe_index_type,
+    get_common_sparql_prefixes,
+)
 from grasp.model import Message, ModelFn, Response, call_model
 from grasp.tasks import get_task
 from grasp.tasks import rules as general_rules
@@ -36,9 +40,7 @@ def system_instructions(
     notes: list[str],
 ) -> str:
     index_types = set()
-    prefixes = {}
     for manager in managers:
-        prefixes.update(manager.prefixes)
         if manager.entity_index is not None:
             index_types.add(manager.entity_index.index_type)
         if manager.property_index is not None:
@@ -78,11 +80,18 @@ Knowledge graph specific notes:
 General notes across knowledge graphs:
 {format_notes(notes)}"""
 
-    if prefixes:
+    common_prefixes = get_common_sparql_prefixes()
+    if common_prefixes:
         instructions += f"""
 
-SPARQL prefixes for use in function calls:
-{format_prefixes(prefixes)}"""
+Common SPARQL prefixes:
+{format_prefixes(common_prefixes)}"""
+
+    if common_prefixes or any(manager.kg_prefixes for manager in managers):
+        instructions += """
+
+All SPARQL prefixes above can be used implicitly in SPARQL queries \
+and function calls."""
 
     rules = general_rules() + task.rules()
     if rules:

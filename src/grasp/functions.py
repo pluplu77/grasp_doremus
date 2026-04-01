@@ -16,6 +16,7 @@ from grasp.sparql.types import (
     AskResult,
     Binding,
     ObjType,
+    Position,
     Selection,
     SelectResult,
     SelectRow,
@@ -161,6 +162,9 @@ list(kg="wikidata", property="wdt:P19")""",
         },
     )
 
+    has_entity_index = "entity" in seen
+    has_property_index = "property" in seen
+
     if fn_set in ["search", "search_extended", "all"]:
         search_entity_props = {
             "kg": {
@@ -199,8 +203,8 @@ list(kg="wikidata", property="wdt:P19")""",
             search_property_props["query_type"] = dict(query_type_prop)
             search_property_required.append("query_type")
 
-        fns.extend(
-            [
+        if has_entity_index:
+            fns.append(
                 {
                     "name": "search_entity",
                     "description": """\
@@ -219,6 +223,10 @@ search_entity(kg="wikidata", query="albert einstein")""",
                     },
                     "strict": True,
                 },
+            )
+
+        if has_property_index:
+            fns.append(
                 {
                     "name": "search_property",
                     "description": """\
@@ -236,8 +244,7 @@ search_property(kg="wikidata", query="birth")""",
                     },
                     "strict": True,
                 },
-            ]
-        )
+            )
 
     if fn_set in ["search_extended", "all"]:
         search_prop_of_ent_props = {
@@ -285,8 +292,8 @@ search_property(kg="wikidata", query="birth")""",
             search_obj_of_prop_props["query_type"] = dict(query_type_prop)
             search_obj_of_prop_required.append("query_type")
 
-        fns.extend(
-            [
+        if has_property_index:
+            fns.append(
                 {
                     "name": "search_property_of_entity",
                     "description": """\
@@ -305,6 +312,10 @@ search_property_of_entity(kg="wikidata", entity="wd:Q937", query="birth")""",
                     },
                     "strict": True,
                 },
+            )
+
+        if has_entity_index:
+            fns.append(
                 {
                     "name": "search_object_of_property",
                     "description": """\
@@ -322,10 +333,9 @@ search_object_of_property(kg="wikidata", property="wdt:P106", query="football")"
                     },
                     "strict": True,
                 },
-            ]
-        )
+            )
 
-    if fn_set in ["search_filter", "all"]:
+    if fn_set in ["search_filter", "all"] and all_index_names:
         search_filter_props = {
             "kg": {
                 "type": "string",
@@ -383,7 +393,7 @@ search_with_filter(kg="wikidata", index="property", sparql="SELECT DISTINCT ?p W
             }
         )
 
-    if fn_set in ["search_constraints", "all"]:
+    if fn_set in ["search_constraints", "all"] and all_index_names:
         search_constraints_props = {
             "kg": {
                 "type": "string",
@@ -866,7 +876,9 @@ def execute_sparql(
     return ExecutionResult(sparql, formatted, result)
 
 
-def verify_iri_or_literal(input: str, position: str, manager: KgManager) -> str | None:
+def verify_iri_or_literal(
+    input: str, position: Position, manager: KgManager
+) -> str | None:
     # parse and resolve percent encoding in IRIs
     binding = parse_into_binding(input, manager.iri_literal_parser, manager.prefixes)
 
@@ -878,7 +890,7 @@ def verify_iri_or_literal(input: str, position: str, manager: KgManager) -> str 
             manager.prefixes,
         )
 
-    if binding is None and position == "object":
+    if binding is None and position == Position.OBJECT:
         # fallback for string literals because they are typically given without quotes
         # but the parser expects them to be quoted
         binding = parse_into_binding(
@@ -893,6 +905,17 @@ def verify_iri_or_literal(input: str, position: str, manager: KgManager) -> str 
         return binding.identifier()
     else:
         return wrap_iri(binding.identifier())
+
+
+def format_verification_error(value: str, position: Position) -> str:
+    expected = "IRI" if position != Position.OBJECT else "IRI or literal"
+    return f'Value "{value}" for {position} is not a valid {expected}. \
+IRIs can be given in prefixed form, like wd:Q937, or in full form, \
+like <http://www.wikidata.org/entity/Q937> or \
+http://www.wikidata.org/entity/Q937. Be aware that not all IRIs can be \
+used in prefixed form due to unsupported characters. If the value \
+comes from a previous function call result, make sure to specify it exactly \
+as given, with proper escaping and quoting.'
 
 
 def list_triples(
@@ -915,23 +938,16 @@ def list_triples(
 
     triple = []
     bindings = []
-    for pos, const in [("subject", subject), ("property", property), ("object", obj)]:
+    for pos, const in zip(Position, [subject, property, obj]):
         if const is None:
-            triple.append(f"?{pos[0]}")
+            triple.append(f"?{pos.value[0]}")
             continue
 
         ver_const = verify_iri_or_literal(const, pos, manager)
         if ver_const is None:
-            expected = "IRI" if pos != "object" else "IRI or literal"
-            raise FunctionCallException(
-                f'Constraint "{const}" for {pos} position \
-is not a valid {expected}. IRIs can be given in prefixed form, like wd:Q937, \
-or in full form, like <http://www.wikidata.org/entity/Q937> or \
-http://www.wikidata.org/entity/Q937. Make sure that special unicode \
-characters are properly escaped and literals are properly quoted.'
-            )
+            raise FunctionCallException(format_verification_error(const, pos))
 
-        bindings.append(f"BIND({ver_const} AS ?{pos[0]})")
+        bindings.append(f"BIND({ver_const} AS ?{pos.value[0]})")
         triple.append(ver_const)
 
     triple = " ".join(triple)
@@ -1044,17 +1060,15 @@ SELECT ?s ?p ?o WHERE {{
     update_known_from_rows(known, result.rows(), manager.entity_normalizer)
     update_known_from_rows(known, result.rows(), manager.property_normalizer)
 
-    # override column names
-    column_names = ["subject", "property", "object"]
-
     return manager.format_sparql_result(
         result,
         show_top_rows=k,
         show_bottom_rows=0,
         show_left_columns=3,
         show_right_columns=0,
-        column_names=column_names,
-        clip_values=not unclipped,
+        # override column names
+        column_names=["subject", "property", "object"],
+        clip_literals=not unclipped,
     )
 
 
@@ -1095,26 +1109,19 @@ object should be constrained at once."
     info = ""
     if num_constraints > 0:
         pos_values = {}
-        for pos in ["subject", "property", "object"]:
-            const = constraints.get(pos)
+        for pos in Position:
+            const = constraints.get(pos.value)
             if const is None:
-                pos_values[pos] = f"?{pos[0]}"
+                pos_values[pos] = f"?{pos.value[0]}"
                 continue
 
-            elif pos == position:
+            elif pos.value == position:
                 pos_values[pos] = "?search"
                 continue
 
             ver_const = verify_iri_or_literal(const, pos, manager)
             if ver_const is None:
-                expected = "IRI" if pos != "object" else "IRI or literal"
-                raise FunctionCallException(
-                    f'Constraint "{const}" for {pos} position \
-is not a valid {expected}. IRIs can be given in prefixed form, like wd:Q937, \
-or in full form, like <http://www.wikidata.org/entity/Q937> or \
-http://www.wikidata.org/entity/Q937. Make sure that special unicode \
-characters are properly escaped and literals are properly quoted.'
-                )
+                raise FunctionCallException(format_verification_error(const, pos))
 
             pos_values[pos] = ver_const
 

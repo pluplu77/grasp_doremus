@@ -18,14 +18,15 @@ from grasp.manager.utils import (
     Index,
     SearchIndex,
     format_index_meta,
+    get_common_sparql_prefixes,
     get_embedding_model_key,
     load_embedding_model,
     load_image_from_url,
     load_kg_indices,
+    load_kg_info,
     load_kg_info_caches,
     load_kg_info_sparqls,
     load_kg_normalizers,
-    load_kg_info,
     load_other_indices,
 )
 from grasp.sparql.types import (
@@ -58,7 +59,7 @@ from grasp.sparql.utils import (
     query_type,
     wrap_iri,
 )
-from grasp.utils import clip, format_list, ordered_unique
+from grasp.utils import clip, format_list, format_prefixes, ordered_unique
 
 
 class KgManager:
@@ -94,7 +95,9 @@ class KgManager:
         self.sparql_parser = load_sparql_parser()
         self.iri_literal_parser = load_iri_and_literal_parser()
 
-        self.prefixes = prefixes or {}
+        self.prefixes = get_common_sparql_prefixes()
+        self.kg_prefixes = prefixes or {}
+        self.prefixes.update(self.kg_prefixes)
 
         self.entity_info_sparql = entity_info_sparql or load_entity_info_sparql()
         self.property_info_sparql = property_info_sparql or load_property_info_sparql()
@@ -170,7 +173,7 @@ class KgManager:
         show_left_columns: int = 5,
         show_right_columns: int = 5,
         column_names: list[str] | None = None,
-        clip_values: bool = True,
+        clip_literals: bool = True,
     ) -> str:
         # run sparql against endpoint, format result as string
         if isinstance(result, AskResult):
@@ -212,7 +215,7 @@ class KgManager:
                     formatted_row.append(val.identifier())
 
                 elif val.typ == "literal":
-                    formatted = clip(val.value) if clip_values else val.value
+                    formatted = clip(val.value) if clip_literals else val.value
                     if val.lang is not None:
                         formatted += f" (lang:{val.lang})"
                     elif val.datatype is not None:
@@ -877,33 +880,32 @@ def format_kg_notes(kg_notes: dict[str, list[str]]) -> str:
 
 
 def format_kg(manager: KgManager) -> str:
-    if manager.description and "\n" in manager.description:
-        msg = f'"{manager.kg}" at {manager.endpoint}'
-        desc_lines = manager.description.strip().split("\n")
-        msg += "\n" + "\n".join(f"  {line}" for line in desc_lines)
-    elif manager.description:
-        msg = f'"{manager.kg}" at {manager.endpoint}: {manager.description}'
-    else:
-        msg = f'"{manager.kg}" at {manager.endpoint}'
+    msg = f'"{manager.kg}" at {manager.endpoint}'
+    if manager.description:
+        msg += f": {manager.description}"
 
-    parts = []
+    indices = []
     if manager.entity_index is not None:
-        parts.append(
+        indices.append(
             f'"entity" index ({format_index_meta(manager.entity_index)}): '
             "Entities indexed by their labels and synonyms"
         )
+
     if manager.property_index is not None:
-        parts.append(
+        indices.append(
             f'"property" index ({format_index_meta(manager.property_index)}): '
             "Properties indexed by their labels, synonyms, and identifiers"
         )
 
     for name, idx in manager.indices.items():
-        parts.append(
+        indices.append(
             f'"{name}" index ({format_index_meta(idx.index)}): {idx.description}'
         )
 
-    if parts:
-        msg += "\n" + format_list(parts, indent=2)
+    if indices:
+        msg += "\n  Search indices:\n" + format_list(indices, indent=4)
+
+    if manager.kg_prefixes:
+        msg += f"\n  SPARQL prefixes:\n{format_prefixes(manager.kg_prefixes, indent=4)}"
 
     return msg

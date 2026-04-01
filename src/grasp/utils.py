@@ -36,11 +36,14 @@ class FunctionCallException(Exception):
     pass
 
 
-def format_prefixes(prefixes: dict[str, str]) -> str:
+def format_prefixes(prefixes: dict[str, str], indent: int = 0) -> str:
     if not prefixes:
         return "No prefixes available"
 
-    return format_list(f"{short}: {long}" for short, long in sorted(prefixes.items()))
+    return format_list(
+        (f"{short}: {long}" for short, long in sorted(prefixes.items())),
+        indent=indent,
+    )
 
 
 def format_notes(notes: list[str], indent: int = 0, enumerated: bool = False) -> str:
