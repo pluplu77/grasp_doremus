@@ -235,6 +235,7 @@ def load_kg_info(
     kg: str,
     endpoint: str | None = None,
 ) -> tuple[dict[str, str], str | None]:
+    logger = get_logger(f"{kg.upper()} INFO LOADING")
     kg_index_dir = get_index_dir(kg)
     info_file = os.path.join(kg_index_dir, "info.json")
     prefix_file = os.path.join(kg_index_dir, "prefixes.json")
@@ -273,15 +274,30 @@ def load_kg_info(
     # strip prefixes already covered by the common prefixes
     for short, long in common_prefixes.items():
         if short in prefixes:
+            # name clash, prefer common prefix
+            if long != prefixes[short]:
+                # warn only if prefixes differ, otherwise it's just redundant information
+                logger.warning(
+                    f'Prefix "{short}" is defined both in common prefixes ({long}) '
+                    f"and KG-specific prefixes ({prefixes[short]}), but different. "
+                    "The common prefix will be kept and the KG-specific prefix will be ignored. "
+                    "Note that this may lead to unexpected behavior if the KG-specific prefix is "
+                    "actually used in the KG. Please rename or remove the KG-specific prefix."
+                )
             prefixes.pop(short)
-        elif long in reverse_prefixes:
+        elif long in reverse_prefixes and reverse_prefixes[long] in prefixes:
+            # already covered by common prefix, remove it
+            logger.warning(
+                f'{long} is already covered by common prefix "{short}". '
+                f'The KG-specific prefix "{reverse_prefixes[long]}" will be ignored.'
+            )
             prefixes.pop(reverse_prefixes[long])
 
     return prefixes, description
 
 
 def load_kg_index_sparqls(kg: str) -> tuple[str, str]:
-    logger = get_logger("KG INDEX SPARQL LOADING")
+    logger = get_logger(f"{kg.upper()} INDEX SPARQL LOADING")
     kg_index_dir = get_index_dir(kg)
     ent_index = load_index_sparql(os.path.join(kg_index_dir, "entities"), logger)
     prop_index = load_index_sparql(os.path.join(kg_index_dir, "properties"), logger)
@@ -292,7 +308,7 @@ def load_kg_index_sparqls(kg: str) -> tuple[str, str]:
 
 
 def load_kg_info_sparqls(kg: str) -> tuple[str | None, str | None]:
-    logger = get_logger("KG INFO SPARQL LOADING")
+    logger = get_logger(f"{kg.upper()} INFO SPARQL LOADING")
     kg_index_dir = get_index_dir(kg)
     ent_info = load_info_sparql(os.path.join(kg_index_dir, "entities"), logger)
     prop_info = load_info_sparql(os.path.join(kg_index_dir, "properties"), logger)
@@ -300,7 +316,7 @@ def load_kg_info_sparqls(kg: str) -> tuple[str | None, str | None]:
 
 
 def load_kg_info_caches(kg: str) -> tuple[Cache | None, Cache | None]:
-    logger = get_logger("KG INFO CACHE LOADING")
+    logger = get_logger(f"{kg.upper()} INFO CACHE LOADING")
     kg_index_dir = get_index_dir(kg)
     ent_cache = load_info_cache(os.path.join(kg_index_dir, "entities"), logger)
     prop_cache = load_info_cache(os.path.join(kg_index_dir, "properties"), logger)
@@ -327,6 +343,7 @@ def get_common_sparql_prefixes() -> dict[str, str]:
         "skos": "http://www.w3.org/2004/02/skos/core#",
         "dct": "http://purl.org/dc/terms/",
         "dc": "http://purl.org/dc/elements/1.1/",
+        "qb": "http://purl.org/linked-data/cube#",
         "prov": "http://www.w3.org/ns/prov#",
         "schema": "http://schema.org/",
         "geo": "http://www.opengis.net/ont/geosparql#",
@@ -336,7 +353,6 @@ def get_common_sparql_prefixes() -> dict[str, str]:
         "bd": "http://www.bigdata.com/rdf#",
         "hint": "http://www.bigdata.com/queryHints#",
         "wikibase": "http://wikiba.se/ontology#",
-        "qb": "http://purl.org/linked-data/cube#",
         "void": "http://rdfs.org/ns/void#",
     }
 
