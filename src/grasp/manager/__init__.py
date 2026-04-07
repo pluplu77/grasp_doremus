@@ -50,7 +50,6 @@ from grasp.sparql.utils import (
     fix_prefixes,
     format_iri,
     get_endpoint,
-    has_iri,
     load_entity_info_sparql,
     load_iri_and_literal_parser,
     load_property_info_sparql,
@@ -619,9 +618,6 @@ class KgManager:
         typ = query_type(sparql, self.sparql_parser)
         if typ != "select":
             raise SPARQLException("SPARQL query is not a SELECT query")
-
-        if not has_iri(sparql, self.sparql_parser):
-            raise SPARQLException("SPARQL query contains no IRIs to constrain with")
 
         self.logger.debug(
             f"Getting candidate IDs for index '{index_name}' with {sparql}"

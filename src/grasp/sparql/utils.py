@@ -71,7 +71,7 @@ def format_literal(s: str) -> str:
         s = s.strip('"')
     elif s.startswith("'") and s.endswith("'"):
         s = s.strip("'")
-    return s.encode().decode("unicode_escape")
+    return s
 
 
 def parse_into_binding(
@@ -287,24 +287,6 @@ def normalize(sparql: str, parser: LR1Parser, is_prefix: bool = False) -> str:
         rest = rest[:-1]
 
     return parse_to_string(parse) + rest
-
-
-def has_iri(sparql: str, parser: LR1Parser) -> bool:
-    parse, _ = parse_string(
-        sparql,
-        parser,
-        skip_empty=True,
-        collapse_single=True,
-    )
-
-    return (
-        find(
-            parse,
-            {"IRIREF", "PNAME_NS", "PNAME_LN"},
-            skip={"BaseDecl", "PrefixDecl"},
-        )
-        is not None
-    )
 
 
 def autocomplete_prefix(
@@ -904,6 +886,7 @@ def format_iri(
 
     short, long = longest
     val = iri[len(long) :]
+
     short_iri = short + ":" + val
 
     try:

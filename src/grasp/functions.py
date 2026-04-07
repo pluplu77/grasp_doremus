@@ -877,7 +877,9 @@ def execute_sparql(
 
 
 def verify_iri_or_literal(
-    input: str, position: Position, manager: KgManager
+    input: str,
+    position: Position,
+    manager: KgManager,
 ) -> str | None:
     # parse and resolve percent encoding in IRIs
     binding = parse_into_binding(input, manager.iri_literal_parser, manager.prefixes)
