@@ -30,10 +30,10 @@ def functions() -> list[dict]:
                     },
                     "questions": {
                         "type": "array",
-                        "description": "A list of natural language questions corresponding to the SPARQL query",
+                        "description": "A list of natural language questions for the SPARQL query",
                         "items": {
                             "type": "string",
-                            "description": "A natural language question corresponding to the SPARQL query",
+                            "description": "A natural language question for the SPARQL query",
                         },
                     },
                 },

@@ -8,6 +8,7 @@ from grasp.tasks.cea import CeaTask
 from grasp.tasks.exploration import ExplorationTask
 from grasp.tasks.general_qa import GeneralQaTask
 from grasp.tasks.sparql_qa import SparqlQaTask
+from grasp.tasks.sparql_to_question import SparqlToQuestionTask
 from grasp.tasks.wikidata_query_logs import WdqlTask
 
 
@@ -18,6 +19,7 @@ class Task(StrEnum):
     GENERAL_QA = "general-qa"
     CEA = "cea"
     WDQL = "wikidata-query-logs"
+    S2Q = "sparql-to-question"
 
 
 _REGISTRY: dict[str, type[GraspTask]] = {
@@ -27,6 +29,7 @@ _REGISTRY: dict[str, type[GraspTask]] = {
         GeneralQaTask,
         CeaTask,
         WdqlTask,
+        SparqlToQuestionTask,
         ExplorationTask,
         AutoSetupTask,
     ]
@@ -45,8 +48,8 @@ def rules() -> list[str]:
         "Do not ask the user for clarification, neither on the initial input nor on \
 follow-up inputs or feedback. When the task input is incomplete or \
 ambiguous, proceed based on reasonable assumptions.",
-        "Use identifiers and literals returned in function call results as is in subsequent \
-function calls. Escaping or encoding special characters might lead to errors and unexpected or empty results.",
+        "Use IRIs returned in function call results as is in subsequent function calls. \
+Escaping or encoding special characters might lead to errors and unexpected or empty results.",
         'Do not use "SERVICE wikibase:label { bd:serviceParam wikibase:language ..." \
 in SPARQL queries. It is not SPARQL standard and unsupported by most SPARQL endpoints. \
 Use rdfs:label or similar properties to get labels instead.',
