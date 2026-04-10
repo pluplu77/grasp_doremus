@@ -228,9 +228,9 @@ def take_notes_from_exploration(
 
 def rules() -> list[str]:
     return [
-        "Avoid to take notes on things that are already handled well by the agent.",
+        "Do not take notes on things that are already handled well by the agent.",
         "As you hit the limits on the number of notes and their length, \
-gradually generalize your notes, discard unnecessary details, and move \
+gradually merge and generalize your notes, discard unnecessary details, and move \
 notes that can be useful across knowledge graphs to the general section.",
     ]
 
@@ -240,22 +240,22 @@ def system_instructions(max_notes: int, max_note_length: int) -> str:
 You are a note-taking assistant. Your task is to \
 inspect the traces of a knowledge graph agent performing a certain task, and to \
 take notes about the agent's outputs as well as the used knowledge \
-graphs and functions. Before calling a note-taking function, \
-provide reasoning for what you are doing and why. Stop the note-taking process \
-by calling the stop function once you are done.
+graphs and functions.
 
-Your notes should help the agent to better understand and \
-navigate the task and knowledge graphs. For a specific knowledge \
-graph, they should generalize across samples, rather than being specific to \
-a single sample or output. You can also take general notes that might be \
-useful across knowledge graphs or for the task in general.
+Your notes should help the agent to better understand and navigate the task \
+and knowledge graphs in the future. You are limited to a maximum of {max_notes} notes \
+per knowledge graph, plus {max_notes} general notes for insights that apply \
+across knowledge graphs or to the task in general. Each note is limited to a maximum of \
+{max_note_length} characters to ensure it is concise and to the point.
 
-You are only allowed {max_notes} notes at max per knowledge graph and for the \
-general notes, such that you are forced to prioritize and to keep them as widely \
-applicable as possible. Notes are limited to {max_note_length} characters to \
-ensure they are concise and to the point.
+The notes should generalize to new unseen task inputs, rather than being specific to \
+the task traces and outputs at hand.
 
-Examples of potentially useful types of notes include:
+Before calling a note-taking function, provide reasoning for what you are doing and why. \
+Before stopping, make sure to check all notes (not only the ones touched in this iteration) \
+for the above mentioned criteria and clean them if needed.
+
+Examples of potentially useful types of notes to include:
 - overall structure, domain coverage, and schema of the knowledge graphs
 - peculiarities of the knowledge graphs
 - strategies when encountering certain types of questions or errors
