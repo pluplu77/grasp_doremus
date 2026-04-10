@@ -196,9 +196,7 @@ list(kg="wikidata", property="wdt:P19")""",
                 {
                     "name": "search_entity",
                     "description": """\
-Search for entities in the knowledge graph with a search query. \
-This function uses the index type for entities of the \
-given knowledge graph internally.
+Search for entities in the knowledge graph with a search query.
 
 For example, to search for the entity Albert Einstein in Wikidata, \
 do the following:
@@ -218,9 +216,7 @@ search_entity(kg="wikidata", query="albert einstein")""",
                 {
                     "name": "search_property",
                     "description": """\
-Search for properties in the knowledge graph with a search query. \
-This function uses the index type for properties of the \
-given knowledge graph internally.
+Search for properties in the knowledge graph with a search query.
 
 For example, to search for properties related to birth in Wikidata, do the following:
 search_property(kg="wikidata", query="birth")""",
@@ -274,9 +270,7 @@ search_property(kg="wikidata", query="birth")""",
                 {
                     "name": "search_property_of_entity",
                     "description": """\
-Search for properties of a given entity in the knowledge graph. \
-This function uses the index type for properties of the \
-given knowledge graph internally.
+Search for properties of a given entity in the knowledge graph.
 
 For example, to search for properties related to birth for Albert Einstein \
 in Wikidata, do the following:
@@ -296,9 +290,7 @@ search_property_of_entity(kg="wikidata", entity="wd:Q937", query="birth")""",
                 {
                     "name": "search_object_of_property",
                     "description": """\
-Search for objects (entities or literals) for a given property in the knowledge graph. \
-This function uses the index type for entities of the \
-given knowledge graph and a temporary prefix index for literals internally.
+Search for entities at the object position for a given property in the knowledge graph.
 
 For example, to search for football jobs in Wikidata, do the following:
 search_object_of_property(kg="wikidata", property="wdt:P106", query="football")""",
@@ -352,11 +344,11 @@ search_object_of_property(kg="wikidata", property="wdt:P106", query="football")"
             {
                 "name": "search_with_filter",
                 "description": """\
-Search for knowledge graph items in a context-sensitive way by specifying filter \
+Search for knowledge graph items in a context-sensitive way by specifying a filter \
 SPARQL query together with a search query. The SPARQL query must be a SELECT query \
 returning a single column of IRIs. The search is then restricted to knowledge graph items \
-matching those IRIs in the specified index. The index parameter specifies which index to \
-search in. The SPARQL query can be null, in which case a search over the full index is performed.
+matching those IRIs in the specified index. The SPARQL query can be null, in which case \
+a search over the full index is performed.
 
 For example, to search for Albert Einstein at the subject position in \
 Wikidata, do the following:
@@ -435,8 +427,7 @@ search_with_filter(kg="wikidata", index="properties", sparql="SELECT DISTINCT ?p
                 "description": """\
 Search for knowledge graph items at a particular position (subject, property, or object) \
 with optional constraints. If constraints are provided, they are used to limit the search \
-space accordingly. The index parameter specifies which index to search in ("entities", \
-"properties", or any other index name).
+space accordingly.
 
 For example, to search for the subject Albert Einstein in Wikidata, do the following:
 search_with_constraints(kg="wikidata", index="entities", position="subject", query="albert einstein")
