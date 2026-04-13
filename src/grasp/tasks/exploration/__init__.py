@@ -125,6 +125,7 @@ class ExplorationTask(GraspTask):
                 self.config.sparql_request_timeout,
                 self.config.sparql_read_timeout,
             )
+
         return call_note_function(
             self.state.kg_notes,
             self.state.notes,

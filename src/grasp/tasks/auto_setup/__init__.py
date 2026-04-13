@@ -251,19 +251,15 @@ current prefixes along the way.
             return self.update_prefix(manager, fn_args["short"], fn_args["namespace"])
 
         elif fn_name == "set_description":
-            return self.set_description(manager, fn_args["description"])
+            return self.set_description(fn_args["description"])
 
         elif fn_name == "stop":
             return "Stopping."
 
         raise FunctionCallException(f"Unknown function {fn_name}")
 
-    def set_description(self, manager: KgManager, description: str) -> str:
+    def set_description(self, description: str) -> str:
         self.state.description = description
-        if self.input["phase"] == "index":
-            manager.get(self.input["name"]).description = description
-        else:
-            manager.description = description
         return "Description updated."
 
     def set_query(self, manager: KgManager, type: str, sparql: str) -> str:
@@ -277,15 +273,17 @@ current prefixes along the way.
                 f"Invalid {name} {type} SPARQL:\n{str(e)}"
             ) from e
 
+        index = manager.try_get(name)
         if type == "info":
             self.state.info_sparql = sparql
-            # write directly to manager so it's usable in subsequent calls
-            manager.get(name).info_sparql = sparql
+            # write directly to manager if available
+            if index is not None:
+                index.info_sparql = sparql
         else:
             self.state.index_sparql = sparql
 
         msg = f"{name.capitalize()} {type} SPARQL updated"
-        if type == "info":
+        if type == "info" and index is not None:
             msg += " and used in subsequent function calls"
         return msg
 
@@ -368,10 +366,8 @@ Additional notes:
 {self.input.get("notes")}"""
 
     def output(self, messages: list[Message]) -> dict:
-        assert self.state is not None
-        manager = self.managers[0]
-
         if self.input["phase"] == "index":
+            assert isinstance(self.state, IndexState)
             return {
                 "type": "output",
                 "phase": "index",
@@ -381,9 +377,10 @@ Additional notes:
                 "description": self.state.description,
             }
         else:
+            assert isinstance(self.state, InfoState)
             return {
                 "type": "output",
                 "phase": "info",
-                "description": manager.description,
-                "prefixes": manager.kg_prefixes,
+                "description": self.state.description,
+                "prefixes": self.state.prefixes,
             }

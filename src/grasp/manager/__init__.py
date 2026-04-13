@@ -318,17 +318,21 @@ class KgManager:
             raise ValueError(f"Index '{name}' not found")
         return self.indices[name]
 
-    def try_get(self, name: str) -> Index | None:
-        return self.indices.get(name)
-
-    def get_normalizer(self, name: str) -> Normalizer:
-        return self.get(name).normalizer or Normalizer()
-
-    def get_index(self, name: str) -> SearchIndex | None:
+    def get_index(self, name: str) -> SearchIndex:
         return self.get(name).index
 
     def get_data(self, name: str) -> Data:
         return self.get(name).data
+
+    def try_get(self, name: str) -> Index | None:
+        return self.indices.get(name)
+
+    def get_normalizer(self, name: str) -> Normalizer:
+        index = self.try_get(name)
+        if index is None or index.normalizer is None:
+            return Normalizer()
+        else:
+            return index.normalizer
 
     def try_get_data(self, name: str) -> Data | None:
         index = self.try_get(name)
@@ -337,7 +341,10 @@ class KgManager:
         return index.data
 
     def get_info_sparql(self, name: str) -> str | None:
-        return self.get(name).info_sparql
+        index = self.try_get(name)
+        if index is None:
+            return None
+        return index.info_sparql
 
     @property
     def index_names(self) -> list[str]:
@@ -363,7 +370,10 @@ class KgManager:
         identifier: str,
         index_name: str,
     ) -> bool:
-        return self.get_data(index_name).id_from_identifier(identifier) is not None
+        data = self.try_get_data(index_name)
+        if data is None:
+            return False
+        return data.id_from_identifier(identifier) is not None
 
     def get_label(
         self,
