@@ -2,7 +2,8 @@ import os
 
 from pydantic import BaseModel
 
-from grasp.manager import KgManager
+from grasp.functions import check_known
+from grasp.manager import DEFAULT_DESCRIPTIONS, KgManager
 from grasp.manager.utils import (
     get_common_sparql_prefixes,
     load_index_description,
@@ -19,11 +20,10 @@ from grasp.sparql.utils import (
     load_property_info_sparql,
 )
 from grasp.tasks.auto_setup.functions import (
-    INDEX_SPARQL_VARS,
-    INFO_SPARQL_VARS,
     index_functions,
     info_functions,
-    validate_sparql,
+    validate_index_sparql,
+    validate_info_sparql,
 )
 from grasp.tasks.base import GraspTask
 from grasp.tasks.functions import find_frequent, find_frequent_function_definition
@@ -109,12 +109,12 @@ class AutoSetupTask(GraspTask):
 
         return f"""\
 You are a knowledge graph setup assistant. Your task is to explore \
-a SPARQL endpoint and come up with index and info SPARQL queries \
-for {name}. If there already exist such queries for {name}, you \
-should focus on improving them.
+the {manager.kg} knowledge graph and come up with or improve the setup \
+- an index SPARQL query, an info SPARQL query, and a description - \
+of the {name} index.
 
-The index SPARQL query is used to build a search index for {name} \
-in the knowledge graph. It must be a SELECT query returning three variables:
+The index SPARQL query is used to build a search index over {name}. \
+It must be a SELECT query returning:
 - ?id: the IRI
 - ?value: a string literal (typically label or alias) or the IRI itself \
 (if should be searchable)
@@ -125,8 +125,8 @@ computed is the total number of occurrences of an IRI in all triples, but some \
 knowledge graphs might provide other measures of relevance that you can use \
 instead (e.g., Wikidata's "sitelinks").
 
-The info SPARQL query retrieves additional context for {name} found \
-during search, to support disambiguation. It must be a SELECT query returning:
+The info SPARQL query retrieves additional context for {name} retrieved \
+via search. It must be a SELECT query returning:
 - ?id: the IRI
 - ?value: a string literal (label, alias, description, type, etc.)
 - ?type: one of "label", "alias", or "other"
@@ -134,50 +134,60 @@ It must contain the placeholder {{IDS}} which will be replaced with a list \
 of IRIs at query time. The infos retrieved per IRI should be limited to the \
 most important ones (10 or fewer) to keep the query efficient and the search \
 results concise. The goal is to help to characterize and distinguish different \
-IRIs, and not to list all associated information.
+IRIs, and not to list all their associated information.
+
+The description should be a concise summary of what the {name} index is \
+about and what data it contains.
 
 You should follow a step-by-step approach:
-1. Look at and understand the current index and info SPARQLs (if any). It \
-might also help to look at the reference SPARQLs below.
-2. Throgouly explore the knowledge graph using the provided functions to understand \
-its structure and what {name} are available.
-3. Iteratively develop and test the index and info SPARQLs. Make sure to always validate \
-and execute them against the knowledge graph. If you encounter errors or unexpected results, \
-go back to step 2 to gather more information.
-4. Perform a final review of the SPARQL queries, and call stop.
+1. Look at and understand the current setup. It might also help to look at the \
+default reference setup below.
+2. Thorougly explore the knowledge graph using the provided functions to understand \
+its structure. If the current setup is non-empty, validate it and \
+try to find potential issues or improvements.
+3. Update the setup based on your findings. Make sure to verify \
+and execute SPARQL queries against the knowledge graph before setting them.
+4. Perform a final review of the setup. If you see any issues, \
+go back to step 2 and repeat, otherwise stop.
 
-Below are generic reference SPARQL queries you can use as a starting point. \
-They are used as defaults if no specific queries have been set yet, \
-but may not be optimal for this knowledge graph.
+Below is a reference setup you can use as a starting point if \
+no {name} index setup is available yet. It is generic and thus \
+may not be optimal for the knowledge graph at hand.
 
-Reference index SPARQL:
+Reference {name} index SPARQL:
 {format_query(manager, index_sparql)}
 
-Reference info SPARQL:
-{format_query(manager, info_sparql)}"""
+Reference {name} info SPARQL:
+{format_query(manager, info_sparql)}
+
+Reference {name} index description:
+{DEFAULT_DESCRIPTIONS[name]}"""
 
     def _info_system_information(self) -> str:
-        return """\
-You are a knowledge graph setup assistant. Your task is to explore \
-a SPARQL endpoint and configure SPARQL prefixes and a description for the \
-underlying knowledge graph. If there already exist prefixes and a description, \
-you should focus on improving them.
+        manager = self.managers[0]
 
-Prefixes map short names to IRI namespaces (e.g. "wd" is short for \
+        return f"""\
+You are a knowledge graph setup assistant. Your task is to explore \
+the {manager.kg} knowledge graph and come up with or improve its general \
+setup, which consists of a set of prefixes and a description.
+
+The prefixes map short names to IRI namespaces (e.g., "wd" is short for \
 "http://www.wikidata.org/entity/"). Only knowledge graph specific \
 prefixes are needed as common ones like rdf, rdfs, owl, xsd are \
 already available by default.
 
 The description should be a concise summary of what the knowledge graph \
-contains (typically one or two sentences about its domain and scope).
+is about.
 
 You should follow a step-by-step approach:
-1. Look at and understand the current prefixes and description (if any).
-2. Explore the knowledge graph using the provided functions to discover its \
-structure and frequently used IRI namespaces. Add, update, and delete \
-current prefixes along the way.
-3. Update the description if necessary.
-4. Perform a final review of the prefixes and description, and call stop."""
+1. Look at and understand the current setup.
+2. Thorougly explore the knowledge graph using the provided functions to \
+discover its scope, structure, and frequently used IRI namespaces. If \
+the current setup is non-empty, validate it and try to find potential issues \
+or improvements.
+3. Update the current setup based on your findings.
+4. Perform a final review of the setup. If you see any issues, go back to step 2 \
+and repeat, otherwise stop."""
 
     def rules(self) -> list[str]:
         if self.input["phase"] == "index":
@@ -187,11 +197,13 @@ current prefixes along the way.
 
     def _index_rules(self) -> list[str]:
         return [
-            "If the user provides additional notes about the setup, make sure to follow them.",
+            "If the user provides additional notes about the desired setup, make sure to follow them.",
             "If you want to make an IRI searchable even if it does not have any associated literals, "
             "bind the IRI itself as value in the index SPARQL via BIND(?id AS ?value).",
             "When developing the SPARQL queries, try to make them as efficient as possible. For example, "
             "put VALUES { {IDS} } clauses in the info SPARQL inside each UNION.",
+            "If there already exsists a setup, you can verify the index and info SPARQLs "
+            "also by using the search-related functions and checking their results.",
         ]
 
     def _info_rules(self) -> list[str]:
@@ -239,7 +251,7 @@ current prefixes along the way.
             return self.show_setup()
 
         elif fn_name == "set_query":
-            return self.set_query(manager, **fn_args)
+            return self.set_query(manager, **fn_args, known=known)
 
         elif fn_name == "add_prefix":
             return self.add_prefix(manager, fn_args["short"], fn_args["namespace"])
@@ -262,12 +274,25 @@ current prefixes along the way.
         self.state.description = description
         return "Description updated."
 
-    def set_query(self, manager: KgManager, type: str, sparql: str) -> str:
-        required = INFO_SPARQL_VARS if type == "info" else INDEX_SPARQL_VARS
+    def set_query(
+        self,
+        manager: KgManager,
+        type: str,
+        sparql: str,
+        known: set[str],
+    ) -> str:
         name = self.input["name"]
 
+        if self.config.know_before_use:
+            check_known(manager, sparql, known)
+
+        validation_fn = (
+            validate_index_sparql if type == "index" else validate_info_sparql
+        )
+
         try:
-            validate_sparql(manager, sparql, required)
+            validation_fn(manager, sparql)
+            sparql = manager.fix_prefixes(sparql)
         except ValueError as e:
             raise FunctionCallException(
                 f"Invalid {name} {type} SPARQL:\n{str(e)}"
@@ -299,9 +324,8 @@ current prefixes along the way.
         manager.prefixes = merged
 
     def show_setup(self) -> str:
-        manager = self.managers[0]
         if self.input["phase"] == "index":
-            return format_index_state(self.state, manager)
+            return format_index_state(self.state, self.managers[0])
         else:
             return format_info_state(self.state)
 

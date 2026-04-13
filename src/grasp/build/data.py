@@ -12,7 +12,12 @@ from tqdm import tqdm
 from universal_ml_utils.io import dump_jsonl, dump_text, load_jsonl
 from universal_ml_utils.logging import get_logger
 
-from grasp.manager.utils import get_common_sparql_prefixes, load_kg_info
+from grasp.manager.utils import (
+    get_common_sparql_prefixes,
+    load_index_sparql,
+    load_kg_info,
+    merge_prefixes,
+)
 from grasp.sparql.utils import (
     find_longest_prefix,
     get_endpoint,
@@ -75,8 +80,8 @@ def build_data_and_mapping(
 def get_data(
     kg: str,
     endpoint: str | None = None,
-    entity_query: str | None = None,
-    property_query: str | None = None,
+    entity_sparql: str | None = None,
+    property_sparql: str | None = None,
     query_params: dict[str, str] | None = None,
     add_id_as_label: str | None = None,
     entity_file: str | None = None,
@@ -96,19 +101,23 @@ def get_data(
 
     prefixes = get_common_sparql_prefixes()
     kg_prefixes, _ = load_kg_info(kg)
-    prefixes.update(kg_prefixes)
+    prefixes, _, _ = merge_prefixes(prefixes, kg_prefixes, logger)
 
     logger.info(f"Using prefixes:\n{json.dumps(prefixes, indent=2)}")
 
     kg_dir = get_index_dir(kg)
 
     # entities
-    ent_dir = os.path.join(kg_dir, "entities")
-    os.makedirs(ent_dir, exist_ok=True)
-    ent_sparql = entity_query or load_entity_index_sparql()
+    entity_dir = os.path.join(kg_dir, "entities")
+    os.makedirs(entity_dir, exist_ok=True)
+    if entity_sparql is None:
+        entity_sparql = load_index_sparql(entity_dir, logger)
+    if entity_sparql is None:
+        entity_sparql = load_entity_index_sparql()
+
     download_data(
-        ent_dir,
-        ent_sparql,
+        entity_dir,
+        entity_sparql,
         logger,
         prefixes,
         endpoint,
@@ -117,16 +126,20 @@ def get_data(
         entity_file,
         overwrite,
     )
-    dump_text(ent_sparql, os.path.join(ent_dir, "index.sparql"))
-    build_data_and_mapping(ent_dir, logger, overwrite)
+    dump_text(entity_sparql, os.path.join(entity_dir, "index.sparql"))
+    build_data_and_mapping(entity_dir, logger, overwrite)
 
     # properties
-    prop_dir = os.path.join(kg_dir, "properties")
-    os.makedirs(prop_dir, exist_ok=True)
-    prop_sparql = property_query or load_property_index_sparql()
+    property_dir = os.path.join(kg_dir, "properties")
+    os.makedirs(property_dir, exist_ok=True)
+    if property_sparql is None:
+        property_sparql = load_index_sparql(property_dir, logger)
+    if property_sparql is None:
+        property_sparql = load_property_index_sparql()
+
     download_data(
-        prop_dir,
-        prop_sparql,
+        property_dir,
+        property_sparql,
         logger,
         prefixes,
         endpoint,
@@ -135,8 +148,8 @@ def get_data(
         result_file=property_file,
         overwrite=overwrite,
     )
-    dump_text(prop_sparql, os.path.join(prop_dir, "index.sparql"))
-    build_data_and_mapping(prop_dir, logger, overwrite)
+    dump_text(property_sparql, os.path.join(property_dir, "index.sparql"))
+    build_data_and_mapping(property_dir, logger, overwrite)
 
 
 def stream_json(

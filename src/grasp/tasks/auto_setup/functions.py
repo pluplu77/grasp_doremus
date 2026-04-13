@@ -1,5 +1,5 @@
 from grasp.manager import KgManager
-from grasp.sparql.utils import find, find_all, parse_string
+from grasp.sparql.utils import find, find_all, parse_string, parse_to_string
 
 STOP_FUNCTION = {
     "name": "stop",
@@ -157,10 +157,6 @@ def info_functions() -> list[dict]:
     ]
 
 
-INDEX_SPARQL_VARS = {"id", "value", "tags"}
-INFO_SPARQL_VARS = {"id", "value", "type"}
-
-
 def find_select_vars(parse: dict) -> set[str]:
     clause = find(parse, "SelectClause")
     if clause is None:
@@ -173,12 +169,45 @@ def find_select_vars(parse: dict) -> set[str]:
     return used
 
 
-def validate_sparql(manager: KgManager, sparql: str, required: set[str]):
-    parse, _ = parse_string(sparql, manager.sparql_parser)
+def find_order_by(parse: dict) -> str:
+    order_by = find(parse, "OrderClause")
+    if order_by is None:
+        raise ValueError("No ORDER BY clause found in query")
+    return parse_to_string(order_by)
 
+
+def validate_sparql_vars(parse: dict, required: set[str]):
     used = find_select_vars(parse)
 
     missing = required - used
     if missing:
         missing_str = ", ".join(f"?{v}" for v in sorted(missing))
         raise ValueError(f"Missing required variables {missing_str} in SELECT clause.")
+
+
+def validate_order_by(parse: dict, target: str):
+    order_by = find_order_by(parse)
+    if order_by != target:
+        raise ValueError(f"ORDER BY clause must be '{target}' instead of '{order_by}'")
+
+
+INDEX_SPARQL_VARS = {"id", "value", "tags"}
+INDEX_SPARQL_ORDER_BY = "ORDER BY DESC ( ?score ) ?id DESC ( ?tags )"
+
+
+def validate_index_sparql(manager: KgManager, sparql: str):
+    parse, _ = parse_string(sparql, manager.sparql_parser)
+
+    validate_sparql_vars(parse, INDEX_SPARQL_VARS)
+    validate_order_by(parse, INDEX_SPARQL_ORDER_BY)
+
+
+INFO_SPARQL_VARS = {"id", "value", "type"}
+INFO_SPARQL_ORDER_BY = "ORDER BY ?id ?type ?value"
+
+
+def validate_info_sparql(manager: KgManager, sparql: str):
+    parse, _ = parse_string(sparql, manager.sparql_parser)
+
+    validate_sparql_vars(parse, INFO_SPARQL_VARS)
+    validate_order_by(parse, INFO_SPARQL_ORDER_BY)

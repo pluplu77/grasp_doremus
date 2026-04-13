@@ -787,6 +787,13 @@ def auto_setup_grasp(args: argparse.Namespace) -> None:
     logger = get_logger("GRASP AUTO-SETUP", args.log_level)
     config = GraspConfig(**load_config(args.config))
 
+    if not config.know_before_use:
+        logger.warning(
+            "`know_before_use` is not enabled in the config, but it is required "
+            "for auto-setup. Enabling it and continuing."
+        )
+        config.know_before_use = True
+
     # load KG manager, gracefully handling missing indices
     managers, _ = setup(config)
     if not managers:
@@ -810,6 +817,14 @@ def auto_setup_grasp(args: argparse.Namespace) -> None:
         {"phase": "index", "name": "entities", "notes": args.index_notes},
         {"phase": "index", "name": "properties", "notes": args.index_notes},
     ]
+
+    def backup(file: str) -> None:
+        # copy the file to file.prev to enable the user to restore it if
+        # auto-setup fails
+        if os.path.exists(file):
+            backup_file = file + ".prev"
+            os.replace(file, backup_file)
+            logger.info(f"Backed up existing file {file} to {backup_file}")
 
     for phase_input in phases:
         phase = phase_input["phase"]
@@ -840,6 +855,7 @@ def auto_setup_grasp(args: argparse.Namespace) -> None:
         # save outputs to disk
         if phase == "info":
             path = os.path.join(kg_dir, "info.json")
+            backup(path)
             dump_json(
                 {"description": output["description"], "prefixes": output["prefixes"]},
                 path,
@@ -855,11 +871,13 @@ def auto_setup_grasp(args: argparse.Namespace) -> None:
                 continue
 
             path = os.path.join(kg_dir, name, f"{typ}.sparql")
+            backup(path)
             dump_text(sparql, path)
             logger.info(f"Saved {name} {typ} SPARQL to {path}")
 
         if output.get("description") is not None:
             path = os.path.join(kg_dir, name, "info.json")
+            backup(path)
             dump_json({"description": output["description"]}, path, indent=2)
             logger.info(f"Saved {name} description to {path}")
 

@@ -741,14 +741,14 @@ def update_known_from_alternatives(
     update_known_from_alts(
         known,
         alternatives.get(ObjType.ENTITY, []),
-        manager.get_normalizer("entities"),
+        manager.get_normalizer(ObjType.ENTITY.index_name),
     )
 
     # properties
     update_known_from_alts(
         known,
         alternatives.get(ObjType.PROPERTY, []),
-        manager.get_normalizer("properties"),
+        manager.get_normalizer(ObjType.PROPERTY.index_name),
     )
 
     # other
