@@ -11,6 +11,7 @@ from universal_ml_utils.ops import consume_generator
 from grasp.configs import (
     GraspConfig,
     NotesConfig,
+    NotesFromExplorationConfig,
     NotesFromOutputsConfig,
     NotesFromSamplesConfig,
     NoteTakingConfig,
@@ -24,9 +25,11 @@ from grasp.tasks import get_task
 from grasp.tasks.cea import AnnotationState, CeaSample, prepare_annotation
 from grasp.tasks.exploration import ExplorationState
 from grasp.tasks.exploration.functions import call_function, note_functions
+from grasp.tasks.exploration_v2 import ExplorationState as ExplorationV2State
 from grasp.tasks.sparql_qa.examples import SparqlQaSample
 from grasp.tasks.utils import Sample, format_sparql_result, prepare_sparql_result
 from grasp.utils import (
+    format_kg_notes,
     format_list,
     format_message,
     format_notes,
@@ -200,12 +203,20 @@ def take_notes_from_exploration(
     with open(os.path.join(out_dir, "config.yaml"), "w") as f:
         yaml.dump(config.model_dump(), f)
 
-    state = ExplorationState(notes=notes, kg_notes=kg_notes)
+    assert isinstance(config, NotesFromExplorationConfig)
+    if config.version == "v1":
+        task_name = "exploration"
+        state = ExplorationState(notes=notes, kg_notes=kg_notes)
+    elif config.version == "v2":
+        task_name = "exploration_v2"
+        state = ExplorationV2State(notes=notes, kg_notes=kg_notes)
+    else:
+        raise ValueError(f"Unknown exploration version: {config.version}")
 
     for r in trange(config.num_rounds, desc="Taking notes from exploration"):
         consume_iterator(
             generate(
-                "exploration",
+                task_name,
                 state,
                 config,
                 managers,
@@ -312,16 +323,6 @@ def prepare_ground_truths(
     return ground_truths
 
 
-def format_kg_notes(kg_notes: dict[str, list[str]]) -> str:
-    if not kg_notes:
-        return "None"
-
-    return format_list(
-        f'"{kg}":\n{format_notes(notes, indent=2, enumerated=True)}'
-        for kg, notes in kg_notes.items()
-    )
-
-
 def note_taking_instructions(
     kg_notes: dict[str, list[str]],
     notes: list[str],
@@ -360,7 +361,7 @@ be the same notes provided to the agent) based on the given agent traces \
 below.
 
 Knowledge graph specific notes:
-{format_kg_notes(kg_notes)}
+{format_kg_notes(kg_notes, enumerated=True)}
 
 General notes across knowledge graphs:
 {format_notes(notes, enumerated=True)}

@@ -847,8 +847,8 @@ def execute_sparql(
 
 def verify_iri_or_literal(
     input: str,
-    position: Position,
     manager: KgManager,
+    allow_literal: bool = True,
 ) -> str | None:
     # parse and resolve percent encoding in IRIs
     binding = parse_into_binding(input, manager.iri_literal_parser, manager.prefixes)
@@ -861,7 +861,7 @@ def verify_iri_or_literal(
             manager.prefixes,
         )
 
-    if binding is None and position == Position.OBJECT:
+    if binding is None and allow_literal:
         # fallback for string literals because they are typically given without quotes
         # but the parser expects them to be quoted
         binding = parse_into_binding(
@@ -914,7 +914,11 @@ def list_triples(
             triple.append(f"?{pos.value[0]}")
             continue
 
-        ver_const = verify_iri_or_literal(const, pos, manager)
+        ver_const = verify_iri_or_literal(
+            const,
+            manager,
+            allow_literal=pos == Position.OBJECT,
+        )
         if ver_const is None:
             raise FunctionCallException(format_verification_error(const, pos))
 
@@ -1091,7 +1095,11 @@ object should be constrained at once."
                 pos_values[pos] = "?search"
                 continue
 
-            ver_const = verify_iri_or_literal(const, pos, manager)
+            ver_const = verify_iri_or_literal(
+                const,
+                manager,
+                allow_literal=pos == Position.OBJECT,
+            )
             if ver_const is None:
                 raise FunctionCallException(format_verification_error(const, pos))
 

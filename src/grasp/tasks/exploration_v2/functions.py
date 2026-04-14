@@ -1,5 +1,6 @@
+from grasp.functions import find_manager, verify_iri_or_literal
 from grasp.manager import KgManager
-from grasp.utils import FunctionCallException, format_notes
+from grasp.utils import FunctionCallException, format_enumerate, format_notes
 
 
 def note_functions(managers: list[KgManager]) -> list[dict]:
@@ -91,6 +92,49 @@ def note_functions(managers: list[KgManager]) -> list[dict]:
             "strict": True,
         },
         {
+            "name": "mark_explored",
+            "description": "Mark an IRI as the seed node for this exploration round. "
+            "Exactly one seed node must be marked per round.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "kg": {
+                        "type": "string",
+                        "enum": kgs[:-1],  # cannot be null for this function
+                        "description": "The knowledge graph of the seed node to mark as explored",
+                    },
+                    "iri": {
+                        "type": "string",
+                        "description": "The IRI of the seed node to mark as explored",
+                    },
+                },
+                "required": ["kg", "iri"],
+                "additionalProperties": False,
+            },
+            "strict": True,
+        },
+        {
+            "name": "show_explored",
+            "description": "Show previously explored seed nodes, most recent first.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "kg": {
+                        "type": "string",
+                        "enum": kgs[:-1],  # cannot be null for this function
+                        "description": "The knowledge graph for which to show explored seed nodes",
+                    },
+                    "page": {
+                        "type": "integer",
+                        "description": "Page number (1-indexed) for paginating results (default should be 1)",
+                    },
+                },
+                "required": ["kg", "page"],
+                "additionalProperties": False,
+            },
+            "strict": True,
+        },
+        {
             "name": "stop",
             "description": "Stop the note taking process.",
             "parameters": {
@@ -150,6 +194,70 @@ def update_note(
     num -= 1
     notes[num] = note
     return f"Updated note {num + 1}"
+
+
+def mark_explored(
+    managers: list[KgManager],
+    kg: str,
+    explored: dict[str, list[str]],
+    iri: str,
+    explored_this_round: bool,
+) -> str:
+    if explored_this_round:
+        raise FunctionCallException(
+            "A seed node was already marked as explored this round"
+        )
+
+    manager, _ = find_manager(managers, kg)
+    ver_iri = verify_iri_or_literal(iri, manager, allow_literal=False)
+    if ver_iri is None:
+        raise FunctionCallException(f'"{iri}" is not a valid IRI')
+
+    kg_explored = explored.setdefault(kg, [])
+    if ver_iri in kg_explored:
+        raise FunctionCallException(
+            "This node was already explored in a previous round"
+        )
+
+    kg_explored.append(ver_iri[1:-1])
+    return f'Marked "{iri}" as explored'
+
+
+def show_explored(
+    managers: list[KgManager],
+    kg: str,
+    explored: dict[str, list[str]],
+    page: int,
+    k: int,
+) -> str:
+    if page < 1:
+        raise FunctionCallException("Page number must be at least 1")
+
+    kg_explored = explored.get(kg, [])
+    if not kg_explored:
+        return "None"
+
+    total_pages = (len(kg_explored) + k - 1) // k
+    if page > total_pages:
+        raise FunctionCallException(f"Page number exceeds maximum page {total_pages}")
+
+    # most recent first
+    kg_explored = list(reversed(kg_explored))
+
+    start = (page - 1) * k
+    end = page * k
+    page_items = kg_explored[start:end]
+
+    header = f"Most recently explored nodes (page {page} of {total_pages}):\n"
+
+    manager, _ = find_manager(managers, kg)
+    infos = manager.get_info_for_identifiers_from_index(page_items, "entities")
+    items = []
+    for iri in page_items:
+        alt = manager.build_alternative_with_info(iri, infos.get(iri))
+        items.append(alt.get_selection_string())
+
+    return header + format_enumerate(items, start=start)
 
 
 def call_function(

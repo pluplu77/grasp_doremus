@@ -6,10 +6,49 @@ from grasp.functions import (
 )
 from grasp.manager import KgManager
 from grasp.sparql.types import Position, SelectResult
+from grasp.sparql.utils import wrap_iri
 from grasp.utils import FunctionCallException
 
 
-def find_frequent_function_definition(kgs: list[str], k: int) -> dict:
+def find_frequent_function_definition(
+    kgs: list[str],
+    k: int,
+    extra_params: dict[str, dict] | None = None,
+) -> dict:
+    properties = {
+        "kg": {
+            "type": "string",
+            "enum": kgs,
+            "description": "The knowledge graph to query",
+        },
+        "position": {
+            "type": "string",
+            "enum": ["subject", "property", "object"],
+            "description": "The position to find common values for",
+        },
+        "subject": {
+            "type": ["string", "null"],
+            "description": "IRI constraint for subject position (null for unconstrained)",
+        },
+        "property": {
+            "type": ["string", "null"],
+            "description": "IRI constraint for property position (null for unconstrained)",
+        },
+        "object": {
+            "type": ["string", "null"],
+            "description": "IRI or literal constraint for object position (null for unconstrained)",
+        },
+        "page": {
+            "type": "integer",
+            "description": "Page number (1-indexed) for paginating results (default should be 1)",
+        },
+    }
+    required = ["kg", "position", "subject", "property", "object", "page"]
+
+    if extra_params:
+        properties.update(extra_params)
+        required.extend(extra_params.keys())
+
     return {
         "name": "find_frequent",
         "description": f"""\
@@ -25,42 +64,8 @@ Or to find the most frequently used properties in Wikidata:
 find_frequent(kg="wikidata", position="property")""",
         "parameters": {
             "type": "object",
-            "properties": {
-                "kg": {
-                    "type": "string",
-                    "enum": kgs,
-                    "description": "The knowledge graph to query",
-                },
-                "position": {
-                    "type": "string",
-                    "enum": ["subject", "property", "object"],
-                    "description": "The position to find common values for",
-                },
-                "subject": {
-                    "type": ["string", "null"],
-                    "description": "IRI constraint for subject position (null for unconstrained)",
-                },
-                "property": {
-                    "type": ["string", "null"],
-                    "description": "IRI constraint for property position (null for unconstrained)",
-                },
-                "object": {
-                    "type": ["string", "null"],
-                    "description": "IRI or literal constraint for object position (null for unconstrained)",
-                },
-                "page": {
-                    "type": "integer",
-                    "description": "Page number (1-indexed) for paginating results (default should be 1)",
-                },
-            },
-            "required": [
-                "kg",
-                "position",
-                "subject",
-                "property",
-                "object",
-                "page",
-            ],
+            "properties": properties,
+            "required": required,
             "additionalProperties": False,
         },
         "strict": True,
@@ -79,6 +84,7 @@ def find_frequent(
     known: set[str],
     request_timeout: float | tuple[float, float] | None = None,
     read_timeout: float | None = None,
+    exclude_explored: set[str] | None = None,
 ) -> str:
     if page < 1:
         raise FunctionCallException("Page number must be at least 1")
@@ -99,7 +105,11 @@ def find_frequent(
             pos_values.append(f"?{pos.value[0]}")
             continue
 
-        ver_const = verify_iri_or_literal(const, pos, manager)
+        ver_const = verify_iri_or_literal(
+            const,
+            manager,
+            allow_literal=pos == Position.OBJECT,
+        )
         if ver_const is None:
             raise FunctionCallException(format_verification_error(const, pos))
 
@@ -107,12 +117,23 @@ def find_frequent(
 
     target_var = f"?{position[0]}"
 
+    exclude_pattern = ""
+    if exclude_explored:
+        exclude_values = " ".join(wrap_iri(iri) for iri in exclude_explored)
+        exclude_pattern = f"FILTER({target_var} NOT IN ({exclude_values}))"
+
     triple_pattern = " ".join(pos_values)
     sparql = f"""\
-SELECT {target_var} (COUNT(*) AS ?freq) WHERE {{
-    {triple_pattern} .
-}} GROUP BY {target_var}
-ORDER BY DESC(?freq) {target_var}
+SELECT * WHERE {{
+    {{ 
+        SELECT {target_var} (COUNT(*) AS ?freq) WHERE {{
+            {triple_pattern} .
+        }} 
+        GROUP BY {target_var}
+        ORDER BY DESC(?freq) {target_var} 
+    }}
+    {exclude_pattern}
+}}
 LIMIT {page * k}"""
 
     try:

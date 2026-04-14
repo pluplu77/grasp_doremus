@@ -61,9 +61,25 @@ def format_list(items: Iterable[str], indent: int = 0) -> str:
     return "\n".join(f"{indent_str}- {item}" for item in items)
 
 
-def format_enumerate(items: Iterable[str], indent: int = 0) -> str:
+def format_enumerate(
+    items: Iterable[str],
+    indent: int = 0,
+    start: int = 0,
+) -> str:
     indent_str = " " * indent
-    return "\n".join(f"{indent_str}{i + 1}. {item}" for i, item in enumerate(items))
+    return "\n".join(
+        f"{indent_str}{i + 1}. {item}" for i, item in enumerate(items, start=start)
+    )
+
+
+def format_kg_notes(kg_notes: dict[str, list[str]], enumerated: bool = False) -> str:
+    if not kg_notes:
+        return "None"
+
+    return format_list(
+        f'"{kg}":\n{format_notes(notes, indent=2, enumerated=enumerated)}'
+        for kg, notes in kg_notes.items()
+    )
 
 
 def format_model(model: BaseModel | None) -> str:

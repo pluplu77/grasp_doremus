@@ -684,7 +684,7 @@ class KgManager:
         index_name: str,
     ) -> dict[str, dict]:
         info_sparql = self.get_info_sparql(index_name)
-        data = self.get_data(index_name)
+        data = self.try_get_data(index_name)
         return self.get_info_for_identifiers(identifiers, info_sparql, data)
 
     def get_info_for_identifiers(

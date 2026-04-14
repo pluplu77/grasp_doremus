@@ -137,4 +137,5 @@ class NotesFromOutputsConfig(NoteTakingConfig):
 
 
 class NotesFromExplorationConfig(NotesConfig):
+    version: str = "v1"
     questions_per_round: int = 3
