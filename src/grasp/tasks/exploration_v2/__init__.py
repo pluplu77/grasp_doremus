@@ -28,8 +28,9 @@ seed nodes than sparsely connected instance-like nodes.",
         "As you hit the limits on the number of notes and their length, \
 gradually generalize your notes, discard unnecessary details, and move \
 notes that can be useful across knowledge graphs to the general section.",
-        "The find_frequent function is only available during exploration, \
-but not for downstream tasks, so do not take notes about it and its usage.",
+        "The exploration- and note-specific functions including find_frequent \
+are only available during exploration, but not for downstream tasks, so do not \
+take notes about them and their usage.",
     ]
 
 

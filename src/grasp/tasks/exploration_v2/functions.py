@@ -1,6 +1,6 @@
 from grasp.functions import find_manager, verify_iri_or_literal
 from grasp.manager import KgManager
-from grasp.utils import FunctionCallException, format_enumerate, format_notes
+from grasp.utils import FunctionCallException, clip, format_enumerate, format_notes
 
 
 def note_functions(managers: list[KgManager]) -> list[dict]:
@@ -166,7 +166,7 @@ def add_note(notes: list[str], note: str, max_notes: int, max_note_length: int) 
     check_note(note, max_note_length)
 
     notes.append(note)
-    return f"Added note {len(notes)}"
+    return f"Added note {len(notes)}: {clip(note, 64)}"
 
 
 def delete_note(notes: list[str], num: int | float) -> str:
@@ -175,8 +175,8 @@ def delete_note(notes: list[str], num: int | float) -> str:
         raise FunctionCallException("Note number out of range")
 
     num -= 1
-    notes.pop(num)
-    return f"Deleted note {num + 1}"
+    note = notes.pop(num)
+    return f"Deleted note {num + 1}: {clip(note, 64)}"
 
 
 def update_note(
@@ -193,7 +193,7 @@ def update_note(
 
     num -= 1
     notes[num] = note
-    return f"Updated note {num + 1}"
+    return f"Updated note {num + 1}: {clip(note, 64)}"
 
 
 def mark_explored(
