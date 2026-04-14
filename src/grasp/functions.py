@@ -340,23 +340,25 @@ search_object_of_property(kg="wikidata", property="wdt:P106", query="football")"
             search_filter_props["query_type"] = query_type_prop
             search_filter_required.append("query_type")
 
+        search_filter_name = (
+            "search" if fn_set == "search_filter" else "search_with_filter"
+        )
         fns.append(
             {
-                "name": "search_with_filter",
-                "description": """\
+                "name": search_filter_name,
+                "description": f"""\
 Search for knowledge graph items in a context-sensitive way by specifying a filter \
 SPARQL query together with a search query. The SPARQL query must be a SELECT query \
 returning a single column of IRIs. The search is then restricted to knowledge graph items \
 matching those IRIs in the specified index. The SPARQL query can be null, in which case \
 a search over the full index is performed.
 
-For example, to search for Albert Einstein at the subject position in \
-Wikidata, do the following:
-search_with_filter(kg="wikidata", index="entities", query="albert einstein")
+For example, to search for Albert Einstein in Wikidata, do the following:
+{search_filter_name}(kg="wikidata", index="entities", query="albert einstein")
 
 Or to search for properties of Albert Einstein related to his birth in \
 Wikidata, do the following:
-search_with_filter(kg="wikidata", index="properties", sparql="SELECT DISTINCT ?p WHERE { wd:Q937 ?p ?o }", query="birth")""",
+{search_filter_name}(kg="wikidata", index="properties", sparql="SELECT DISTINCT ?p WHERE {{ wd:Q937 ?p ?o }}", query="birth")""",
                 "parameters": {
                     "type": "object",
                     "properties": search_filter_props,
@@ -421,21 +423,24 @@ search_with_filter(kg="wikidata", index="properties", sparql="SELECT DISTINCT ?p
             search_constraints_props["query_type"] = query_type_prop
             search_constraints_required.append("query_type")
 
+        search_constraints_name = (
+            "search" if fn_set == "search_constraints" else "search_with_constraints"
+        )
         fns.append(
             {
-                "name": "search_with_constraints",
-                "description": """\
+                "name": search_constraints_name,
+                "description": f"""\
 Search for knowledge graph items at a particular position (subject, property, or object) \
 with optional constraints. If constraints are provided, they are used to limit the search \
 space accordingly.
 
 For example, to search for the subject Albert Einstein in Wikidata, do the following:
-search_with_constraints(kg="wikidata", index="entities", position="subject", query="albert einstein")
+{search_constraints_name}(kg="wikidata", index="entities", position="subject", query="albert einstein")
 
 Or to search for properties of Albert Einstein related to his birth in Wikidata, \
 do the following:
-search_with_constraints(kg="wikidata", index="properties", position="property", query="birth", \
-constraints={"subject": "wd:Q937"})""",
+{search_constraints_name}(kg="wikidata", index="properties", position="property", query="birth", \
+constraints={{"subject": "wd:Q937"}})""",
                 "parameters": {
                     "type": "object",
                     "properties": search_constraints_props,
@@ -548,7 +553,9 @@ def call_function(
             config.sparql_read_timeout,
         )
 
-    elif fn_name == "search_with_constraints":
+    elif fn_name == "search_with_constraints" or (
+        fn_name == "search" and config.fn_set == "search_constraints"
+    ):
         return search_with_constraints(
             managers,
             fn_args["kg"],
@@ -563,7 +570,9 @@ def call_function(
             config.sparql_read_timeout,
         )
 
-    elif fn_name == "search_with_filter":
+    elif fn_name == "search_with_filter" or (
+        fn_name == "search" and config.fn_set == "search_filter"
+    ):
         return search_with_filter(
             managers,
             fn_args["kg"],
