@@ -95,13 +95,9 @@ def format_error(reason: str, content: str) -> str:
 
 def format_message(message: Message) -> str:
     if isinstance(message.content, str):
-        header = colored(f"{message.role.upper()}", "magenta")
-        content = (
-            json.dumps(message.content, indent=2)
-            if isinstance(message.content, dict)
-            else message.content
-        )
-        return f"{header}\n{content}"
+        name = message.name or message.role
+        header = colored(f"{name.upper()}", "magenta")
+        return f"{header}\n{message.content}"
     else:
         return format_response(message.content)
 

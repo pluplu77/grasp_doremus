@@ -11,7 +11,8 @@ from universal_ml_utils.logging import get_logger
 
 from grasp.configs import ModelConfig
 from grasp.manager.utils import get_common_sparql_prefixes, load_kg_info, merge_prefixes
-from grasp.model import Message, call_model
+from grasp.model import Message, get_model
+from grasp.model.base import Model
 from grasp.sparql.metrics import f1_score
 from grasp.sparql.types import AskResult, SelectResult
 from grasp.sparql.utils import (
@@ -209,9 +210,9 @@ def evaluate_f1(
 
 
 def judge_candidates(
+    model: Model,
     question: str,
     candidates: list[str],
-    config: ModelConfig,
     logger: Logger,
 ) -> tuple[str, int | None]:
     if len(candidates) > len(string.ascii_uppercase):
@@ -250,9 +251,8 @@ def judge_candidates(
     ]
 
     messages = [
-        Message(
-            role="system",
-            content="""\
+        Message.system(
+            """\
 You are an expert judge for evaluating SPARQL queries.
 
 You are given a question and two or more SPARQL query candidates \
@@ -267,9 +267,8 @@ than a generated SPARQL query that is incorrect or irrelevant to the question.
 
 Think before you finalize your answer with the provided judge function.""",
         ),
-        Message(
-            role="user",
-            content=f"""\
+        Message.user(
+            f"""\
 Question:
 {question}
 
@@ -284,7 +283,7 @@ Question:
     logger.debug(format_message(messages[-1]))
 
     try:
-        response = call_model(messages, functions, config)
+        response = model(messages, functions)
     except Exception as e:
         raise ValueError(f"Error during judging: {e}")
 
@@ -380,6 +379,7 @@ def evaluate_with_judge(
         f"{len(evaluations['evaluations']):,} existing evaluations"
     )
 
+    model = get_model(judge_config)
     random.seed(judge_config.seed)
 
     for id, sample in tqdm(
@@ -442,9 +442,9 @@ def evaluate_with_judge(
             ]
 
             explanation, verdict = judge_candidates(
+                model,
                 sample.question,
                 formatted,
-                judge_config,
                 logger,
             )
             evaluation["explanation"] = explanation

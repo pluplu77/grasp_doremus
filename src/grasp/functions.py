@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Iterable
 
-from grammar_utils.parse import LR1Parser
+from grammar_utils.parse import LR1Parser  # type: ignore
 from search_rdf import EmbeddingIndex
 from universal_ml_utils.ops import partition_by
 

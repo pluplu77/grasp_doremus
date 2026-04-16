@@ -16,10 +16,10 @@ from grasp.configs import (
     NotesFromSamplesConfig,
     NoteTakingConfig,
 )
-from grasp.core import call_model, generate, load_notes, setup
+from grasp.core import generate, load_notes, setup
 from grasp.functions import find_manager
 from grasp.manager import KgManager
-from grasp.model import Message
+from grasp.model import Message, get_model
 from grasp.notes.utils import consume_iterator, format_output, link
 from grasp.tasks import get_task
 from grasp.tasks.cea import AnnotationState, CeaSample, prepare_annotation
@@ -400,10 +400,11 @@ def take_notes(
     # replacement for the model config; otherwise fall back to
     # the parent grasp config
     nt_config = config.note_taking_model or config
+    model = get_model(nt_config)
 
     while len(messages) - num_messages < config.max_steps:
         try:
-            response = call_model(messages, functions, nt_config)
+            response = model(messages, functions)
         except Exception as e:
             logger.error(f"LLM API returned error during note taking: {e}")
             return

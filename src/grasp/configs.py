@@ -21,22 +21,20 @@ class ModelConfig(BaseModel):
     seed: int | None = None
 
     # model parameters
-    model: str = "openai/gpt-5-mini"
+    model: str = "gpt-5-mini"
+    model_provider: str = "openai/completions"
     model_endpoint: str | None = None
     model_api_key: str | None = None
 
+    # any additional inference parameters
     model_kwargs: dict[str, Any] = {}
 
-    # decoding parameters
+    # important inference parameters, supported by almost
+    # all providers and models
     temperature: float | None = 1.0
     top_p: float | None = 1.0
-    reasoning_effort: str | None = None
-    reasoning_summary: str | None = None
-    api: str | None = None
     parallel_tool_calls: bool = False
     tool_choice: str = "auto"
-
-    # completion parameters
     max_completion_tokens: int = 8192  # 8k, leaves enough space for reasoning models
     completion_timeout: float = 120.0
     num_retries: int = 2
