@@ -432,7 +432,7 @@ def generate(
         "elapsed": end - start,
         "error": error,
         "messages": [
-            message.model_dump(exclude=set(), exclude_defaults=True)
+            message.model_dump(exclude_unset=True, exclude_defaults=True)
             for message in messages
         ],
         "known": list(known),
