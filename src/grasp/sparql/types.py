@@ -274,17 +274,23 @@ class Alternative:
             s += ", "
             if self.has_label():
                 s += "also "
-            s += "known as " + ", ".join(
-                f'"{clip(a)}"' for a in self.aliases[:max_aliases]
-            )
+
+            if len(self.aliases) > max_aliases:
+                aliases = random.sample(self.aliases, max_aliases)
+            else:
+                aliases = self.aliases
+
+            s += "known as " + ", ".join(f'"{clip(alias)}"' for alias in aliases)
+
             if len(self.aliases) > max_aliases:
                 s += ", etc."
 
         if add_info and self.info and max_info > 0:
             if len(self.info) > max_info:
-                infos = sorted(random.sample(self.info, max_info))
+                infos = random.sample(self.info, max_info)
             else:
                 infos = self.info
+
             s += ":\n" + format_list((clip(info) for info in infos), indent=2)
 
         return s
