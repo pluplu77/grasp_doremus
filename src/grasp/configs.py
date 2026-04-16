@@ -23,6 +23,7 @@ class ModelConfig(BaseModel):
     # model parameters
     model: str = "openai/gpt-5-mini"
     model_endpoint: str | None = None
+    model_api_key: str | None = None
 
     model_kwargs: dict[str, Any] = {}
 

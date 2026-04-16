@@ -399,6 +399,7 @@ def call_model(
             drop_params=True,
             num_retries=config.num_retries,
         )
+        print(completions_resp)
         return Response.from_completions_api(completions_resp)
 
     elif api == "responses":

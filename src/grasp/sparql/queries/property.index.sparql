@@ -7,10 +7,7 @@ SELECT DISTINCT ?id ?value ?tags WHERE {
   { SELECT ?id (COUNT(?id) AS ?score) WHERE { ?s ?id ?o } GROUP BY ?id } 
 
   {
-    # Properties often do not have labels, so make IRI itself searchable
-    BIND(?id AS ?value)
-  } UNION {
-    # Get label
+    # Get label as main field
     ?id rdfs:label ?value
     BIND("main" AS ?tags)
     FILTER(LANG(?value) = "en")
@@ -18,5 +15,9 @@ SELECT DISTINCT ?id ?value ?tags WHERE {
     # Get aliases
     ?id skos:altLabel ?value
     FILTER(LANG(?value) = "en")
+  } UNION {
+    # Properties often do not have labels, so also make IRI itself
+    # searchable by binding it as value
+    BIND(?id AS ?value)
   }
 } ORDER BY DESC(?score) ?id DESC(?tags)

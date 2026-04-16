@@ -201,21 +201,16 @@ and repeat, otherwise stop."""
             "If the user provides additional notes about the desired setup, make sure to follow them.",
             "When developing the SPARQL queries, try to make them as efficient as possible. For example, "
             "put VALUES { {IDS} } clauses in the info SPARQL inside each UNION.",
-            f"If there already exists a {name} index, you can verify its index and info SPARQLs "
-            "also by checking that the search-related functions return expected results.",
+            f"To make {name} searchable via their identifiers, which is e.g. useful if they do not have "
+            "any associated literals, just bind the IRI to the ?value variable in the index SPARQL.",
         ]
         if name == "entities":
             rules.append(
-                f"Not all {name} in the knowledge graph need to and should be covered by the index. "
-                f"For example, {name} without any descriptive associated literals typically also do not "
-                f"need to be searchable. If you want to make such {name} searchable anyway, "
-                f"just bind their IRI as value in the index SPARQL via BIND(?id AS ?value).",
+                f"Not all {name} in the knowledge graph need to be searchable and should be covered by the index. "
+                f"Typical examples are identifier-like, internal, or intermediate {name} "
+                "without any descriptive associated literals."
             )
-        elif name == "properties":
-            rules.append(
-                f"If you want to make {name} searchable even if they do not have any descriptive associated literals "
-                f"(typical for {name}), just bind their IRI as value in the index SPARQL via BIND(?id AS ?value).",
-            )
+
         return rules
 
     def _info_rules(self) -> list[str]:
@@ -278,7 +273,7 @@ and repeat, otherwise stop."""
             return self.set_description(fn_args["description"])
 
         elif fn_name == "stop":
-            return "Stopping."
+            return "Stopping"
 
         raise FunctionCallException(f"Unknown function {fn_name}")
 

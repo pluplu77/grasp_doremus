@@ -1,4 +1,4 @@
-from grasp.functions import find_manager, verify_iri_or_literal
+from grasp.functions import find_manager, parse_iri_or_literal
 from grasp.manager import KgManager
 from grasp.utils import FunctionCallException, clip, format_enumerate, format_notes
 
@@ -212,8 +212,8 @@ def mark_explored(
         )
 
     manager, _ = find_manager(managers, kg)
-    ver_iri = verify_iri_or_literal(iri, manager, allow_literal=False)
-    if ver_iri is None:
+    ver_iri = parse_iri_or_literal(iri, manager.iri_literal_parser, manager.prefixes)
+    if ver_iri is None or ver_iri.typ != "uri":
         raise FunctionCallException(f'"{iri}" is not a valid IRI')
 
     kg_explored = explored.setdefault(kg, [])
@@ -222,7 +222,7 @@ def mark_explored(
             "This node was already explored in a previous round"
         )
 
-    kg_explored.append(ver_iri[1:-1])
+    kg_explored.append(ver_iri.identifier())
     return f'Marked "{iri}" as explored'
 
 

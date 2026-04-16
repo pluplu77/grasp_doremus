@@ -4,12 +4,6 @@ from grasp.sparql.utils import find, find_all, parse_string, parse_to_string
 STOP_FUNCTION = {
     "name": "stop",
     "description": "Stop the setup process.",
-    "parameters": {
-        "type": "object",
-        "properties": {},
-        "required": [],
-        "additionalProperties": False,
-    },
     "strict": True,
 }
 

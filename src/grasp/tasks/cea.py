@@ -300,12 +300,6 @@ This function overwrites any previous annotation of the cell.""",
         {
             "name": "stop",
             "description": "Finalize your annotations and stop the annotation process.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
             "strict": True,
         },
     ]

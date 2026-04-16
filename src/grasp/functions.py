@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Iterable
 
+from grammar_utils.parse import LR1Parser
 from search_rdf import EmbeddingIndex
 from universal_ml_utils.ops import partition_by
 
@@ -854,37 +855,24 @@ def execute_sparql(
     return ExecutionResult(sparql, formatted, result)
 
 
-def verify_iri_or_literal(
+def parse_iri_or_literal(
     input: str,
-    manager: KgManager,
-    allow_literal: bool = True,
-) -> str | None:
+    parser: LR1Parser,
+    prefixes: dict[str, str] | None = None,
+) -> Binding | None:
     # parse and resolve percent encoding in IRIs
-    binding = parse_into_binding(input, manager.iri_literal_parser, manager.prefixes)
+    binding = parse_into_binding(input, parser, prefixes)
 
     if binding is None and has_scheme(input):
         # fallback for full IRIs given without angle brackets
-        binding = parse_into_binding(
-            wrap_iri(input),
-            manager.iri_literal_parser,
-            manager.prefixes,
-        )
-
-    if binding is None and allow_literal:
-        # fallback for string literals because they are typically given without quotes
-        # but the parser expects them to be quoted
-        binding = parse_into_binding(
-            f'"{input}"',
-            manager.iri_literal_parser,
-            manager.prefixes,
-        )
+        binding = parse_into_binding(wrap_iri(input), parser, prefixes)
 
     if binding is None:
-        return None
-    elif binding.typ == "literal":
-        return binding.identifier()
-    else:
-        return wrap_iri(binding.identifier())
+        # fallback for string literals because they are typically given without quotes
+        # but the parser expects them to be quoted
+        binding = parse_into_binding(f'"{input}"', parser, prefixes)
+
+    return binding
 
 
 def format_verification_error(value: str, position: Position) -> str:
@@ -923,16 +911,16 @@ def list_triples(
             triple.append(f"?{pos.value[0]}")
             continue
 
-        ver_const = verify_iri_or_literal(
+        ver_const = parse_iri_or_literal(
             const,
-            manager,
-            allow_literal=pos == Position.OBJECT,
+            manager.iri_literal_parser,
+            manager.prefixes,
         )
-        if ver_const is None:
+        if ver_const is None or (pos != Position.OBJECT and ver_const.typ != "uri"):
             raise FunctionCallException(format_verification_error(const, pos))
 
-        bindings.append(f"BIND({ver_const} AS ?{pos.value[0]})")
-        triple.append(ver_const)
+        bindings.append(f"BIND({ver_const.sparql()} AS ?{pos.value[0]})")
+        triple.append(ver_const.sparql())
 
     triple = " ".join(triple)
     bindings = "\n".join(bindings)
@@ -1104,15 +1092,15 @@ object should be constrained at once."
                 pos_values[pos] = "?search"
                 continue
 
-            ver_const = verify_iri_or_literal(
+            ver_const = parse_iri_or_literal(
                 const,
-                manager,
-                allow_literal=pos == Position.OBJECT,
+                manager.iri_literal_parser,
+                manager.prefixes,
             )
-            if ver_const is None:
+            if ver_const is None or (pos != Position.OBJECT and ver_const.typ != "uri"):
                 raise FunctionCallException(format_verification_error(const, pos))
 
-            pos_values[pos] = ver_const
+            pos_values[pos] = ver_const.sparql()
 
         select_var = f"?{position[0]}"
 

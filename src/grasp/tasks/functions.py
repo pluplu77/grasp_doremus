@@ -2,7 +2,7 @@ from grasp.functions import (
     find_manager,
     format_verification_error,
     update_known_from_rows,
-    verify_iri_or_literal,
+    parse_iri_or_literal,
 )
 from grasp.manager import KgManager
 from grasp.sparql.types import Position, SelectResult
@@ -105,15 +105,15 @@ def find_frequent(
             pos_values.append(f"?{pos.value[0]}")
             continue
 
-        ver_const = verify_iri_or_literal(
+        ver_const = parse_iri_or_literal(
             const,
-            manager,
-            allow_literal=pos == Position.OBJECT,
+            manager.iri_literal_parser,
+            manager.prefixes,
         )
-        if ver_const is None:
+        if ver_const is None or (pos != Position.OBJECT and ver_const.typ != "uri"):
             raise FunctionCallException(format_verification_error(const, pos))
 
-        pos_values.append(ver_const)
+        pos_values.append(ver_const.sparql())
 
     target_var = f"?{position[0]}"
 

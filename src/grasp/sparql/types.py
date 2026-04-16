@@ -106,6 +106,17 @@ class Binding:
             case _:
                 raise ValueError(f"Unknown binding type: {self.typ}")
 
+    def sparql(self) -> str:
+        identifier = self.identifier()
+
+        if self.typ == "uri":
+            identifier = f"<{identifier}>"
+
+        return identifier
+
+    def __repr__(self) -> str:
+        return self.identifier()
+
 
 SelectRow = dict[str, Binding]
 
