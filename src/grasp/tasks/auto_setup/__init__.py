@@ -14,6 +14,7 @@ from grasp.manager.utils import (
 )
 from grasp.model import Message
 from grasp.sparql.utils import (
+    get_qlever_endpoint,
     load_entity_index_sparql,
     load_entity_info_sparql,
     load_property_index_sparql,
@@ -425,12 +426,18 @@ Additional notes:
             }
         else:
             assert isinstance(self.state, InfoState)
+            manager = self.managers[0]
+            endpoint = manager.endpoint
+            if endpoint == get_qlever_endpoint(manager.kg):
+                # if endpoint is default anyway, set it to None
+                endpoint = None
+
             return {
                 "type": "output",
                 "phase": "info",
                 "info": {
                     "description": self.state.description,
                     "prefixes": self.state.prefixes,
-                    "endpoint": self.managers[0].endpoint,
+                    "endpoint": endpoint,
                 },
             }
