@@ -370,7 +370,7 @@ Wikidata, do the following:
             }
         )
 
-    if fn_set in ["search_constraints", "all"] and index_names:
+    if fn_set == "search_constraints" and index_names:
         search_constraints_props = {
             "kg": {
                 "type": "string",
