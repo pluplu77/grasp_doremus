@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, conlist
+from pydantic import BaseModel, Field, conlist
 
 
 class KgConfig(BaseModel):
@@ -24,7 +24,7 @@ class ModelConfig(BaseModel):
     model: str = "gpt-5-mini"
     model_provider: str = "openai/completions"
     model_endpoint: str | None = None
-    model_api_key: str | None = None
+    model_api_key: str | None = Field(default=None, exclude=True)
 
     # any additional inference parameters
     model_kwargs: dict[str, Any] = {}
