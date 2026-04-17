@@ -395,19 +395,18 @@ and repeat, otherwise stop."""
         manager = self.managers[0]
         if self.input["phase"] == "index":
             self.state = load_index_state(manager, self.input["name"])
-            return f"""\
-Set up the index and info SPARQLs for {self.input["name"]} of the {manager.kg} knowledge graph.
+            if self.input.get("notes"):
+                return input["notes"]
+            else:
+                return f"Set up the index and info SPARQLs for {self.input['name']} \
+of the {manager.kg} knowledge graph."
 
-Additional notes:
-{self.input.get("notes")}"""
-
+        # info phase
+        self.state = load_info_state(manager)
+        if self.input.get("notes"):
+            return input["notes"]
         else:
-            self.state = load_info_state(manager)
-            return f"""\
-Set up the prefixes and description for the {manager.kg} knowledge graph.
-
-Additional notes:
-{self.input.get("notes")}"""
+            return f"Set up the prefixes and description for the {manager.kg} knowledge graph."
 
     def output(self, messages: list[Message]) -> dict:
         if self.input["phase"] == "index":
