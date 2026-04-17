@@ -2,7 +2,7 @@ from grasp.manager import KgManager
 from grasp.utils import FunctionCallException, clip, format_notes
 
 
-def note_functions(managers: list[KgManager]) -> list[dict]:
+def note_function_definitions(managers: list[KgManager]) -> list[dict]:
     kgs: list[str | None] = [manager.kg for manager in managers]
     kgs.append(None)
     return [

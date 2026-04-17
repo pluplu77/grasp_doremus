@@ -23,9 +23,11 @@ from grasp.model import Message, get_model
 from grasp.notes.utils import consume_iterator, format_output, link
 from grasp.tasks import get_task
 from grasp.tasks.cea import AnnotationState, CeaSample, prepare_annotation
-from grasp.tasks.exploration import ExplorationState
-from grasp.tasks.exploration.functions import call_function, note_functions
-from grasp.tasks.exploration_v2 import ExplorationState as ExplorationV2State
+from grasp.tasks.exploration import (
+    FunctionalExplorationState,
+    StructuralExplorationState,
+)
+from grasp.tasks.exploration.functions import call_function, note_function_definitions
 from grasp.tasks.sparql_qa.examples import SparqlQaSample
 from grasp.tasks.utils import Sample, format_sparql_result, prepare_sparql_result
 from grasp.utils import (
@@ -204,14 +206,14 @@ def take_notes_from_exploration(
         yaml.dump(config.model_dump(), f)
 
     assert isinstance(config, NotesFromExplorationConfig)
-    if config.version == "v1":
-        task_name = "exploration"
-        state = ExplorationState(notes=notes, kg_notes=kg_notes)
-    elif config.version == "v2":
-        task_name = "exploration_v2"
-        state = ExplorationV2State(notes=notes, kg_notes=kg_notes)
+    if config.mode == "functional":
+        task_name = "exploration_functional"
+        state = FunctionalExplorationState(notes=notes, kg_notes=kg_notes)
+    elif config.mode == "structural":
+        task_name = "exploration_structural"
+        state = StructuralExplorationState(notes=notes, kg_notes=kg_notes)
     else:
-        raise ValueError(f"Unknown exploration version: {config.version}")
+        raise ValueError(f"Unknown exploration mode: {config.mode}")
 
     for r in trange(config.num_rounds, desc="Taking notes from exploration"):
         consume_iterator(
@@ -392,7 +394,7 @@ def take_notes(
     for msg in messages:
         logger.debug(format_message(msg))
 
-    functions = note_functions(managers)
+    functions = note_function_definitions(managers)
 
     num_messages = len(messages)
 

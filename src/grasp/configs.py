@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, conlist
 
@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field, conlist
 class KgConfig(BaseModel):
     kg: str
     endpoint: str | None = None
-    entities_type: str = "fuzzy"
-    properties_type: str = "embedding"
+    entities_type: Literal["fuzzy", "embedding", "keyword"] = "fuzzy"
+    properties_type: Literal["fuzzy", "embedding", "keyword"] = "embedding"
     notes_file: str | None = None
     example_index: str | None = None
 
@@ -22,7 +22,10 @@ class ModelConfig(BaseModel):
 
     # model parameters
     model: str = "gpt-5-mini"
-    model_provider: str = "openai/completions"
+    model_provider: Literal[
+        "openai/completions",
+        "openai/responses",
+    ] = "openai/completions"
     model_endpoint: str | None = None
     model_api_key: str | None = Field(default=None, exclude=True)
 
@@ -34,7 +37,7 @@ class ModelConfig(BaseModel):
     temperature: float | None = 1.0
     top_p: float | None = 1.0
     parallel_tool_calls: bool = False
-    tool_choice: str = "auto"
+    tool_choice: Literal["auto", "required"] = "auto"
     max_completion_tokens: int = 8192  # 8k, leaves enough space for reasoning models
     completion_timeout: float = 120.0
     num_retries: int = 2
@@ -42,7 +45,14 @@ class ModelConfig(BaseModel):
 
 class GraspConfig(ModelConfig):
     # function set, notes, and knowledge graphs
-    fn_set: str = "search_extended"
+    fn_set: Literal[
+        "base",
+        "search",
+        "search_extended",
+        "search_filter",
+        "search_constraints",
+        "all",
+    ] = "search_filter"
     notes_file: str | None = None
 
     knowledge_graphs: list[KgConfig] = [KgConfig(kg="wikidata")]
@@ -136,5 +146,5 @@ class NotesFromOutputsConfig(NoteTakingConfig):
 
 
 class NotesFromExplorationConfig(NotesConfig):
-    version: str = "v1"
+    mode: Literal["functional", "structural"] = "structural"
     questions_per_round: int = 3

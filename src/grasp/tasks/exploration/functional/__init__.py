@@ -5,26 +5,21 @@ from pydantic import BaseModel
 from grasp.configs import GraspConfig, NotesConfig, NotesFromExplorationConfig
 from grasp.model import Message
 from grasp.tasks.base import GraspTask
-from grasp.tasks.exploration_v2.functions import call_function as call_note_function
-from grasp.tasks.exploration_v2.functions import (
-    mark_explored,
-    note_functions,
-    show_explored,
-)
+from grasp.tasks.exploration.functions import call_function as call_note_function
+from grasp.tasks.exploration.functions import note_function_definitions
 from grasp.tasks.functions import find_frequent, find_frequent_function_definition
 from grasp.utils import format_kg_notes, format_notes
 
 
-class ExplorationState(BaseModel):
+class FunctionalExplorationState(BaseModel):
     notes: list[str] = []
     kg_notes: dict[str, list[str]] = {}
-    explored: dict[str, list[str]] = {}
 
 
 def rules() -> list[str]:
     return [
-        "Frequently connected class-like nodes are typically better \
-seed nodes than sparsely connected instance-like nodes.",
+        "The questions you come up with should be diverse and cover different \
+parts of the knowledge graphs.",
         "As you hit the limits on the number of notes and their length, \
 gradually generalize your notes, discard unnecessary details, and move \
 notes that can be useful across knowledge graphs to the general section.",
@@ -38,8 +33,8 @@ def system_information(config: GraspConfig) -> str:
     assert isinstance(config, NotesFromExplorationConfig)
     return f"""\
 You are a note-taking assistant. Your task is to \
-explore knowledge graphs around selected seed nodes \
-and take notes about them using the provided functions.
+explore knowledge graphs and take notes about them using the \
+provided functions.
 
 You are limited to a maximum of {config.max_notes} notes \
 per knowledge graph, plus {config.max_notes} general notes for insights that apply \
@@ -47,23 +42,22 @@ across knowledge graphs. Each note is limited to a maximum of \
 {config.max_note_length} characters to ensure it is concise and to the point.
 
 Your notes should help you to better understand and navigate the \
-knowledge graphs in the future. The notes should generalize and be useful for \
-answering all kinds of questions about the knowledge graphs, rather than \
-being specific to the seed nodes you explore.
+knowledge graphs in the future. The notes should generalize to new unseen \
+questions, rather than being specific to the ones you come up with \
+during the exploration.
 
 You should follow a step-by-step approach to take notes:
-1. Look at the current notes and already explored seed nodes across \
-all knowledge graphs to figure out well covered and underexplored areas.
-2. Determine a seed node in an underexplored area of one of the knowledge graphs. \
-Avoid previously explored nodes or nodes very similar to them.
-3. Thoroughly explore the seed nodes' neighborhood in the graph. You can also come \
-up with questions targeting this area and try to build SPARQL queries to answer them. \
-Make sure to use all of the provided functions during your exploration, and \
-take notes about your findings along the way.
-4. If there are no more open questions and insights to be gained from exploring \
-the seed node, mark it as explored. Before stopping, check all notes (not only \
-the ones touched in this exploration) for the above mentioned criteria and clean \
-them if needed. 
+1. Determine the scope and domain of the knowledge graphs and what types \
+of questions a user might want to answer with them. Look at the current notes \
+and figure out well covered and underexplored areas.
+2. Come up with a potential user question over one or more knowledge graphs, \
+preferably targeting an underexplored area. Try to build a SPARQL query to answer \
+the question and take notes about your findings along the way. Make sure to \
+use all of the provided functions during your exploration.
+3. Repeat steps 1 and 2 until you explored at least {config.questions_per_round} \
+different potential user questions or you run out of ideas.
+4. Before stopping, make sure to check all notes (not only the ones touched in this exploration) \
+for the above mentioned criteria and clean them if needed.
 
 Examples of potentially useful types of notes include:
 - overall structure, domain coverage, and schema of the knowledge graphs
@@ -72,7 +66,7 @@ Examples of potentially useful types of notes include:
 - tips for when and how to use certain functions"""
 
 
-def output(state: ExplorationState) -> dict:
+def output(state: FunctionalExplorationState) -> dict:
     formatted = f"""\
 Exploration completed.
 
@@ -86,13 +80,12 @@ General notes across knowledge graphs:
         "type": "output",
         "notes": state.notes,
         "kg_notes": state.kg_notes,
-        "explored": state.explored,
         "formatted": formatted,
     }
 
 
-class ExplorationTask(GraspTask):
-    name = "exploration_v2"
+class FunctionalExplorationTask(GraspTask):
+    name = "exploration_functional"
 
     def system_information(self) -> str:
         return system_information(self.config)
@@ -102,20 +95,8 @@ class ExplorationTask(GraspTask):
 
     def function_definitions(self) -> list[dict]:
         kgs = [m.kg for m in self.managers]
-        functions = note_functions(self.managers)
-        functions.append(
-            find_frequent_function_definition(
-                kgs,
-                self.config.list_k,
-                extra_params={
-                    "exclude_explored": {
-                        "type": "boolean",
-                        "description": "If true, exclude previously explored "
-                        "seed nodes from the results",
-                    },
-                },
-            )
-        )
+        functions = note_function_definitions(self.managers)
+        functions.append(find_frequent_function_definition(kgs, self.config.list_k))
         return functions
 
     def call_function(
@@ -127,27 +108,6 @@ class ExplorationTask(GraspTask):
     ) -> str:
         assert isinstance(self.config, NotesConfig)
         assert self.state is not None, "State must be provided for exploration task"
-
-        if fn_name == "mark_explored":
-            result = mark_explored(
-                self.managers,
-                fn_args["kg"],
-                self.state.explored,
-                fn_args["iri"],
-                self.explored_this_round,
-            )
-            self.explored_this_round = True
-            return result
-
-        if fn_name == "show_explored":
-            return show_explored(
-                self.managers,
-                fn_args["kg"],
-                self.state.explored,
-                fn_args["page"],
-                self.config.list_k,
-            )
-
         if fn_name == "find_frequent":
             return find_frequent(
                 self.managers,
@@ -176,13 +136,12 @@ class ExplorationTask(GraspTask):
         return fn_name == "stop"
 
     def setup(self, input: Any) -> str:
-        assert isinstance(input, ExplorationState), (
-            "Input for exploration must already be an ExplorationState"
+        assert isinstance(input, FunctionalExplorationState), (
+            "Input for exploration must already be a FunctionalExplorationState"
         )
         self.state = input
-        self.explored_this_round = False
-        return "Choose a seed node and start the exploration. \
-Add to, delete from, or update the current notes along the way."
+        return "Explore the available knowledge graphs. Add to, delete from, or \
+update the current notes along the way."
 
     def output(self, messages: list[Message]) -> dict:
         return output(self.state)
