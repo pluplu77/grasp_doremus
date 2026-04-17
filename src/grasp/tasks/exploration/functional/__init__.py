@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from grasp.configs import GraspConfig, NotesConfig, NotesFromExplorationConfig
 from grasp.model import Message
 from grasp.tasks.base import GraspTask
+from grasp.tasks.exploration import shared_rules
 from grasp.tasks.exploration.functions import call_function as call_note_function
 from grasp.tasks.exploration.functions import note_function_definitions
 from grasp.tasks.functions import find_frequent, find_frequent_function_definition
@@ -17,15 +18,10 @@ class FunctionalExplorationState(BaseModel):
 
 
 def rules() -> list[str]:
-    return [
-        "The questions you come up with should be diverse and cover different \
-parts of the knowledge graphs.",
-        "As you hit the limits on the number of notes and their length, \
-gradually generalize your notes, discard unnecessary details, and move \
-notes that can be useful across knowledge graphs to the general section.",
-        "The exploration- and note-specific functions including find_frequent \
-are only available during exploration, but not for downstream tasks, so do not \
-take notes about them and their usage.",
+    return shared_rules() + [
+        "The note-specific functions as well as find_frequent are only available \
+during exploration, but not for downstream tasks, so do not take notes about \
+them and their usage.",
     ]
 
 
@@ -49,21 +45,20 @@ during the exploration.
 You should follow a step-by-step approach to take notes:
 1. Determine the scope and domain of the knowledge graphs and what types \
 of questions a user might want to answer with them. Look at the current notes \
-and figure out well covered and underexplored areas.
+and figure out well-covered and underexplored areas.
 2. Come up with a potential user question over one or more knowledge graphs, \
-preferably targeting an underexplored area. Try to build a SPARQL query to answer \
-the question and take notes about your findings along the way. Make sure to \
-use all of the provided functions during your exploration.
-3. Repeat steps 1 and 2 until you explored at least {config.questions_per_round} \
+preferably targeting an underexplored area. Then build a SPARQL query to answer \
+the question and take notes about your findings along the way. Try to use \
+all of the provided functions at least once during your exploration.
+3. Repeat steps 1 and 2 until you have explored at least {config.questions_per_round} \
 different potential user questions or you run out of ideas.
 4. Before stopping, make sure to check all notes (not only the ones touched in this exploration) \
-for the above mentioned criteria and clean them if needed.
+for the above-mentioned criteria and clean them if needed.
 
-Examples of potentially useful types of notes include:
-- overall structure, domain coverage, and schema of the knowledge graphs
-- peculiarities of the knowledge graphs
+Examples of potentially useful types of notes:
+- tips for when and how to use certain functions
 - strategies when encountering certain types of questions or errors
-- tips for when and how to use certain functions"""
+- quirks and peculiarities of both knowledge graphs and functions"""
 
 
 def output(state: FunctionalExplorationState) -> dict:

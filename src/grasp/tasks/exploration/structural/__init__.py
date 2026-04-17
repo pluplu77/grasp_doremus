@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from grasp.configs import GraspConfig, NotesConfig, NotesFromExplorationConfig
 from grasp.model import Message
 from grasp.tasks.base import GraspTask
+from grasp.tasks.exploration import shared_rules
 from grasp.tasks.exploration.functions import call_function as call_note_function
 from grasp.tasks.exploration.structural.functions import (
     mark_explored,
@@ -22,15 +23,11 @@ class StructuralExplorationState(BaseModel):
 
 
 def rules() -> list[str]:
-    return [
+    return shared_rules() + [
         "Frequently connected class-like nodes are typically better \
 seed nodes than sparsely connected instance-like nodes.",
-        "As you hit the limits on the number of notes and their length, \
-gradually generalize your notes, discard unnecessary details, and move \
-notes that can be useful across knowledge graphs to the general section.",
-        "The exploration- and note-specific functions including find_frequent \
-are only available during exploration, but not for downstream tasks, so do not \
-take notes about them and their usage.",
+        "Do not take notes on the provided functions and their usage. Instead, \
+focus on structural and modeling insights about the knowledge graphs.",
     ]
 
 
@@ -53,23 +50,21 @@ being specific to the seed nodes you explore.
 
 You should follow a step-by-step approach to take notes:
 1. Look at the current notes and already explored seed nodes across \
-all knowledge graphs to figure out well covered and underexplored areas.
+all knowledge graphs to figure out well-covered and underexplored areas.
 2. Determine a seed node in an underexplored area of one of the knowledge graphs. \
 Avoid previously explored nodes or nodes very similar to them.
-3. Thoroughly explore the seed nodes' neighborhood in the graph. You can also come \
-up with questions targeting this area and try to build SPARQL queries to answer them. \
-Make sure to use all of the provided functions during your exploration, and \
+3. Thoroughly explore the seed node's neighborhood in the graph, and \
 take notes about your findings along the way.
-4. If there are no more open questions and insights to be gained from exploring \
+4. If there are no more insights to be gained from exploring \
 the seed node, mark it as explored. Before stopping, check all notes (not only \
-the ones touched in this exploration) for the above mentioned criteria and clean \
+the ones touched in this exploration) for the above-mentioned criteria and clean \
 them if needed.
 
-Examples of potentially useful types of notes include:
-- overall structure, domain coverage, and schema of the knowledge graphs
-- peculiarities of the knowledge graphs
-- strategies when encountering certain types of questions or errors
-- tips for when and how to use certain functions"""
+Examples of potentially useful types of notes:
+- overall structure and domain coverage
+- quirks and peculiarities
+- type taxonomy and class hierarchy
+- notable or unusual modeling patterns"""
 
 
 def output(state: StructuralExplorationState) -> dict:
