@@ -17,9 +17,9 @@ SELECT DISTINCT ?id ?value ?tags WHERE {
     FILTER(LANG(?value) = "en")
   } UNION {
     # Properties often do not have labels, so make IRI itself
-    # searchable via its local name by binding it to value directly;
-    # e.g., on Wikidata http://www.wikidata.org/prop/direct/P31 would 
-    # be searchable as "P31" in the end.
+    # searchable by binding it to value directly; the indexer
+    # will extract the local name from the full IRI, so no
+    # need to do it manually here
     BIND(?id AS ?value)
   }
 } ORDER BY DESC(?score) ?id DESC(?tags)

@@ -78,7 +78,7 @@ class OpenAICompletionsModel(Model):
         if hasattr(choice.message, "reasoning_content"):
             reasoning = Reasoning(
                 id=uuid4().hex,
-                content=strip_none(choice.message.reasoning_content),
+                content=strip_none(choice.message.reasoning_content),  # type: ignore
             )
 
         tool_calls = []
@@ -109,10 +109,10 @@ class OpenAICompletionsModel(Model):
         prompt_token_ids = None
         if (
             hasattr(choice, "provider_specific_fields")
-            and choice.provider_specific_fields
+            and choice.provider_specific_fields  # type: ignore
         ):
-            token_ids = choice.provider_specific_fields.get("token_ids")
-            prompt_token_ids = choice.provider_specific_fields.get("prompt_token_ids")
+            token_ids = choice.provider_specific_fields.get("token_ids")  # type: ignore
+            prompt_token_ids = choice.provider_specific_fields.get("prompt_token_ids")  # type: ignore
         # Also check response-level attributes
         if token_ids is None and hasattr(response, "token_ids"):
             token_ids = response.token_ids  # type: ignore

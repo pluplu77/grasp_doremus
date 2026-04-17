@@ -201,9 +201,12 @@ and repeat, otherwise stop."""
             "If the user provides additional notes about the desired setup, make sure to follow them.",
             "When developing the SPARQL queries, try to make them as efficient as possible. For example, "
             "put VALUES { {IDS} } clauses in the info SPARQL inside each UNION.",
-            f"To make {name} searchable via their local names, which e.g. is useful "
-            "if they do not have any associated literals, use the IRIs as values by binding ?id to ?value "
-            "in the index SPARQL.",
+            f"To include {name} in the index and make them searchable even if they do not have "
+            "have any associated literals, use their IRIs as values by binding ?id to ?value directly "
+            "in the index SPARQL. During indexing the local part of the IRI (after a known prefix, "
+            "or the last slash or hash) will be extracted and indexed as the value, so make sure it is "
+            "meaningful for search. This also means you do not need to extract the local part in the SPARQL "
+            "yourself.",
         ]
         if name == "entities":
             rules.append(

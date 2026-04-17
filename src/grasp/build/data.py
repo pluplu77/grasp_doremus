@@ -7,7 +7,7 @@ from urllib.parse import unquote_plus
 
 import ijson
 import requests
-from grammar_utils.parse import LR1Parser
+from grammar_utils.parse import LR1Parser  # type: ignore
 from search_rdf import Data
 from tqdm import tqdm
 from universal_ml_utils.io import dump_jsonl, dump_text, load_jsonl
@@ -63,7 +63,7 @@ def download_data(
         bindings = stream_json(endpoint, sparql, params)
 
     dump_jsonl(
-        prepare_items(bindings, prefixes, add_id_as_label, logger),
+        prepare_items(bindings, prefixes, parser, add_id_as_label, logger),
         data_file.as_posix(),
     )
 

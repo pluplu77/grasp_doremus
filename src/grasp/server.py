@@ -75,7 +75,7 @@ class RateLimiter:
 def serve(config: ServerConfig, log_level: int | str | None = None) -> None:
     # create a fast api websocket server to serve the generate_sparql function
     app = FastAPI()
-    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")  # type: ignore
     logger = get_logger("GRASP SERVER", log_level)
 
     # keep track of connections and limit to 10 concurrent connections

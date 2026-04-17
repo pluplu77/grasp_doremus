@@ -32,12 +32,6 @@ def index_functions() -> list[dict]:
         {
             "name": "show_setup",
             "description": "Show the current index and info SPARQL queries for the knowledge graph.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
             "strict": True,
         },
         {
@@ -74,12 +68,6 @@ def info_functions() -> list[dict]:
         {
             "name": "show_setup",
             "description": "Show the current prefixes and description of the knowledge graph.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
             "strict": True,
         },
         {
