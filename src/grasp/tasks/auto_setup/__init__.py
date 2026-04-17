@@ -402,7 +402,7 @@ Additional notes:
 {self.input.get("notes")}"""
 
         else:
-            self.state = load_kg_info(manager.kg)
+            self.state = load_info_state(manager)
             return f"""\
 Set up the prefixes and description for the {manager.kg} knowledge graph.
 
