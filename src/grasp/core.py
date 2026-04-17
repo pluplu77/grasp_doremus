@@ -183,10 +183,7 @@ def generate(
     }
 
     # log stuff
-    config_msg = Message(
-        role="config",
-        content=config.model_dump_json(indent=2, exclude_none=True),
-    )
+    config_msg = Message(role="config", content=config.model_dump_json(indent=2))
     logger.debug(format_message(config_msg))
 
     fn_msg = Message(
@@ -206,7 +203,7 @@ def generate(
 
     known = past_known or set()
 
-    start = time.perf_counter()
+    start = time.monotonic()
 
     # add user input
     messages.append(Message.user(content=input))
@@ -426,17 +423,14 @@ def generate(
     )
     logger.info(format_message(out_msg))
 
-    end = time.perf_counter()
+    end = time.monotonic()
     output = {
         "type": "output",
         "task": task_name,
         "output": output,
         "elapsed": end - start,
         "error": error,
-        "messages": [
-            message.model_dump(exclude_unset=True, exclude_defaults=True)
-            for message in messages
-        ],
+        "messages": [message.model_dump() for message in messages],
         "known": list(known),
     }
 

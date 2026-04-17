@@ -55,7 +55,7 @@ def try_load_search_index(
     index_type: str,
     logger: logging.Logger | None = None,
 ) -> SearchIndex | None:
-    start = time.perf_counter()
+    start = time.monotonic()
 
     try:
         data = load_data(index_dir)
@@ -84,7 +84,7 @@ def try_load_search_index(
             logger.warning(f"Failed to load {index_type} index from {index_dir}: {e}")
         return None
 
-    end = time.perf_counter()
+    end = time.monotonic()
 
     if logger is not None:
         logger.debug(

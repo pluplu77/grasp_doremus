@@ -735,13 +735,13 @@ def _stream_with_timeout(
     response: requests.Response,
     seconds: float | None = None,
 ) -> Any:
-    start = time.perf_counter()
+    start = time.monotonic()
     chunks: list[bytes] = []
     for chunk in response.iter_content(chunk_size=8192):
         if not chunk:
             continue
         chunks.append(chunk)
-        if seconds and time.perf_counter() - start > seconds:
+        if seconds and time.monotonic() - start > seconds:
             raise SPARQLExecuteException(
                 f"Took longer than {seconds} seconds to read SPARQL result",
                 sparql,

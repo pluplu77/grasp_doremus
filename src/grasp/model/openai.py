@@ -157,7 +157,7 @@ class OpenAICompletionsModel(Model):
             message=message,
             reasoning=reasoning,
             tool_calls=tool_calls,
-            usage=response.usage.model_dump(exclude_defaults=True),  # type: ignore
+            usage=response.usage.model_dump(),  # type: ignore
             prompt_token_ids=prompt_token_ids,
             token_ids=token_ids,
             token_logprobs=token_logprobs,
@@ -328,6 +328,6 @@ class OpenAIResponsesModel(Model):
             message=message,
             reasoning=reasoning,
             tool_calls=tool_calls,
-            usage=response.usage.model_dump(exclude_defaults=True),  # type: ignore
+            usage=response.usage.model_dump(),  # type: ignore
             raw=response,
         )
