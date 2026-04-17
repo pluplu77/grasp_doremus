@@ -3,11 +3,7 @@ from typing import Any
 from uuid import uuid4
 
 from openai import OpenAI
-from openai.types.chat import (
-    ChatCompletion,
-    ChatCompletionMessage,
-    ChatCompletionMessageCustomToolCall,
-)
+from openai.types.chat import ChatCompletion
 from openai.types.responses import Response as OpenAIResponse
 
 from grasp.configs import ModelConfig
@@ -103,9 +99,8 @@ class OpenAICompletionsModel(Model):
         )
 
         # convert completions api response to our response
-        id = uuid4().hex
         if not response.choices:
-            return Response(id=id, message=None, tool_calls=[], raw=response)
+            return Response(id=response.id, message=None, tool_calls=[], raw=response)
 
         choice = response.choices[0]  # type: ignore
         if choice.finish_reason not in ["tool_calls", "stop", "length"]:
@@ -158,7 +153,7 @@ class OpenAICompletionsModel(Model):
             prompt_token_ids = response.prompt_token_ids  # type: ignore
 
         return Response(
-            id=id,
+            id=response.id,
             message=message,
             reasoning=reasoning,
             tool_calls=tool_calls,
