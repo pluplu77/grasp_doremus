@@ -6,6 +6,7 @@
   import AppFooter from './AppFooter.svelte';
   import {
     TASKS,
+    configEndpoint,
     kgEndpoint,
     wsEndpoint,
     saveSharedStateEndpoint,
@@ -74,6 +75,7 @@ let composerValue = '';
 let histories = [];
 let task = initialTaskSeed || TASKS[0].id;
 let knowledgeGraphs = new Map();
+let sttEnabled = false;
 let past = null;
 let connectionStatus = 'initial';
 let statusMessage = '';
@@ -131,7 +133,7 @@ let running = false;
       resetStateForFailedShareLoad();
     }
     try {
-      await loadKnowledgeGraphs();
+      await Promise.all([loadKnowledgeGraphs(), loadServerConfig()]);
       await openConnection();
     } catch (error) {
       console.error('Failed to initialize', error);
@@ -269,6 +271,17 @@ let running = false;
       return cloneCeaTable(lastInputRecord.value) ?? lastInputRecord.value;
     }
     return null;
+  }
+
+  async function loadServerConfig() {
+    try {
+      const response = await fetch(configEndpoint());
+      if (!response.ok) return;
+      const data = await response.json();
+      sttEnabled = Boolean(data && data.speech_to_text);
+    } catch (error) {
+      console.warn('Failed to load server config', error);
+    }
   }
 
   async function loadKnowledgeGraphs() {
@@ -977,6 +990,7 @@ let running = false;
           on:taskchange={handleTaskChange}
           on:kgchange={handleKnowledgeGraphChange}
           initialCeaPayload={ceaInitialPayload}
+          {sttEnabled}
         />
       </div>
     </main>

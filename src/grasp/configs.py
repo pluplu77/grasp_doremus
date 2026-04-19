@@ -97,6 +97,15 @@ class GraspConfig(ModelConfig):
         return self.sparql_connection_timeout, self.sparql_query_timeout
 
 
+class SpeechToTextConfig(BaseModel):
+    model: str = "gpt-4o-mini-transcribe"
+    endpoint: str | None = None
+    api_key: str | None = Field(default=None, exclude=True)
+    timeout: float = 30.0
+    num_retries: int = 2
+    max_audio_bytes: int = 25 * 1024 * 1024
+
+
 class ServerConfig(GraspConfig):
     port: int = 6789
     max_connections: int = 10
@@ -107,6 +116,7 @@ class ServerConfig(GraspConfig):
     share: str | None = None
     rate_limit: int | None = None
     rate_limit_window: int = 60
+    speech_to_text: SpeechToTextConfig | None = None
 
 
 class NotesConfig(GraspConfig):

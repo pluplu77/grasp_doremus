@@ -1,7 +1,8 @@
 <script>
-  import { createEventDispatcher, onMount, tick } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount, tick } from 'svelte';
   import SelectionBar from './SelectionBar.svelte';
   import { parseCsvTable } from '../utils/csv.js';
+  import { transcribeEndpoint } from '../constants.js';
 
   export let value = '';
   export let disabled = false;
@@ -15,6 +16,7 @@
   export let errorMessage = '';
   export let onReload = null;
   export let initialCeaPayload = null;
+  export let sttEnabled = false;
 
   const dispatch = createEventDispatcher();
 
@@ -46,6 +48,14 @@
   let ceaPreviousFileName = '';
   let ceaPreviousSelectedRows = [];
   let appliedInitialCeaRef = null;
+
+  let isRecording = false;
+  let isTranscribing = false;
+  let sttError = '';
+  let mediaRecorder = null;
+  let recordingStream = null;
+  let audioChunks = [];
+  let recordingMimeType = '';
 
   const INACTIVITY_MESSAGE_PREFIX = 'connection closed due to inactivity';
 
@@ -81,7 +91,16 @@
       !disabled &&
       connected &&
       !isRunning &&
-      !isCancelling;
+      !isCancelling &&
+      !isRecording &&
+      !isTranscribing;
+  $: canRecord = sttEnabled &&
+    !isCeaTask &&
+    !disabled &&
+    !isRunning &&
+    !isCancelling &&
+    !isTranscribing;
+  $: showMicControls = sttEnabled && !isCeaTask;
   $: canCancel = connected && isRunning && !isCancelling && !disabled;
   $: showCancel = isRunning || isCancelling;
   $: showClear = hasHistory && !isRunning && !isCancelling;
@@ -262,6 +281,174 @@
       onReload();
     }
   }
+
+  function pickRecordingMimeType() {
+    if (typeof MediaRecorder === 'undefined') return '';
+    const candidates = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg;codecs=opus',
+      'audio/ogg'
+    ];
+    for (const type of candidates) {
+      if (MediaRecorder.isTypeSupported?.(type)) return type;
+    }
+    return '';
+  }
+
+  function releaseRecordingStream() {
+    if (recordingStream) {
+      for (const track of recordingStream.getTracks()) {
+        track.stop();
+      }
+      recordingStream = null;
+    }
+    mediaRecorder = null;
+    audioChunks = [];
+  }
+
+  async function startRecording() {
+    if (!canRecord || isRecording) return;
+    sttError = '';
+
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      sttError = 'Microphone access is not supported in this browser.';
+      return;
+    }
+    if (typeof MediaRecorder === 'undefined') {
+      sttError = 'Audio recording is not supported in this browser.';
+      return;
+    }
+
+    try {
+      recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (error) {
+      console.warn('Microphone access denied', error);
+      sttError = 'Microphone access was denied.';
+      return;
+    }
+
+    recordingMimeType = pickRecordingMimeType();
+    try {
+      mediaRecorder = recordingMimeType
+        ? new MediaRecorder(recordingStream, { mimeType: recordingMimeType })
+        : new MediaRecorder(recordingStream);
+    } catch (error) {
+      console.warn('Failed to start recorder', error);
+      sttError = 'Failed to start recording.';
+      releaseRecordingStream();
+      return;
+    }
+
+    audioChunks = [];
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        audioChunks.push(event.data);
+      }
+    };
+    mediaRecorder.start();
+    isRecording = true;
+  }
+
+  function cancelRecording() {
+    if (!isRecording) return;
+    try {
+      mediaRecorder?.stop();
+    } catch (error) {
+      console.warn('Failed to stop recorder', error);
+    }
+    isRecording = false;
+    releaseRecordingStream();
+    focusInput();
+  }
+
+  async function stopAndTranscribe() {
+    if (!isRecording || !mediaRecorder) return;
+    const recorder = mediaRecorder;
+    const mime = recordingMimeType || recorder.mimeType || 'audio/webm';
+
+    const stopped = new Promise((resolve) => {
+      recorder.addEventListener('stop', () => resolve(), { once: true });
+    });
+
+    try {
+      recorder.stop();
+    } catch (error) {
+      console.warn('Failed to stop recorder', error);
+      isRecording = false;
+      releaseRecordingStream();
+      sttError = 'Failed to stop recording.';
+      return;
+    }
+
+    await stopped;
+    isRecording = false;
+
+    const chunks = audioChunks;
+    releaseRecordingStream();
+
+    if (!chunks.length) {
+      sttError = 'No audio was captured.';
+      return;
+    }
+
+    const blob = new Blob(chunks, { type: mime });
+    if (!blob.size) {
+      sttError = 'No audio was captured.';
+      return;
+    }
+
+    isTranscribing = true;
+    sttError = '';
+
+    const extension = mime.includes('mp4')
+      ? 'm4a'
+      : mime.includes('ogg')
+        ? 'ogg'
+        : 'webm';
+
+    const form = new FormData();
+    form.append('file', blob, `recording.${extension}`);
+
+    try {
+      const response = await fetch(transcribeEndpoint(), {
+        method: 'POST',
+        body: form
+      });
+      if (!response.ok) {
+        const message = response.status === 429
+          ? 'Too many requests. Please try again later.'
+          : 'Transcription failed.';
+        throw new Error(message);
+      }
+      const data = await response.json();
+      const text = typeof data?.text === 'string' ? data.text.trim() : '';
+      if (text) {
+        const current = typeof value === 'string' ? value : '';
+        value = current && !/\s$/.test(current) ? `${current} ${text}` : `${current}${text}`;
+        await tick();
+        autoResize();
+      }
+    } catch (error) {
+      console.warn('Transcription failed', error);
+      sttError = error?.message || 'Transcription failed.';
+    } finally {
+      isTranscribing = false;
+      focusInput();
+    }
+  }
+
+  onDestroy(() => {
+    if (isRecording) {
+      try {
+        mediaRecorder?.stop();
+      } catch (error) {
+        // ignore
+      }
+    }
+    releaseRecordingStream();
+  });
 
   function openFileDialog() {
     if (disableFileInput) return;
@@ -831,6 +1018,44 @@
         </div>
       {:else if showActions}
         <div class="composer__input-actions">
+          {#if showMicControls}
+            {#if isRecording}
+              <button
+                type="button"
+                class="icon-button icon-button--danger icon-button--mic-cancel"
+                on:click={cancelRecording}
+                aria-label="Discard recording"
+                title="Discard recording"
+              >
+                <span class="cancel-icon" aria-hidden="true">✖</span>
+              </button>
+              <button
+                type="button"
+                class="icon-button icon-button--mic-stop"
+                on:click={stopAndTranscribe}
+                aria-label="Stop and transcribe"
+                title="Stop and transcribe"
+              >
+                <span class="mic-stop-icon" aria-hidden="true"></span>
+              </button>
+            {:else}
+              <button
+                type="button"
+                class="icon-button icon-button--mic"
+                class:icon-button--mic-busy={isTranscribing}
+                on:click={startRecording}
+                disabled={!canRecord}
+                aria-label={isTranscribing ? 'Transcribing…' : 'Record question'}
+                title={sttError || (isTranscribing ? 'Transcribing…' : 'Record question')}
+              >
+                {#if isTranscribing}
+                  <span class="cancel-spinner" aria-hidden="true"></span>
+                {:else}
+                  <span class="mic-icon" aria-hidden="true">🎤</span>
+                {/if}
+              </button>
+            {/if}
+          {/if}
           <button
             type="button"
             class="icon-button icon-button--primary"
@@ -1460,6 +1685,48 @@
     color: var(--color-uni-blue);
     border: 1px solid rgba(52, 74, 154, 0.18);
     box-shadow: 0 4px 8px rgba(52, 74, 154, 0.16);
+  }
+
+  .icon-button--mic {
+    background: rgba(52, 74, 154, 0.12);
+    color: var(--color-uni-blue);
+    border: 1px solid rgba(52, 74, 154, 0.18);
+    box-shadow: 0 4px 8px rgba(52, 74, 154, 0.16);
+  }
+
+  .icon-button--mic-busy:disabled {
+    opacity: 1;
+    cursor: wait;
+  }
+
+  .icon-button--mic-stop {
+    background: var(--color-uni-green);
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 160, 130, 0.2);
+    animation: mic-pulse 1.2s ease-in-out infinite;
+  }
+
+  .mic-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .mic-stop-icon {
+    width: 0.85rem;
+    height: 0.85rem;
+    background: currentColor;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  @keyframes mic-pulse {
+    0%,
+    100% {
+      box-shadow: 0 4px 8px rgba(0, 160, 130, 0.2);
+    }
+    50% {
+      box-shadow: 0 4px 14px rgba(0, 160, 130, 0.55);
+    }
   }
 
   .icon-button:not(:disabled):hover {

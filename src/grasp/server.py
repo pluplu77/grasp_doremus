@@ -12,9 +12,17 @@ from math import ceil
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import (
+    FastAPI,
+    File,
+    HTTPException,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi import Request as HTTPRequest
 from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI, OpenAIError
 from pydantic import BaseModel, Field, conlist
 from search_rdf.model import SentenceTransformerModel
 from universal_ml_utils.io import dump_json, load_json
@@ -202,6 +210,85 @@ def serve(config: ServerConfig, log_level: int | str | None = None) -> None:
     @app.get("/config")
     async def _config():
         return config.model_dump()
+
+    if config.speech_to_text is not None:
+        stt_config = config.speech_to_text
+        stt_client = OpenAI(
+            base_url=stt_config.endpoint,
+            api_key=stt_config.api_key,
+            timeout=stt_config.timeout,
+            max_retries=stt_config.num_retries,
+        )
+        logger.info(
+            f"Speech-to-text enabled (model={stt_config.model}, "
+            f"max_audio_bytes={stt_config.max_audio_bytes:,})"
+        )
+
+        @app.post("/transcribe")
+        async def _transcribe(
+            http_request: HTTPRequest,
+            file: UploadFile = File(...),
+        ):
+            client_ip = http_request.client.host if http_request.client else "unknown"
+            prefix = f"[{client_ip}] [/transcribe]"
+
+            if rate_limiter is not None:
+                retry_after = rate_limiter.check(client_ip)
+                if retry_after is not None:
+                    logger.warning(
+                        f"{prefix} Rate limit exceeded, retry after {retry_after:.0f}s"
+                    )
+                    raise HTTPException(
+                        status_code=429,
+                        detail="Too many requests, try again later",
+                        headers={"Retry-After": str(int(retry_after))},
+                    )
+
+            audio_bytes = await file.read()
+            if not audio_bytes:
+                raise HTTPException(status_code=400, detail="Empty audio file")
+            if len(audio_bytes) > stt_config.max_audio_bytes:
+                raise HTTPException(
+                    status_code=413,
+                    detail=(
+                        f"Audio file too large "
+                        f"(max {stt_config.max_audio_bytes:,} bytes)"
+                    ),
+                )
+
+            filename = file.filename or "audio.webm"
+            content_type = file.content_type or "application/octet-stream"
+
+            logger.info(
+                f"{prefix} Transcribing {len(audio_bytes):,} bytes "
+                f"({content_type}) with model {stt_config.model}"
+            )
+
+            def run_transcription() -> str:
+                result = stt_client.audio.transcriptions.create(
+                    model=stt_config.model,
+                    file=(filename, audio_bytes, content_type),
+                )
+                return result.text
+
+            try:
+                text = await asyncio.wait_for(
+                    asyncio.to_thread(run_transcription),
+                    timeout=stt_config.timeout + 10.0,
+                )
+            except asyncio.TimeoutError:
+                logger.warning(f"{prefix} Transcription timed out")
+                raise HTTPException(status_code=504, detail="Transcription timed out")
+            except OpenAIError as exc:
+                logger.error(f"{prefix} Transcription failed: {exc}")
+                raise HTTPException(status_code=502, detail="Transcription failed")
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"{prefix} Unexpected transcription error: {exc}")
+                raise HTTPException(
+                    status_code=500, detail="Failed to transcribe audio"
+                )
+
+            return {"text": text}
 
     @app.post("/run")
     async def _run(request: Request, http_request: HTTPRequest):
