@@ -88,6 +88,7 @@ let running = false;
   let composerOffset = 0;
   const COMPOSER_OFFSET_BUFFER = 0;
   let pendingCancelSignal = false;
+  let pendingHistory = false;
   let pendingLoadId = queryParams.loadId;
   let lastInputRecord = null;
   let urlSelectedKgs = initialKgSeed.length ? [...initialKgSeed] : null;
@@ -386,24 +387,29 @@ let running = false;
 
       if (!hasType && payload.error) {
         updateStatusMessage(
-          formatStatusMessage(
-            payload.error,
-            typeof payload.status === 'number' ? payload.status : undefined,
-            'Request failed.'
-          )
+          typeof payload.error === 'string'
+            ? payload.error
+            : 'Request failed.'
         );
         running = false;
         cancelling = false;
+        pendingHistory = false;
         return;
       }
 
       if (!hasType && payload.cancelled) {
         clearHistory('last');
+        pendingHistory = false;
         return;
       }
 
       if (!hasType) {
         return;
+      }
+
+      if (pendingHistory) {
+        startNewHistory();
+        pendingHistory = false;
       }
 
       if (payload.type === 'output') {
@@ -477,6 +483,7 @@ let running = false;
     histories = [...histories, []];
   }
 
+
   function sendReceived() {
     if (!socket || socket.readyState !== WebSocket.OPEN) return;
     const payload = { received: true };
@@ -512,7 +519,7 @@ let running = false;
     persistLastInput(lastInputRecord);
 
     updateStatusMessage('');
-    startNewHistory();
+    pendingHistory = true;
     running = true;
   const payload = {
       task,

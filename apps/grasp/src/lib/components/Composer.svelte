@@ -17,7 +17,6 @@
   export let onReload = null;
   export let initialCeaPayload = null;
   export let sttEnabled = false;
-
   const dispatch = createEventDispatcher();
 
   const MAX_FILE_SIZE_BYTES = 1024 * 1024;
@@ -1018,55 +1017,7 @@
         </div>
       {:else if showActions}
         <div class="composer__input-actions">
-          {#if showMicControls}
-            {#if isRecording}
-              <button
-                type="button"
-                class="icon-button icon-button--danger icon-button--mic-cancel"
-                on:click={cancelRecording}
-                aria-label="Discard recording"
-                title="Discard recording"
-              >
-                <span class="cancel-icon" aria-hidden="true">✖</span>
-              </button>
-              <button
-                type="button"
-                class="icon-button icon-button--mic-stop"
-                on:click={stopAndTranscribe}
-                aria-label="Stop and transcribe"
-                title="Stop and transcribe"
-              >
-                <span class="mic-stop-icon" aria-hidden="true"></span>
-              </button>
-            {:else}
-              <button
-                type="button"
-                class="icon-button icon-button--mic"
-                class:icon-button--mic-busy={isTranscribing}
-                on:click={startRecording}
-                disabled={!canRecord}
-                aria-label={isTranscribing ? 'Transcribing…' : 'Record question'}
-                title={sttError || (isTranscribing ? 'Transcribing…' : 'Record question')}
-              >
-                {#if isTranscribing}
-                  <span class="cancel-spinner" aria-hidden="true"></span>
-                {:else}
-                  <span class="mic-icon" aria-hidden="true">🎤</span>
-                {/if}
-              </button>
-            {/if}
-          {/if}
-          <button
-            type="button"
-            class="icon-button icon-button--primary"
-            on:click={submit}
-            disabled={!canSubmit}
-            aria-label="Run"
-            title="Run"
-          >
-            <span class="paperplane-icon" aria-hidden="true">➤</span>
-          </button>
-          {#if showCancel}
+      {#if showCancel}
             <button
               type="button"
               class="icon-button icon-button--danger"
@@ -1082,6 +1033,53 @@
                 <span class="cancel-icon" aria-hidden="true">✖</span>
               {/if}
             </button>
+          {:else}
+            {#if showMicControls}
+              <button
+                type="button"
+                class="icon-button icon-button--mic"
+                class:icon-button--mic-busy={isTranscribing}
+                class:icon-button--mic-recording={isRecording}
+                on:click={isRecording ? stopAndTranscribe : startRecording}
+                disabled={!canRecord && !isRecording}
+                aria-label={isRecording ? 'Stop and transcribe' : isTranscribing ? 'Transcribing…' : 'Record question'}
+                title={sttError || (isRecording ? 'Stop and transcribe' : isTranscribing ? 'Transcribing…' : 'Record question')}
+              >
+                {#if isTranscribing}
+                  <span class="transcribe-spinner" aria-hidden="true"></span>
+                {:else}
+                  <svg class="soundwave-icon" class:soundwave-icon--active={isRecording} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <line class="soundwave-bar soundwave-bar--1" x1="4" y1="8" x2="4" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <line class="soundwave-bar soundwave-bar--2" x1="8" y1="5" x2="8" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <line class="soundwave-bar soundwave-bar--3" x1="12" y1="2" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <line class="soundwave-bar soundwave-bar--4" x1="16" y1="5" x2="16" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <line class="soundwave-bar soundwave-bar--5" x1="20" y1="8" x2="20" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                {/if}
+              </button>
+            {/if}
+            {#if isRecording}
+              <button
+                type="button"
+                class="icon-button icon-button--danger"
+                on:click={cancelRecording}
+                aria-label="Discard recording"
+                title="Discard recording"
+              >
+                <span class="cancel-icon" aria-hidden="true">✖</span>
+              </button>
+            {:else}
+              <button
+                type="button"
+                class="icon-button icon-button--primary"
+                on:click={submit}
+                disabled={!canSubmit}
+                aria-label="Run"
+                title="Run"
+              >
+                <span class="paperplane-icon" aria-hidden="true">➤</span>
+              </button>
+            {/if}
           {/if}
           {#if showClear}
             <button
@@ -1098,6 +1096,9 @@
         </div>
       {/if}
     </div>
+    {#if sttError}
+      <p class="composer__error" role="alert">{sttError}</p>
+    {/if}
   </div>
 
   <SelectionBar
@@ -1643,9 +1644,10 @@
   }
 
   .icon-button--danger {
-    background: var(--color-uni-red);
-    color: #fff;
-    box-shadow: 0 4px 8px rgba(193, 0, 42, 0.18);
+    background: rgba(193, 0, 42, 0.12);
+    color: var(--color-uni-red);
+    border: 1px solid rgba(193, 0, 42, 0.2);
+    box-shadow: 0 4px 8px rgba(193, 0, 42, 0.1);
   }
 
   .icon-button--reload {
@@ -1699,34 +1701,32 @@
     cursor: wait;
   }
 
-  .icon-button--mic-stop {
-    background: var(--color-uni-green);
+  .icon-button--mic-recording {
+    background: var(--color-uni-blue);
     color: #fff;
-    box-shadow: 0 4px 8px rgba(0, 160, 130, 0.2);
-    animation: mic-pulse 1.2s ease-in-out infinite;
+    border-color: transparent;
+    box-shadow: 0 4px 8px rgba(52, 74, 154, 0.18);
   }
 
-  .mic-icon {
-    font-size: 0.95rem;
-    line-height: 1;
+  .soundwave-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    overflow: visible;
   }
 
-  .mic-stop-icon {
-    width: 0.85rem;
-    height: 0.85rem;
-    background: currentColor;
-    border-radius: 2px;
-    display: inline-block;
+  .soundwave-icon--active .soundwave-bar {
+    transform-origin: center;
+    animation: soundwave-bounce 0.8s ease-in-out infinite;
   }
+  .soundwave-icon--active .soundwave-bar--1 { animation-delay: 0s; }
+  .soundwave-icon--active .soundwave-bar--2 { animation-delay: 0.15s; }
+  .soundwave-icon--active .soundwave-bar--3 { animation-delay: 0.3s; }
+  .soundwave-icon--active .soundwave-bar--4 { animation-delay: 0.45s; }
+  .soundwave-icon--active .soundwave-bar--5 { animation-delay: 0.6s; }
 
-  @keyframes mic-pulse {
-    0%,
-    100% {
-      box-shadow: 0 4px 8px rgba(0, 160, 130, 0.2);
-    }
-    50% {
-      box-shadow: 0 4px 14px rgba(0, 160, 130, 0.55);
-    }
+  @keyframes soundwave-bounce {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
   }
 
   .icon-button:not(:disabled):hover {
@@ -1736,7 +1736,6 @@
   .reload-icon {
     font-size: 1.1rem;
     line-height: 1;
-    color: #fff;
   }
 
   .cancel-spinner {
@@ -1745,10 +1744,19 @@
     border-radius: 50%;
     border: 2px solid rgba(193, 0, 42, 0.28);
     border-top-color: var(--color-uni-red);
-    animation: cancel-spin 0.7s linear infinite;
+    animation: spin 0.7s linear infinite;
   }
 
-  @keyframes cancel-spin {
+  .transcribe-spinner {
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 50%;
+    border: 2px solid rgba(52, 74, 154, 0.28);
+    border-top-color: var(--color-uni-blue);
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin {
     from {
       transform: rotate(0deg);
     }
