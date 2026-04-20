@@ -2,6 +2,7 @@ import os
 
 from pydantic import BaseModel
 
+from grasp.configs import KgInfo
 from grasp.functions import check_known
 from grasp.manager import DEFAULT_DESCRIPTIONS, KgManager
 from grasp.manager.utils import (
@@ -44,7 +45,7 @@ class IndexState(BaseModel):
 
 
 class InfoState(BaseModel):
-    prefixes: dict[str, str]
+    prefixes: dict[str, str] | None = None
     description: str | None = None
 
 
@@ -204,7 +205,10 @@ and repeat, otherwise stop."""
         rules = [
             "If the user provides additional notes about the desired setup, make sure to follow them.",
             "When developing the SPARQL queries, try to make them as efficient as possible. For example, "
-            "put VALUES { {IDS} } clauses in the info SPARQL inside each UNION.",
+            "put VALUES { {IDS} } clauses in the info SPARQL inside each UNION, or avoid string operations "
+            "for the index SPARQL wherever possible.",
+            "Do not use different scores for the same IRI in the index SPARQL, as the IRIs are required to be "
+            "returned in contiguous blocks for the indexing process.",
             f"To include {name} in the index and make them searchable even if they do not have "
             "have any associated literals, use their IRIs as values by binding ?id to ?value directly "
             "in the index SPARQL. During indexing the local part of the IRI (after a known prefix, "
@@ -348,7 +352,9 @@ and repeat, otherwise stop."""
 
     def add_prefix(self, manager: KgManager, short: str, namespace: str) -> str:
         assert isinstance(self.state, InfoState)
-        if short in self.state.prefixes:
+        if not self.state.prefixes:
+            self.state.prefixes = {}
+        elif short in self.state.prefixes:
             raise FunctionCallException(f"Prefix '{short}' already exists.")
 
         try:
@@ -360,7 +366,9 @@ and repeat, otherwise stop."""
 
     def delete_prefix(self, manager: KgManager, short: str) -> str:
         assert isinstance(self.state, InfoState)
-        if short not in self.state.prefixes:
+        if not self.state.prefixes:
+            raise FunctionCallException("No prefixes to delete.")
+        elif short not in self.state.prefixes:
             raise FunctionCallException(f"Prefix '{short}' does not exist.")
 
         try:
@@ -375,7 +383,9 @@ and repeat, otherwise stop."""
 
     def update_prefix(self, manager: KgManager, short: str, namespace: str) -> str:
         assert isinstance(self.state, InfoState)
-        if short not in self.state.prefixes:
+        if not self.state.prefixes:
+            raise FunctionCallException("No prefixes to update.")
+        elif short not in self.state.prefixes:
             raise FunctionCallException(f"Prefix '{short}' does not exist.")
 
         try:
@@ -426,17 +436,25 @@ of the {manager.kg} knowledge graph."
         else:
             assert isinstance(self.state, InfoState)
             manager = self.managers[0]
-            endpoint = manager.endpoint
-            if endpoint == get_qlever_endpoint(manager.kg):
-                # if endpoint is default anyway, set it to None
-                endpoint = None
+
+            # build kg info
+            info = KgInfo()
+            # unchanged fields via manager
+            if manager.endpoint != get_qlever_endpoint(manager.kg):
+                info.endpoint = manager.endpoint
+            if manager.params:
+                info.params = manager.params
+            if manager.headers:
+                info.headers = manager.headers
+
+            # updated fields via state
+            if self.state.description:
+                info.description = self.state.description
+            if self.state.prefixes:
+                info.prefixes = self.state.prefixes
 
             return {
                 "type": "output",
                 "phase": "info",
-                "info": {
-                    "description": self.state.description,
-                    "prefixes": self.state.prefixes,
-                    "endpoint": endpoint,
-                },
+                "info": info.model_dump(exclude_unset=True),
             }

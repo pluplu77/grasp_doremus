@@ -7,6 +7,7 @@ from io import BytesIO
 import numpy as np
 import requests
 from PIL import Image
+from pydantic import BaseModel
 from search_rdf import Data, EmbeddingIndex, FuzzyIndex, KeywordIndex
 from search_rdf.model import (
     HuggingFaceImageModel,
@@ -16,6 +17,7 @@ from search_rdf.model import (
 from universal_ml_utils.configuration import load_config
 from universal_ml_utils.io import load_json, load_text
 
+from grasp.configs import KgInfo
 from grasp.manager.normalizer import Normalizer
 from grasp.sparql.types import ObjType
 from grasp.sparql.utils import find_longest_prefix
@@ -32,13 +34,6 @@ class KgIndex:
     data: Data
     info_sparql: str | None = None
     normalizer: Normalizer | None = None
-
-
-@dataclass
-class KgInfo:
-    prefixes: dict[str, str]
-    description: str | None
-    endpoint: str | None
 
 
 def load_data(index_dir: str) -> Data:
@@ -224,22 +219,20 @@ def load_kg_info(kg: str, logger: logging.Logger | None = None) -> KgInfo:
 
     # load info.json if it exists, fall back to empty
     if os.path.exists(info_file):
-        info = load_json(info_file)
+        info = KgInfo(**load_json(info_file))
     else:
-        info = {}
+        info = KgInfo()
 
-    # compatibility with IRIs: strip leading < and trailing >
-    prefixes = info.get("prefixes", {})
-    prefixes = {k: v.lstrip("<").rstrip(">") for k, v in prefixes.items()}
+    if info.prefixes:
+        # remove prefixes that conflict with or duplicate common prefixes
+        _, _, kg_prefixes = merge_prefixes(
+            get_common_sparql_prefixes(),
+            info.prefixes,
+            logger,
+        )
+        info.prefixes = kg_prefixes
 
-    # remove prefixes that conflict with or duplicate common prefixes
-    _, _, kg_prefixes = merge_prefixes(
-        get_common_sparql_prefixes(),
-        prefixes,
-        logger,
-    )
-
-    return KgInfo(kg_prefixes, info.get("description"), info.get("endpoint"))
+    return info
 
 
 def merge_prefixes(

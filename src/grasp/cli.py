@@ -24,7 +24,6 @@ from grasp.build.data import merge_kgs
 from grasp.configs import (
     GraspConfig,
     JudgeConfig,
-    ModelConfig,
     NotesFromExplorationConfig,
     NotesFromOutputsConfig,
     NotesFromSamplesConfig,
@@ -46,7 +45,7 @@ from grasp.utils import (
     get_available_knowledge_graphs,
     get_index_dir,
     is_invalid_output,
-    parse_parameters,
+    parse_key_value_pairs,
 )
 
 
@@ -373,6 +372,12 @@ def parse_args() -> argparse.Namespace:
         help="Extra query parameters sent to the knowledge graph endpoint",
     )
     data_parser.add_argument(
+        "--query-headers",
+        type=str,
+        nargs="*",
+        help="Extra HTTP headers sent to the knowledge graph endpoint when querying",
+    )
+    data_parser.add_argument(
         "--replace",
         type=str,
         nargs="*",
@@ -693,8 +698,9 @@ def serve_grasp(args: argparse.Namespace) -> None:
 
 
 def get_grasp_data(args: argparse.Namespace) -> None:
-    replace = parse_parameters(args.replace or [])
-    query_params = parse_parameters(args.query_parameters or [])
+    replace = parse_key_value_pairs(args.replace or [])
+    params = parse_key_value_pairs(args.query_parameters or [])
+    headers = parse_key_value_pairs(args.query_headers or [])
 
     if args.entity_sparql is not None:
         args.entity_sparql = load_text(args.entity_sparql).strip()
@@ -711,7 +717,8 @@ def get_grasp_data(args: argparse.Namespace) -> None:
         args.endpoint,
         args.entity_sparql,
         args.property_sparql,
-        query_params,
+        params,
+        headers,
         args.add_id_as_label,
         args.entity_file,
         args.property_file,

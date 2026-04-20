@@ -103,7 +103,7 @@ def evaluate_f1(
 
     prefixes = get_common_sparql_prefixes()
     info = load_kg_info(kg)
-    prefixes, _, _ = merge_prefixes(prefixes, info.prefixes, logger)
+    prefixes, _, _ = merge_prefixes(prefixes, info.prefixes or {}, logger)
 
     endpoint = endpoint or info.endpoint or get_qlever_endpoint(kg)
 

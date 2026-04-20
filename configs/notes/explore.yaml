@@ -21,10 +21,11 @@ result_max_columns: env(RESULT_MAX_COLUMNS:10)
 
 knowledge_graphs:
   - kg: env(KG)
-    endpoint: env(KG_ENDPOINT:null)
     entities_type: env(ENTITIES_TYPE:fuzzy)
     properties_type: env(PROPERTIES_TYPE:embedding)
     notes_file: env(KG_NOTES_FILE:null)
+    info:
+      endpoint: env(KG_ENDPOINT:null)
 
 # note configuration
 max_notes: env(MAX_NOTES:16)

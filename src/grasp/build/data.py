@@ -40,6 +40,7 @@ def download_data(
     logger: Logger,
     endpoint: str | None = None,
     params: dict[str, str] | None = None,
+    headers: dict[str, str] | None = None,
     add_id_as_label: None | str = None,
     result_file: str | None = None,
     overwrite: bool = False,
@@ -58,9 +59,10 @@ def download_data(
         )
         logger.info(
             f"Downloading data to {data_file} from {endpoint} "
-            f"with parameters {params or {}} and SPARQL:\n{sparql}"
+            f"with parameters {params or {}}, headers {headers or {}}, "
+            f"and SPARQL:\n{sparql}"
         )
-        bindings = stream_json(endpoint, sparql, params)
+        bindings = stream_json(endpoint, sparql, params, headers)
 
     dump_jsonl(
         prepare_items(bindings, prefixes, parser, add_id_as_label, logger),
@@ -88,7 +90,8 @@ def get_data(
     endpoint: str | None = None,
     entity_sparql: str | None = None,
     property_sparql: str | None = None,
-    query_params: dict[str, str] | None = None,
+    params: dict[str, str] | None = None,
+    headers: dict[str, str] | None = None,
     add_id_as_label: str | None = None,
     entity_file: str | None = None,
     property_file: str | None = None,
@@ -100,10 +103,18 @@ def get_data(
 
     info = load_kg_info(kg)
 
+    params = params or {}
+    if info.params:
+        params = {**info.params, **params}
+
+    headers = headers or {}
+    if info.headers:
+        headers = {**info.headers, **headers}
+
     endpoint = endpoint or info.endpoint or get_qlever_endpoint(kg)
 
     prefixes = get_common_sparql_prefixes()
-    prefixes, _, _ = merge_prefixes(prefixes, info.prefixes, logger)
+    prefixes, _, _ = merge_prefixes(prefixes, info.prefixes or {}, logger)
     logger.info(f"Using prefixes:\n{json.dumps(prefixes, indent=2)}")
 
     kg_dir = get_index_dir(kg)
@@ -123,7 +134,8 @@ def get_data(
         parser,
         logger,
         endpoint,
-        query_params,
+        params,
+        headers,
         add_id_as_label,
         entity_file,
         overwrite,
@@ -146,7 +158,8 @@ def get_data(
         parser,
         logger,
         endpoint,
-        query_params,
+        params,
+        headers,
         add_id_as_label="always",  # for properties we also want to search via id
         result_file=property_file,
         overwrite=overwrite,
@@ -158,19 +171,21 @@ def get_data(
 def stream_json(
     endpoint: str,
     sparql: str,
-    query_params: dict[str, str] | None = None,
+    params: dict[str, str] | None = None,
+    headers: dict[str, str] | None = None,
 ) -> Iterator[dict]:
     try:
         headers = {
             "Accept": "application/sparql-results+json",
             "Content-Type": "application/sparql-query",
             "User-Agent": "grasp-data-bot",
+            **(headers or {}),
         }
 
         response = requests.post(
             endpoint,
             data=sparql,
-            params=query_params,
+            params=params,
             headers=headers,
             stream=True,
         )

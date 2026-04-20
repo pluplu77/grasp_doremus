@@ -275,7 +275,7 @@ def is_invalid_output(
     return False
 
 
-def parse_parameters(headers: list[str]) -> dict[str, str]:
+def parse_key_value_pairs(headers: list[str]) -> dict[str, str]:
     # each parameter is formatted as key:value
     header_dict = {}
     for header in headers:

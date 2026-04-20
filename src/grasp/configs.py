@@ -3,13 +3,23 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, conlist
 
 
+class KgInfo(BaseModel):
+    prefixes: dict[str, str] | None = None
+    description: str | None = None
+    endpoint: str | None = None
+    headers: dict[str, str] | None = None
+    params: dict[str, str] | None = None
+
+
 class KgConfig(BaseModel):
     kg: str
-    endpoint: str | None = None
     entities_type: Literal["fuzzy", "embedding", "keyword"] = "fuzzy"
     properties_type: Literal["fuzzy", "embedding", "keyword"] = "embedding"
     notes_file: str | None = None
     example_index: str | None = None
+
+    # kg info
+    info: KgInfo | None = None
 
     # additional indices to load
     # built via search-rdf and exposed

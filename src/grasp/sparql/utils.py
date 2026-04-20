@@ -758,8 +758,15 @@ def execute(
     request_timeout: float | tuple[float, float] | None = REQUEST_TIMEOUT,
     read_timeout: float | None = READ_TIMEOUT,
     max_retries: int = 0,
+    headers: dict[str, str] | None = None,
+    params: dict[str, str] | None = None,
     **kwargs: Any,
 ) -> SelectResult | AskResult:
+    if headers is None:
+        headers = {}
+    if params is None:
+        params = {}
+
     max_retries = max(0, max_retries)
     for i in range(max_retries + 1):
         try:
@@ -769,8 +776,9 @@ def execute(
                     "Content-Type": "application/x-www-form-urlencoded",
                     "Accept": "application/sparql-results+json",
                     "User-Agent": "grasp-rdf",
+                    **headers,
                 },
-                data={"query": sparql},
+                data={**params, "query": sparql},
                 timeout=request_timeout,
                 stream=True,
                 **kwargs,

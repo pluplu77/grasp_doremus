@@ -70,10 +70,12 @@ class KgManager:
     def __init__(
         self,
         kg: str,
-        prefixes: dict[str, str] | None = None,
         indices: dict[str, KgIndex] | None = None,
+        prefixes: dict[str, str] | None = None,
         endpoint: str | None = None,
         description: str | None = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
     ):
         self.kg = kg
 
@@ -92,6 +94,8 @@ class KgManager:
         self.endpoint = endpoint or get_qlever_endpoint(self.kg)
         self.indices = indices or {}
         self.description = description
+        self.headers = headers or {}
+        self.params = params or {}
 
         self.embedding_models: dict[str, EmbeddingModel] = {}
 
@@ -140,6 +144,8 @@ class KgManager:
             request_timeout,
             read_timeout,
             max_retries,
+            self.headers,
+            params=self.params,
         )
 
     def format_sparql_result(
@@ -783,25 +789,18 @@ def try_load_index(
     )
 
 
-def load_kg_manager(
-    cfg: KgConfig,
-    skip_indices: bool = False,
-) -> KgManager:
+def load_kg_manager(cfg: KgConfig, skip_indices: bool = False) -> KgManager:
     logger = get_logger(f"{cfg.kg.upper()} KG MANAGER LOADER")
 
     info = load_kg_info(cfg.kg, logger)
-    endpoint = cfg.endpoint or info.endpoint
+    if cfg.info is not None:
+        info = info.model_copy(update=cfg.info.model_dump(exclude_unset=True))
+
     indices: dict[str, KgIndex] = {}
 
     if skip_indices:
         logger.info("Skipping loading of indices")
-        return KgManager(
-            cfg.kg,
-            info.prefixes,
-            indices,
-            endpoint,
-            info.description,
-        )
+        return KgManager(cfg.kg, indices, **info.model_dump())
 
     ent_index = try_load_index(
         cfg.kg,
@@ -832,13 +831,7 @@ def load_kg_manager(
 
         indices[name] = index
 
-    return KgManager(
-        cfg.kg,
-        info.prefixes,
-        indices,
-        endpoint,
-        info.description,
-    )
+    return KgManager(cfg.kg, indices, **info.model_dump())
 
 
 def format_kgs(managers: list[KgManager], notes: dict[str, list[str]]) -> str:
