@@ -98,13 +98,7 @@ execute(kg="wikidata", sparql="SELECT ?job WHERE { wd:Q937 wdt:P106 ?job }")""",
                 "additionalProperties": False,
             },
             "strict": True,
-        }
-    ]
-
-    if fn_set == "base":
-        return fns
-
-    fns.append(
+        },
         {
             "name": "list",
             "description": f"""\
@@ -160,7 +154,10 @@ list(kg="wikidata", property="wdt:P19")""",
             },
             "strict": True,
         },
-    )
+    ]
+
+    if fn_set == "base":
+        return fns
 
     has_entity_index = "entities" in known_indices
     has_property_index = "properties" in known_indices

@@ -346,7 +346,8 @@ def annotate(
                 f"The entity {entity} cannot be used for annotation "
                 "without being known from previous function call results. "
                 "This does not mean it is invalid, but you should verify "
-                "that it indeed exists in the knowledge graphs first."
+                "that it indeed exists (e.g., by listing example triples) "
+                "in the knowledge graphs first."
             )
 
         current = state.annotate(row, column, annotation)
