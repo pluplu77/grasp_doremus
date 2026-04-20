@@ -20,7 +20,7 @@ from grasp.tasks.sparql_qa.examples import (
 from grasp.tasks.sparql_qa.examples import (
     functions as example_functions,
 )
-from grasp.tasks.utils import format_sparql_result, prepare_sparql_result
+from grasp.tasks.utils import prepare_sparql_result
 from grasp.utils import format_list, format_notes
 
 
@@ -360,6 +360,44 @@ def get_answer_or_cancel(
     return last_answer, last_cancel  # type: ignore
 
 
+def prepare_formatted_output(
+    sparql: str,
+    kg: str | None,
+    managers: list[KgManager],
+    max_rows: int = 10,
+    max_cols: int = 10,
+    request_timeout: float | tuple[float, float] = (6.0, 30.0),
+    read_timeout: float = 10.0,
+) -> dict:
+    if kg is None:
+        kg = managers[0].kg
+
+    result, selections = prepare_sparql_result(
+        sparql,
+        kg,
+        managers,
+        max_rows,
+        max_cols,
+        request_timeout=request_timeout,
+        read_timeout=read_timeout,
+    )
+    manager, _ = find_manager(managers, kg)
+
+    formatted = f"SPARQL query over {kg}:\n```sparql\n{result.sparql}\n```"
+    if selections:
+        formatted += f"\n\n{manager.format_selections(selections)}"
+
+    formatted += f"\n\nExecution result:\n{result.formatted}"
+
+    return {
+        "sparql": result.sparql,
+        "selections": manager.format_selections(selections),
+        "result": result.formatted,
+        "endpoint": manager.endpoint,
+        "formatted": formatted,
+    }
+
+
 def output(
     messages: list[Message],
     managers: list[KgManager],
@@ -385,42 +423,36 @@ def output(
         output["answer"] = answer.args["answer"].strip()
         output["sparql"] = answer.args["sparql"]
         output["kg"] = answer.args["kg"]
-        output["formatted"] = output["answer"]
+        formatted = output["answer"]
 
     else:
         assert cancel is not None
         output["type"] = "cancel"
         output["explanation"] = cancel.args["explanation"].strip()
-        output["formatted"] = output["explanation"]
 
         best_attempt = cancel.args.get("best_attempt")
         if best_attempt:
             output["sparql"] = best_attempt.get("sparql")
             output["kg"] = best_attempt.get("kg")
 
-    if output["sparql"] is not None:
-        if output["kg"] is None:
-            output["kg"] = managers[0].kg
+        formatted = output["explanation"]
 
-        result, selections = prepare_sparql_result(
-            output["sparql"],
-            output["kg"],
-            managers,
-            max_rows,
-            max_cols,
-            request_timeout=request_timeout,
-            read_timeout=read_timeout,
-        )
-        manager, _ = find_manager(managers, output["kg"])
+    if output["sparql"] is None:
+        output["formatted"] = formatted
+        return output
 
-        output["sparql"] = result.sparql
-        output["selections"] = manager.format_selections(selections)
-        output["result"] = result.formatted
-        output["endpoint"] = manager.endpoint
-
-        output["formatted"] += "\n\n"
-        output["formatted"] += format_sparql_result(manager, result, selections)
-
+    formatted_output = prepare_formatted_output(
+        output["sparql"],
+        output["kg"],
+        managers,
+        max_rows,
+        max_cols,
+        request_timeout,
+        read_timeout,
+    )
+    # prepend answer or explanation to formatted output
+    formatted_output["formatted"] = formatted + "\n\n" + formatted_output["formatted"]
+    output.update(formatted_output)
     return output
 
 

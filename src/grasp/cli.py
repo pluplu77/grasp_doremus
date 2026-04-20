@@ -23,6 +23,7 @@ from grasp.build import build_indices, get_data
 from grasp.build.data import merge_kgs
 from grasp.configs import (
     GraspConfig,
+    JudgeConfig,
     ModelConfig,
     NotesFromExplorationConfig,
     NotesFromOutputsConfig,
@@ -318,6 +319,18 @@ def parse_args() -> argparse.Namespace:
         "evaluation_file",
         type=str,
         help="Path to file to write the evaluation results to",
+    )
+    eval_judge_parser.add_argument(
+        "--reformat-sparql",
+        action="store_true",
+        help="Whether to re-run candidate formatting based on the SPARQL "
+        "query before judging.",
+    )
+    eval_judge_parser.add_argument(
+        "--timeout",
+        type=float,
+        default=300.0,
+        help="Maximum duration for a single query in seconds if reformatting is enabled",
     )
 
     eval_parser.add_argument(
@@ -755,7 +768,8 @@ def evaluate_grasp(args: argparse.Namespace) -> None:
         )
 
     elif eval_cmd == "judge":
-        judge_config = ModelConfig(**load_config(args.config))
+        judge_config = JudgeConfig(**load_config(args.config))
+
         evaluate_with_judge(
             args.input_file,
             args.prediction_files,
@@ -763,6 +777,8 @@ def evaluate_grasp(args: argparse.Namespace) -> None:
             judge_config,
             args.overwrite,
             args.retry_failed,
+            args.reformat_sparql,
+            args.timeout,
             args.log_level,
         )
 

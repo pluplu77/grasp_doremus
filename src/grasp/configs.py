@@ -41,6 +41,13 @@ class ModelConfig(BaseModel):
     num_retries: int = 2
 
 
+class JudgeConfig(ModelConfig):
+    # optional knowledge graph; required when judge evaluation is run with
+    # --fix-formatted so that SPARQL queries can be executed and selections
+    # recomputed during reformatting
+    knowledge_graph: KgConfig | None = None
+
+
 class GraspConfig(ModelConfig):
     # function set, notes, and knowledge graphs
     fn_set: Literal[
@@ -98,7 +105,7 @@ class GraspConfig(ModelConfig):
 
 
 class SpeechToTextConfig(BaseModel):
-    model: str = "gpt-4o-mini-transcribe"
+    model: str = "gpt-4o-transcribe"
     model_endpoint: str | None = None
     model_api_key: str | None = Field(default=None, exclude=True)
     model_timeout: float = 30.0
