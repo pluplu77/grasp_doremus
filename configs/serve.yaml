@@ -1,14 +1,14 @@
-model: env(MODEL:gpt-5-mini)
+model: env(MODEL:gpt-5.4-mini)
 model_provider: env(MODEL_PROVIDER:openai/responses)
 model_endpoint: env(MODEL_ENDPOINT:null)
-model_api_key: env(MODEL_API_KEY:null)
+model_api_key: env(OPENAI_API_KEY)
+model_timeout: env(MODEL_TIMEOUT:120)
 model_kwargs:
   reasoning:
     effort: env(REASONING_EFFORT:null)
     summary: env(REASONING_SUMMARY:null)
 
-temperature: env(TEMPERATURE:1.0)
-top_p: env(TOP_P:1.0)
+max_completion_tokens: env(MAX_TOKENS:16384)
 tool_choice: env(TOOL_CHOICE:auto)
 
 task_kwargs:
@@ -34,9 +34,6 @@ result_max_columns: env(RESULT_MAX_COLUMNS:10)
 force_examples: env(FORCE_EXAMPLES:null)
 random_examples: env(RANDOM_EXAMPLES:false)
 num_examples: env(NUM_EXAMPLES:3)
-
-max_completion_tokens: env(MAX_TOKENS:16384)
-completion_timeout: env(TIMEOUT:120)
 
 knowledge_graphs:
   - kg: wikidata

@@ -10,7 +10,7 @@ from logging import Logger
 from typing import Generator
 
 import torch
-from grammar_utils.parse import LR1Parser
+from grammar_utils.parse import LR1Parser  # type: ignore
 from peft import AutoPeftModelForCausalLM, PeftModel
 from pydantic import BaseModel
 from tqdm import tqdm

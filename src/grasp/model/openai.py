@@ -24,7 +24,7 @@ class OpenAICompletionsModel(Model):
         self.client = OpenAI(
             base_url=config.model_endpoint,
             api_key=config.model_api_key,
-            timeout=config.completion_timeout,
+            timeout=config.model_timeout,
             max_retries=config.num_retries,
         )
 
@@ -170,7 +170,7 @@ class OpenAIResponsesModel(Model):
         self.client = OpenAI(
             base_url=config.model_endpoint,
             api_key=config.model_api_key,
-            timeout=config.completion_timeout,
+            timeout=config.model_timeout,
             max_retries=config.num_retries,
         )
 
