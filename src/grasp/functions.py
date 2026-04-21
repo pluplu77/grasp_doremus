@@ -1068,15 +1068,15 @@ def search_with_constraints(
     target_constr = constraints.get(position)
     if target_constr is not None:
         raise FunctionCallException(
-            f'Cannot look for {position} and constrain it to \
-"{target_constr}" at the same time.'
+            f"Cannot look for {position} and constrain it to "
+            f'"{target_constr}" at the same time.'
         )
 
     num_constraints = sum(c is not None for c in constraints.values())
     if num_constraints > 2:
         raise FunctionCallException(
-            "At most two of subject, property, and \
-object should be constrained at once."
+            "At most two of subject, property, and "
+            "object should be constrained at once."
         )
 
     identifier_map = None

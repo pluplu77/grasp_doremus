@@ -124,7 +124,7 @@ It must be a SELECT query returning:
 - ?value: the string literal to index for search (e.g., a label or alias)
 - ?tags: "main" for the preferred indexed literal for an IRI, unbound \
 for other indexed literals of the same IRI
-Results should be ordered by relevance score descending, then by ?id and ?tags. \
+Results should be ordered by relevance score descending, then by ?id and ?tags descending. \
 Default to the total number of occurrences of an IRI as its relevance score. \
 If a knowledge graph provides another measure of relevance you can use that instead \
 (e.g., wikibase:sitelinks for Wikidata). When choosing literals to include in the \

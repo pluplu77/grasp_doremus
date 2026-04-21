@@ -82,8 +82,8 @@ def find_frequent(
 
     if constraints.get(position) is not None:
         raise FunctionCallException(
-            f'Cannot find common values at the "{position}" position '
-            f"while also constraining it."
+            f"Cannot look for {position} values and constrain them "
+            f'to "{constraints[position]}" at the same time.'
         )
 
     pos_values = []
