@@ -356,44 +356,23 @@ def setup_model_selection(available_models, selected_models_dict=None):
     Returns:
     - Dictionary with selected models (key: model name, value: True if selected)
     """
-    # Initialize session state for model selection
-    if "model_regex" not in st.session_state:
-        st.session_state.model_regex = ""
-
-    if "model_selections" not in st.session_state:
-        st.session_state.model_selections = {}
-
-    # Add regex filter for model selection
+    # Regex filter — widget key is the source of truth
     model_regex = st.sidebar.text_input(
         "Filter models by regex pattern",
-        value=st.session_state.model_regex,
-        key="model_regex_input",
+        key="model_regex",
         help="Enter a regex pattern to automatically select matching models and deselect non-matching ones. Example: 'llama|phi' selects all LLaMA and Phi models.",
     )
 
-    # Update stored regex value
-    st.session_state.model_regex = model_regex
-
-    # Check if regex changed (compare to previous value)
-    regex_changed = False
-    if "previous_model_regex" not in st.session_state:
-        st.session_state.previous_model_regex = ""
-        regex_changed = model_regex != ""
-    else:
-        regex_changed = model_regex != st.session_state.previous_model_regex
-
-    # Update previous regex pattern
+    # Detect regex changes across reruns
+    previous_regex = st.session_state.get("previous_model_regex")
+    regex_changed = model_regex != previous_regex
     st.session_state.previous_model_regex = model_regex
 
-    # Dictionary to track selected models
-    if selected_models_dict is None:
-        selected_models = {}
-    else:
-        selected_models = selected_models_dict
+    selected_models = {} if selected_models_dict is None else selected_models_dict
 
     # Group models by name (before the first dot)
     model_groups = defaultdict(list)
-    model_list = (
+    model_list = list(
         available_models.keys()
         if isinstance(available_models, dict)
         else available_models
@@ -406,85 +385,48 @@ def setup_model_selection(available_models, selected_models_dict=None):
         )
         model_groups[model_name].append(model_display_name)
 
-    # Find models that match the regex if provided
-    matching_models = set()
-
-    # If regex changed, handle selection updates
-    if regex_changed:
-        # If empty regex, select all models
-        if not model_regex:
-            for model in model_list:
-                st.session_state.model_selections[model] = True
-        else:
-            # Otherwise, use regex to determine selections
-            try:
-                regex = re.compile(model_regex)
-                # Find all models that match the regex
-                for model_name, variants in model_groups.items():
-                    for variant in variants:
-                        if regex.search(variant):
-                            matching_models.add(variant)
-
-                # Show a warning if no models match at all
-                if not matching_models:
-                    st.sidebar.warning(f"No models match the pattern '{model_regex}'")
-
-                # Update selections based on matches
-                for model in model_list:
-                    matches = model in matching_models
-                    st.session_state.model_selections[model] = matches
-
-            except re.error as e:
-                st.sidebar.error(f"Invalid regex pattern: {e}")
-                # In case of error, don't change selections
-    elif model_regex:
-        # If regex didn't change but is non-empty, still build matching_models for display
+    # Compile regex once (if any)
+    compiled_regex = None
+    if model_regex:
         try:
-            regex = re.compile(model_regex)
-            for model_name, variants in model_groups.items():
-                for variant in variants:
-                    if regex.search(variant):
-                        matching_models.add(variant)
-
-            if not matching_models:
-                st.sidebar.warning(f"No models match the pattern '{model_regex}'")
+            compiled_regex = re.compile(model_regex)
         except re.error as e:
             st.sidebar.error(f"Invalid regex pattern: {e}")
 
-    # Initialize any missing models in state with default selection True
-    for model in model_list:
-        if model not in st.session_state.model_selections:
-            # Default is selected (True)
-            st.session_state.model_selections[model] = True
-
-    # Display checkboxes for each model in expanders grouped by model name
-    for model_name, variants in sorted(model_groups.items()):
-        # Create an expander for each model family
-        with st.sidebar.expander(f"**{model_name}**", expanded=False):
-            for variant in sorted(variants):
-                # Get display name without parentheses
-                display_name = variant.replace(model_name + " (", "").replace(")", "")
-                if display_name == variant:  # No parentheses found
-                    checkbox_label = "default"
-                else:
-                    checkbox_label = display_name
-
-                # Use the stored value from session state
-                current_value = st.session_state.model_selections.get(variant, True)
-
-                # Create checkbox with current value
-                selected = st.checkbox(
-                    checkbox_label, value=current_value, key=f"model_{variant}"
+    # On regex change, update widget state directly before widgets render.
+    # Streamlit prioritises session_state[key] over `value=` on re-renders,
+    # so writing the widget key is the only way to programmatically toggle it.
+    if regex_changed:
+        if not model_regex:
+            for variant in model_list:
+                st.session_state[f"model_{variant}"] = True
+        elif compiled_regex is not None:
+            for variant in model_list:
+                st.session_state[f"model_{variant}"] = bool(
+                    compiled_regex.search(variant)
                 )
 
-                # Update both the returned dictionary and the session state
+    # Warn if a non-empty regex matches nothing
+    if compiled_regex is not None and not any(
+        compiled_regex.search(v) for v in model_list
+    ):
+        st.sidebar.warning(f"No models match the pattern '{model_regex}'")
+
+    # Render checkboxes. Widget keys are the source of truth.
+    for model_name, variants in sorted(model_groups.items()):
+        with st.sidebar.expander(f"**{model_name}**", expanded=False):
+            for variant in sorted(variants):
+                display_name = variant.replace(model_name + " (", "").replace(")", "")
+                checkbox_label = "default" if display_name == variant else display_name
+
+                selected = st.checkbox(
+                    checkbox_label, value=True, key=f"model_{variant}"
+                )
+
                 if isinstance(selected_models, dict):
                     selected_models[variant] = selected
                 elif isinstance(selected_models, list) and selected:
                     selected_models.append(variant)
-
-                # Update session state
-                st.session_state.model_selections[variant] = selected
 
     return selected_models
 
@@ -547,10 +489,8 @@ def show_predictions_view(available_data):
 
     # Add regex filter for model selection
     model_regex = st.sidebar.text_input(
-        "Filter models by regex pattern", st.session_state.stored_model_regex
+        "Filter models by regex pattern", key="predictions_model_regex"
     )
-    # Update session state with current filter
-    st.session_state.stored_model_regex = model_regex
 
     # Determine which model options to display
     display_options = model_options
@@ -1284,7 +1224,7 @@ def show_ranking_view(ranking_data):
         return styles
 
     styled_df = df_display.style.apply(highlight_winner, axis=1)
-    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+    st.dataframe(styled_df, width="stretch", hide_index=True)
 
     # Show summary statistics
     st.caption(f"Showing {len(benchmark_entries)} benchmark(s) for {display_name}")
@@ -1527,25 +1467,11 @@ def show_comprehensive_view(available_data):
         help="When checked, ground truth with size 0 (empty result sets) will be counted as valid",
     )
 
-    # We'll set up the benchmark checkboxes after gathering all the data for the table
-    # Create an empty dictionary to track selected benchmarks
-    selected_benchmarks = {}
-
     # Create a list of all available models across all benchmarks
     all_available_models = set()
     for kg_data in available_data.values():
         for benchmark_info in kg_data.values():
             all_available_models.update(benchmark_info["models"].keys())
-
-    # Group models by name (before the first dot)
-    model_groups = defaultdict(list)
-    for model_display_name in all_available_models:
-        model_name = (
-            model_display_name.split(" (")[0]
-            if " (" in model_display_name
-            else model_display_name
-        )
-        model_groups[model_name].append(model_display_name)
 
     # Add model selection
     st.sidebar.markdown("---")
@@ -1641,122 +1567,54 @@ def show_comprehensive_view(available_data):
     st.sidebar.markdown("---")
     st.sidebar.subheader("Select Benchmarks to Include")
 
-    # Get all benchmarks from all KGs
-    all_benchmarks = []
-    for kg, benchmarks in benchmark_by_kg.items():
-        all_benchmarks.extend([(kg, b) for b in benchmarks])
-
-    # Initialize selected benchmarks in session state if not already present
-    # Use (kg, benchmark) tuples as keys for better organization
-    if "selected_benchmarks" not in st.session_state:
-        st.session_state.selected_benchmarks = {
-            (kg, b): True for kg, b in all_benchmarks
-        }
-
-    # Initialize benchmark_regex in session state if not present
-    if "benchmark_regex" not in st.session_state:
-        st.session_state["benchmark_regex"] = ""
-
-    # Store previous regex pattern to detect changes
-    if "previous_benchmark_regex" not in st.session_state:
-        st.session_state["previous_benchmark_regex"] = ""
-
-    # Add regex filter for benchmark selection with persistent state
-    # Use stored value for initial value, but don't update directly
+    # Regex filter — widget key is the source of truth
     benchmark_regex = st.sidebar.text_input(
         "Filter benchmarks by regex pattern",
-        value=st.session_state.stored_benchmark_regex,
-        key="benchmark_regex_widget",
+        key="benchmark_regex",
         help="Enter a regex pattern to automatically select matching benchmarks and deselect non-matching ones. Example: 'wwq|lcquad' selects WWQ and LC-QuAD benchmarks.",
     )
 
-    # Update stored value for next view
-    if "benchmark_regex_widget" in st.session_state:
-        st.session_state.stored_benchmark_regex = (
-            st.session_state.benchmark_regex_widget
-        )
+    # Detect regex changes across reruns
+    previous_regex = st.session_state.get("previous_benchmark_regex")
+    regex_changed = benchmark_regex != previous_regex
+    st.session_state.previous_benchmark_regex = benchmark_regex
 
-    # Check if regex changed
-    regex_changed = benchmark_regex != st.session_state["previous_benchmark_regex"]
+    # Compile regex once (if any)
+    compiled_regex = None
+    if benchmark_regex:
+        try:
+            compiled_regex = re.compile(benchmark_regex)
+        except re.error as e:
+            st.sidebar.error(f"Invalid regex pattern: {e}")
 
-    # Update previous regex pattern
-    st.session_state["previous_benchmark_regex"] = benchmark_regex
-
-    # No need for a separate "Select All" option as it's redundant
-    # Users can select/deselect individual benchmarks
-
-    # Create a checkbox for each benchmark, grouped by knowledge graph
-    selected_benchmarks = {}
-
-    # Process each knowledge graph
-    for kg in sorted(benchmark_by_kg.keys()):
-        benchmarks = benchmark_by_kg[kg]
-
-        # All benchmarks should be visible in the sidebar, but we'll use regex to auto-select
-        filtered_benchmarks = benchmarks
-        matching_benchmarks = set()
-
-        # If we have a regex pattern, find which benchmarks match it
-        if benchmark_regex:
-            try:
-                regex = re.compile(benchmark_regex)
-                matching_benchmarks = {b for b in benchmarks if regex.search(b)}
-                # Removed the "No benchmarks match" warning message
-            except re.error as e:
-                st.sidebar.error(f"Invalid regex pattern: {e}")
-        else:
-            # If no regex pattern, all benchmarks match (for default selection)
-            matching_benchmarks = set(benchmarks)
-
-        # If we have benchmarks to show for this KG, create a section with expander
-        if filtered_benchmarks:
-            # Create an expander for each KG
-            with st.sidebar.expander(f"**{kg}**", expanded=False):
-                for benchmark in sorted(filtered_benchmarks):
-                    # Create a unique key for the checkbox
-                    key = (kg, benchmark)
-
-                    # If regex pattern changed, auto-select checkboxes
-                    if regex_changed:
-                        if not benchmark_regex:
-                            # Empty regex means select all benchmarks
-                            should_select = True
-                        else:
-                            # If benchmark matches regex, select it; otherwise unselect
-                            should_select = benchmark in matching_benchmarks
-                        # Update the session state
-                        st.session_state.selected_benchmarks[key] = should_select
-
-                    # Get the current value from session state
-                    current_value = st.session_state.selected_benchmarks.get(key, True)
-
-                    # Create the checkbox
-                    selected = st.checkbox(
-                        benchmark,
-                        value=current_value,
-                        key=f"benchmark_{kg}_{benchmark}",
+    # On regex change, update widget state directly before widgets render.
+    if regex_changed:
+        for kg, benchmarks in benchmark_by_kg.items():
+            for benchmark in benchmarks:
+                widget_key = f"benchmark_{kg}_{benchmark}"
+                if not benchmark_regex:
+                    st.session_state[widget_key] = True
+                elif compiled_regex is not None:
+                    st.session_state[widget_key] = bool(
+                        compiled_regex.search(benchmark)
                     )
 
-                    # Store the selection
-                    selected_benchmarks[key] = selected
-                    # Update session state
-                    st.session_state.selected_benchmarks[key] = selected
-
-    # For benchmarks not shown due to filtering, preserve their state
-    for kg, benchmarks in benchmark_by_kg.items():
-        for benchmark in benchmarks:
-            key = (kg, benchmark)
-            if key not in selected_benchmarks:
-                selected_benchmarks[key] = st.session_state.selected_benchmarks.get(
-                    key, True
+    # Render checkboxes. Widget keys are the source of truth.
+    selected_benchmarks = {}
+    for kg in sorted(benchmark_by_kg.keys()):
+        with st.sidebar.expander(f"**{kg}**", expanded=False):
+            for benchmark in sorted(benchmark_by_kg[kg]):
+                selected = st.checkbox(
+                    benchmark,
+                    value=True,
+                    key=f"benchmark_{kg}_{benchmark}",
                 )
+                selected_benchmarks[(kg, benchmark)] = selected
 
-    # If no benchmarks selected, select all
+    # If no benchmarks selected, treat as all-selected for filtering
     if not any(selected_benchmarks.values()):
-        selected_benchmarks = {key: True for key in all_benchmarks}
         st.sidebar.warning("No benchmarks selected. Showing all benchmarks.")
-        # Update session state
-        st.session_state.selected_benchmarks = selected_benchmarks
+        selected_benchmarks = {key: True for key in selected_benchmarks}
 
     # Now filter benchmarks based on selected options
     filtered_kg_benchmarks = defaultdict(list)
@@ -1908,7 +1766,7 @@ def show_comprehensive_view(available_data):
 
         # Apply the styling directly
         styled_df = df.style.apply(lambda _: style_df, axis=None)
-        st.dataframe(styled_df, use_container_width=True)
+        st.dataframe(styled_df, width="stretch")
     else:
         # For count metrics, use similar ranking logic
         # Dictionary to store rankings for each KG-benchmark pair
@@ -1988,7 +1846,7 @@ def show_comprehensive_view(available_data):
 
         # Apply the styling directly
         styled_df = df.style.apply(lambda _: style_df, axis=None)
-        st.dataframe(styled_df, use_container_width=True)
+        st.dataframe(styled_df, width="stretch")
 
     # Add a note about the data and color coding
     st.caption(
@@ -2025,14 +1883,6 @@ def main():
             "No benchmarks found. Please make sure the data structure follows the expected pattern."
         )
         return
-
-    # Initialize session state variables that need to be preserved between views
-    # Use different keys for storing values vs widget keys
-    if "stored_benchmark_regex" not in st.session_state:
-        st.session_state.stored_benchmark_regex = ""
-
-    if "stored_model_regex" not in st.session_state:
-        st.session_state.stored_model_regex = ""
 
     # Create a view selector
     view_options = [
@@ -2179,7 +2029,7 @@ def main():
             }
         )
 
-        st.dataframe(metrics_df, use_container_width=True)
+        st.dataframe(metrics_df, width="stretch")
 
         # Add explanation for the info column
         empty_ground_truth_text = (

@@ -1,12 +1,11 @@
 from grasp.functions import (
     find_manager,
     format_verification_error,
-    update_known_from_rows,
     parse_iri_or_literal,
+    update_known_from_rows,
 )
 from grasp.manager import KgManager
 from grasp.sparql.types import Position, SelectResult
-from grasp.sparql.utils import wrap_iri
 from grasp.utils import FunctionCallException
 
 
