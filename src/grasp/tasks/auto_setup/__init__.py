@@ -204,9 +204,12 @@ and repeat, otherwise stop."""
         name = self.input["name"]
         rules = [
             "If the user provides additional notes about the desired setup, make sure to follow them.",
-            "When developing the SPARQL queries, try to make them as efficient as possible. For example, "
-            "put VALUES { {IDS} } clauses in the info SPARQL inside each UNION, and avoid string operations "
-            "and filters for the index SPARQL wherever possible.",
+            "Make the SPARQL queries as efficient as possible. For example, put VALUES { {IDS} } clauses "
+            "in the info SPARQL inside each UNION, and avoid heavy string operations and string filters for the index "
+            "SPARQL. The info SPARQL should run in a fraction of a second, whereas "
+            "the index SPARQL is allowed to take many minutes or even hours on the full knowledge graph. "
+            "The latter should be tested on a subset of the data (e.g., using VALUES) to stay "
+            "within the lower time limits during development.",
             "Do not use different scores for the same IRI in the index SPARQL, as the IRIs are required to be "
             "returned in contiguous blocks for the indexing process.",
             f"To include {name} in the index and make them searchable even if they do not have "

@@ -1,6 +1,6 @@
 import os
-import time
 import random
+import time
 from logging import Logger
 
 import yaml
@@ -21,7 +21,7 @@ from grasp.core import generate, load_notes, setup
 from grasp.functions import find_manager
 from grasp.manager import KgManager
 from grasp.model import Message, get_model
-from grasp.notes.utils import format_output, link
+from grasp.notes.utils import format_output
 from grasp.tasks import get_task
 from grasp.tasks.cea import AnnotationState, CeaSample, prepare_annotation
 from grasp.tasks.exploration import (
@@ -37,6 +37,7 @@ from grasp.utils import (
     format_message,
     format_notes,
     format_response,
+    link,
 )
 
 

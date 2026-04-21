@@ -3,6 +3,7 @@ import json
 import os
 import random
 import sys
+from datetime import datetime
 from importlib import metadata
 
 from search_rdf.model import SentenceTransformerModel
@@ -45,6 +46,7 @@ from grasp.utils import (
     get_available_knowledge_graphs,
     get_index_dir,
     is_invalid_output,
+    link,
     parse_key_value_pairs,
 )
 
@@ -527,10 +529,16 @@ def parse_args() -> argparse.Namespace:
         help="User notes for the info phase (prefixes and description)",
     )
     auto_setup_parser.add_argument(
-        "--index-notes",
+        "--entity-index-notes",
         type=str,
         default=None,
-        help="User notes for the index phases (entity and property index/info SPARQLs)",
+        help="User notes for the entity index (entity index and info SPARQL)",
+    )
+    auto_setup_parser.add_argument(
+        "--property-index-notes",
+        type=str,
+        default=None,
+        help="User notes for the property index (property index and info SPARQL)",
     )
 
     # visualize trace from GRASP output
@@ -835,19 +843,24 @@ def auto_setup_grasp(args: argparse.Namespace) -> None:
 
     # run phases sequentially: info first (so prefixes are available),
     # then entity index, then property index
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     phases = [
         {"phase": "info", "notes": args.info_notes},
-        {"phase": "index", "name": "entities", "notes": args.index_notes},
-        {"phase": "index", "name": "properties", "notes": args.index_notes},
+        {"phase": "index", "name": "entities", "notes": args.entity_index_notes},
+        {"phase": "index", "name": "properties", "notes": args.property_index_notes},
     ]
 
-    def backup(file: str) -> None:
-        # copy the file to file.prev to enable the user to restore it if
-        # auto-setup fails
-        if os.path.exists(file):
-            backup_file = file + ".prev"
-            os.replace(file, backup_file)
-            logger.info(f"Backed up existing file {file} to {backup_file}")
+    def dump_latest(path: str, payload, text: bool = False) -> str:
+        # write to a timestamped sibling, then point `path` at it via a
+        # relative symlink. prior timestamped files are preserved.
+        stem, ext = os.path.splitext(path)
+        stamped = f"{stem}.{timestamp}{ext}"
+        if text:
+            dump_text(payload, stamped)
+        else:
+            dump_json(payload, stamped, indent=2)
+        link(stamped, path)
+        return stamped
 
     for phase_input in phases:
         phase = phase_input["phase"]
@@ -876,9 +889,10 @@ def auto_setup_grasp(args: argparse.Namespace) -> None:
         # save the full trace so we can inspect it
         # independent of success or failure
         trace_path = os.path.join(trace_dir, "auto_setup.json")
-        backup(trace_path)
-        dump_json(result, trace_path, indent=2)
-        logger.info(f"Saved auto-setup {phase} trace to {trace_path}")
+        stamped = dump_latest(trace_path, result)
+        logger.info(
+            f"Saved auto-setup {phase} trace to {stamped} (latest: {trace_path})"
+        )
 
         output = result.get("output")
         if output is None:
@@ -888,9 +902,8 @@ def auto_setup_grasp(args: argparse.Namespace) -> None:
         # save outputs to disk
         if phase == "info":
             path = os.path.join(kg_dir, "info.json")
-            backup(path)
-            dump_json(output["info"], path, indent=2)
-            logger.info(f"Saved prefixes and description to {path}")
+            stamped = dump_latest(path, output["info"])
+            logger.info(f"Saved prefixes and description to {stamped} (latest: {path})")
             continue
 
         name = phase_input["name"]
@@ -900,14 +913,12 @@ def auto_setup_grasp(args: argparse.Namespace) -> None:
                 continue
 
             path = os.path.join(kg_dir, name, f"{typ}.sparql")
-            backup(path)
-            dump_text(sparql, path)
-            logger.info(f"Saved {name} {typ} SPARQL to {path}")
+            stamped = dump_latest(path, sparql, text=True)
+            logger.info(f"Saved {name} {typ} SPARQL to {stamped} (latest: {path})")
 
         path = os.path.join(kg_dir, name, "info.json")
-        backup(path)
-        dump_json(output["info"], path, indent=2)
-        logger.info(f"Saved {name} description to {path}")
+        stamped = dump_latest(path, output["info"])
+        logger.info(f"Saved {name} description to {stamped} (latest: {path})")
 
 
 def main():
