@@ -139,4 +139,6 @@ LIMIT {page * k}"""
         table_only=True,
     )
 
-    return f"Showing {position} values {start + 1} to {min(end, start + len(result.data))}:\n{table}"
+    if position == "property":
+        position = "propertie"
+    return f"Showing page {page} of most frequent {position}s:\n{table}"
