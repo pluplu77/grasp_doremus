@@ -157,6 +157,7 @@ class KgManager:
         show_right_columns: int = 5,
         column_names: list[str] | None = None,
         clip_literals: bool = True,
+        table_only: bool = False,
         time: float | None = None,
     ) -> str:
         tmf = ""
@@ -258,6 +259,9 @@ class KgManager:
             alignments=["left"] * len(header),
             max_column_width=sys.maxsize,
         )
+
+        if table_only:
+            return table
 
         comp = "" if result.complete else "more than "
         formatted = (

@@ -129,7 +129,7 @@ LIMIT {page * k}"""
     update_known_from_rows(known, result.rows(), manager.get_normalizer("entities"))
     update_known_from_rows(known, result.rows(), manager.get_normalizer("properties"))
 
-    return manager.format_sparql_result(
+    table = manager.format_sparql_result(
         result,
         show_top_rows=k,
         show_bottom_rows=0,
@@ -137,4 +137,7 @@ LIMIT {page * k}"""
         show_right_columns=0,
         column_names=[position, "frequency"],
         clip_literals=False,
+        table_only=True,
     )
+
+    return f"Showing {position} values {start + 1} to {min(end, start + len(result.data))}:\n{table}"

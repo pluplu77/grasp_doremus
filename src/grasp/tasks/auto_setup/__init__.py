@@ -121,25 +121,32 @@ of the {name} index.
 The index SPARQL query is used to build a search index over {name}. \
 It must be a SELECT query returning:
 - ?id: the IRI
-- ?value: a string literal (typically label or alias) or the IRI itself \
-(if should be searchable)
-- ?tags: "main" for the primary label, unbound for secondary values (aliases)
-Results should be ordered descending by a relevance score and then by ?id, \
-to break ties in search results. A sensible relevant score that can always be \
-computed is the total number of occurrences of an IRI in all triples, but some \
-knowledge graphs might provide other measures of relevance that you can use \
-instead (e.g., Wikidata's "sitelinks").
+- ?value: the string literal to index for search (e.g., a label or alias)
+- ?tags: "main" for the preferred indexed literal for an IRI, unbound \
+for other indexed literals of the same IRI
+Results should be ordered by relevance score descending, then by ?id and ?tags. \
+Default to the total number of occurrences of an IRI as its relevance score. \
+If a knowledge graph provides another measure of relevance you can use that instead \
+(e.g., wikibase:sitelinks for Wikidata). When choosing literals to include in the \
+index SPARQL, make sure that they uniquely or near-uniquely identify the corresponding \
+IRI, as each indexed literal for an IRI is treated individually during search. Any \
+descriptive information shared by many IRIs (e.g., their type or common properties) \
+should rather be included in the info SPARQL for disambiguation. A good rule of thumb: \
+if searching for the literal is likely to return the target IRI among the top results, \
+include it. For example, for Angela Merkel include "Angela Merkel" or "Merkel", but not \
+"politician" or "human".
 
 The info SPARQL query retrieves additional context for {name} retrieved \
 via search. It must be a SELECT query returning:
 - ?id: the IRI
-- ?value: a string literal (label, alias, description, type, etc.)
-- ?type: one of "label", "alias", or "other"
-It must contain the placeholder {{IDS}} which will be replaced with a list \
-of IRIs at query time. The infos retrieved per IRI should be limited to the \
-most important ones (10 or fewer) to keep the query efficient and the search \
-results concise. The goal is to help to characterize and distinguish different \
-IRIs, and not to list all their associated information.
+- ?value: a descriptive string literal (e.g., a label, alias, description, or type)
+- ?type: one of "label" or "alias" (similar to ?tags in the index SPARQL), \
+or "other" for any additional descriptive information
+It must contain the placeholder {{IDS}} which will be replaced with a \
+space-separated list of IRIs at query time. The information retrieved per IRI should \
+be limited to the most important ones (10 or fewer) to keep the query efficient \
+and the search results concise. The goal is to help to characterize and distinguish \
+different IRIs, and not to list all their associated information.
 
 The description should be a concise summary of what the {name} index is \
 about and what data it contains.

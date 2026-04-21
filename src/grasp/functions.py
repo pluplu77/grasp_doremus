@@ -1031,7 +1031,7 @@ SELECT ?s ?p ?o WHERE {{
     update_known_from_rows(known, result.rows(), ent_norm)
     update_known_from_rows(known, result.rows(), prop_norm)
 
-    return manager.format_sparql_result(
+    table = manager.format_sparql_result(
         result,
         show_top_rows=k,
         show_bottom_rows=0,
@@ -1040,7 +1040,10 @@ SELECT ?s ?p ?o WHERE {{
         # override column names
         column_names=["subject", "property", "object"],
         clip_literals=not unclipped,
+        table_only=True,
     )
+
+    return f"Showing {len(result)} triples from page {page}:\n{table}"
 
 
 def search_with_constraints(
