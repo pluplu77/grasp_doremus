@@ -19,11 +19,16 @@ from grasp.utils import is_invalid_evaluation, is_invalid_output
 
 logger = get_logger("EVALUATION APP")
 
+STYLE_BEST = "background-color: #005500; color: white; font-weight: bold"
+STYLE_SECOND = "background-color: #003366; color: white"
+STYLE_INVALID = "background-color: #990000; color: white"
+STYLE_MISSING = "background-color: #444444; color: #ffffff"
+
 # Set page configuration
 st.set_page_config(page_title="SPARQL QA Evaluation", page_icon="📊", layout="wide")
 
 
-def parse_model_name(filename):
+def parse_model_name(filename: str) -> tuple[str, str]:
     """Parse model name and additional info from filename."""
     basename = os.path.basename(filename)
     if basename.endswith(".jsonl"):
@@ -83,8 +88,40 @@ def try_load_rank_json(path) -> dict:
         return {}
 
 
+def widget_changed(tracker_key: str, current_value) -> bool:
+    """Return True if `current_value` differs from the last value stored under `tracker_key`."""
+    changed = st.session_state.get(tracker_key) != current_value
+    st.session_state[tracker_key] = current_value
+    return changed
+
+
+def select_kg_and_benchmark(available_data: dict) -> tuple[str, str]:
+    """Render the KG + benchmark sidebar selectboxes with conventional defaults."""
+    kg_options = list(available_data.keys())
+    default_index = kg_options.index("wikidata") if "wikidata" in kg_options else 0
+    selected_kg = st.sidebar.selectbox("Select Group", kg_options, index=default_index)
+
+    benchmark_options = list(available_data[selected_kg].keys())
+    default_benchmark = (
+        "qald10"
+        if selected_kg == "wikidata"
+        else "wqsp"
+        if selected_kg == "freebase"
+        else benchmark_options[0]
+    )
+    default_index = (
+        benchmark_options.index(default_benchmark)
+        if default_benchmark in benchmark_options
+        else 0
+    )
+    selected_benchmark = st.sidebar.selectbox(
+        "Select Benchmark", benchmark_options, index=default_index
+    )
+    return selected_kg, selected_benchmark
+
+
 @st.cache_data(ttl=30)
-def load_available_data():
+def load_available_data() -> dict:
     """Find all available benchmarks and models."""
     data_root = Path(sys.argv[1])
     benchmarks = {}
@@ -140,7 +177,7 @@ def load_available_data():
 
 
 @st.cache_data(ttl=30)
-def load_ranking_data():
+def load_ranking_data() -> dict:
     """Find all available ranking evaluation files, organized by ranking filename."""
     data_root = Path(sys.argv[1])
     rankings = {}
@@ -197,7 +234,9 @@ def load_model_outputs(output_file: str, mtime: float) -> dict:
     return outputs_dict
 
 
-def calculate_average_steps_and_time(outputs_dict):
+def calculate_average_steps_and_time(
+    outputs_dict: dict,
+) -> tuple[float | None, float | None]:
     """
     Calculate average steps and time from model outputs.
 
@@ -234,11 +273,11 @@ def calculate_average_steps_and_time(outputs_dict):
 
 
 def calculate_metrics(
-    ground_truth,
-    model_outputs,
-    model_evaluations,
-    empty_target_valid=False,
-):
+    ground_truth: list,
+    model_outputs: dict,
+    model_evaluations: dict,
+    empty_target_valid: bool = False,
+) -> dict:
     total = len(ground_truth)
 
     num_outputs = len(model_outputs)
@@ -299,11 +338,11 @@ def calculate_metrics(
 
 
 def load_and_process_data(
-    test_file,
-    model_info,
-    restrict_to_common_valid=False,
-    empty_target_valid=False,
-):
+    test_file: str,
+    model_info: dict,
+    restrict_to_common_valid: bool = False,
+    empty_target_valid: bool = False,
+) -> tuple[list, dict, dict, dict]:
     """Load and process data for the selected benchmark and models."""
     # Load test data (ground truth)
     ground_truth = load_jsonl(test_file)
@@ -377,7 +416,9 @@ def load_and_process_data(
     return ground_truth, model_outputs, model_eval_data, metrics
 
 
-def setup_model_selection(available_models, selected_models_dict=None):
+def setup_model_selection(
+    available_models, selected_models_dict: dict | list | None = None
+) -> dict | list:
     """
     Setup model selection UI with regex filtering and checkboxes in expanders.
 
@@ -396,9 +437,7 @@ def setup_model_selection(available_models, selected_models_dict=None):
     )
 
     # Detect regex changes across reruns
-    previous_regex = st.session_state.get("previous_model_regex")
-    regex_changed = model_regex != previous_regex
-    st.session_state.previous_model_regex = model_regex
+    regex_changed = widget_changed("previous_model_regex", model_regex)
 
     selected_models = {} if selected_models_dict is None else selected_models_dict
 
@@ -464,36 +503,14 @@ def setup_model_selection(available_models, selected_models_dict=None):
 
 
 # Additional view functions
-def show_predictions_view(available_data):
+def show_predictions_view(available_data: dict) -> None:
     """Show a view focused on examining model outputs in detail."""
     st.title("Outputs Analysis")
 
     # Sidebar for benchmark and model selection
     st.sidebar.title("Benchmark Settings")
 
-    kg_options = list(available_data.keys())
-    # Set Wikidata as default if available
-    default_index = kg_options.index("wikidata") if "wikidata" in kg_options else 0
-    selected_kg = st.sidebar.selectbox("Select Group", kg_options, index=default_index)
-
-    benchmark_options = list(available_data[selected_kg].keys())
-    # Set default benchmark based on selected knowledge graph
-    default_benchmark = (
-        "qald10"
-        if selected_kg == "wikidata"
-        else "wqsp"
-        if selected_kg == "freebase"
-        else benchmark_options[0]
-    )
-    # Make sure the default benchmark exists in the options
-    default_index = (
-        benchmark_options.index(default_benchmark)
-        if default_benchmark in benchmark_options
-        else 0
-    )
-    selected_benchmark = st.sidebar.selectbox(
-        "Select Benchmark", benchmark_options, index=default_index
-    )
+    selected_kg, selected_benchmark = select_kg_and_benchmark(available_data)
 
     # Get available models for this benchmark
     benchmark_info = available_data[selected_kg][selected_benchmark]
@@ -846,7 +863,9 @@ def show_predictions_view(available_data):
                 st.markdown("---")
 
 
-def validate_ranking_consistency(benchmark_entries, rank_data_by_path):
+def validate_ranking_consistency(
+    benchmark_entries: list, rank_data_by_path: dict
+) -> None:
     """
     Validate consistency across ranking files.
 
@@ -926,7 +945,7 @@ def validate_ranking_consistency(benchmark_entries, rank_data_by_path):
             st.warning(warning_msg)
 
 
-def show_ranking_view(ranking_data):
+def show_ranking_view(ranking_data: dict) -> None:
     """Show a view for ranking evaluations across multiple benchmarks."""
     st.title("Ranking View - Cross-Benchmark Comparison")
 
@@ -1200,9 +1219,7 @@ def show_ranking_view(ranking_data):
             winner_col = f"{winner} Wins" if winner != "Ties" else "Ties"
             if winner_col in display_columns:
                 col_idx = display_columns.index(winner_col)
-                styles[col_idx] = (
-                    "background-color: #005500; color: white; font-weight: bold"
-                )
+                styles[col_idx] = STYLE_BEST
 
         return styles
 
@@ -1400,7 +1417,7 @@ def show_ranking_view(ranking_data):
                         st.write(fallback_data)
 
 
-def show_comprehensive_view(available_data):
+def show_comprehensive_view(available_data: dict) -> None:
     """Show a comprehensive view with a large table of metrics across KGs and benchmarks."""
     st.title("Comprehensive Model Comparison")
 
@@ -1529,9 +1546,7 @@ def show_comprehensive_view(available_data):
     )
 
     # Detect regex changes across reruns
-    previous_regex = st.session_state.get("previous_benchmark_regex")
-    regex_changed = benchmark_regex != previous_regex
-    st.session_state.previous_benchmark_regex = benchmark_regex
+    regex_changed = widget_changed("previous_benchmark_regex", benchmark_regex)
 
     # Compile regex once (if any)
     compiled_regex = None
@@ -1647,22 +1662,20 @@ def show_comprehensive_view(available_data):
         model_name = df.iloc[i, 0]
         for j, col in enumerate(df.columns[1:], 1):
             if df.iloc[i, j] == "—":
-                style_df.iloc[i, j] = "background-color: #444444; color: #ffffff"
+                style_df.iloc[i, j] = STYLE_MISSING
                 continue
 
             kg, benchmark = col
             cell_metrics = all_metrics.get(model_name, {}).get(kg, {}).get(benchmark)
             if cell_metrics and cell_metrics.get("invalid_preds", 0) > 0:
-                style_df.iloc[i, j] = "background-color: #990000; color: white"
+                style_df.iloc[i, j] = STYLE_INVALID
                 continue
 
             rank = rankings.get((kg, benchmark), {}).get(model_name)
             if rank == 0:
-                style_df.iloc[i, j] = (
-                    "background-color: #005500; color: white; font-weight: bold"
-                )
+                style_df.iloc[i, j] = STYLE_BEST
             elif rank == 1:
-                style_df.iloc[i, j] = "background-color: #003366; color: white"
+                style_df.iloc[i, j] = STYLE_SECOND
 
     styled_df = df.style.apply(lambda _: style_df, axis=None)
     st.dataframe(styled_df, width="stretch")
@@ -1691,7 +1704,7 @@ def show_comprehensive_view(available_data):
 
 
 # Main app
-def main():
+def main() -> None:
     st.title("SPARQL Question-Answering Evaluation")
 
     # Load available benchmarks and models
@@ -1727,31 +1740,7 @@ def main():
         # Sidebar for benchmark and model selection
         st.sidebar.title("Benchmark Settings")
 
-        kg_options = list(available_data.keys())
-        # Set Wikidata as default if available
-        default_index = kg_options.index("wikidata") if "wikidata" in kg_options else 0
-        selected_kg = st.sidebar.selectbox(
-            "Select Group", kg_options, index=default_index
-        )
-
-        benchmark_options = list(available_data[selected_kg].keys())
-        # Set default benchmark based on selected knowledge graph
-        default_benchmark = (
-            "qald10"
-            if selected_kg == "wikidata"
-            else "wqsp"
-            if selected_kg == "freebase"
-            else benchmark_options[0]
-        )
-        # Make sure the default benchmark exists in the options
-        default_index = (
-            benchmark_options.index(default_benchmark)
-            if default_benchmark in benchmark_options
-            else 0
-        )
-        selected_benchmark = st.sidebar.selectbox(
-            "Select Benchmark", benchmark_options, index=default_index
-        )
+        selected_kg, selected_benchmark = select_kg_and_benchmark(available_data)
 
         # Option to restrict evaluation to common examples - moved to top, without heading
         restrict_to_common = st.sidebar.checkbox(
