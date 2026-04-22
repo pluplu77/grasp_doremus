@@ -8,6 +8,7 @@ from grasp.sparql.utils import (
     fix_prefixes,
     load_iri_and_literal_parser,
     load_sparql_parser,
+    query_type,
 )
 
 SPARQL_PARSER = load_sparql_parser()
@@ -30,6 +31,85 @@ def _parse(sparql: str) -> dict:
 def _prefix_from_marked_query(sparql: str) -> str:
     assert "<CUR>" in sparql, "Expected <CUR> marker in test query"
     return sparql.split("<CUR>", 1)[0]
+
+
+class TestQueryType:
+    def test_complete_select(self):
+        assert query_type("SELECT ?x WHERE { ?x ?p ?o }", SPARQL_PARSER) == "select"
+
+    def test_complete_ask(self):
+        assert query_type("ASK { ?x ?p ?o }", SPARQL_PARSER) == "ask"
+
+    def test_complete_construct(self):
+        assert (
+            query_type(
+                "CONSTRUCT { ?x ?p ?o } WHERE { ?x ?p ?o }", SPARQL_PARSER
+            )
+            == "construct"
+        )
+
+    def test_complete_describe(self):
+        assert (
+            query_type("DESCRIBE ?x WHERE { ?x ?p ?o }", SPARQL_PARSER) == "describe"
+        )
+
+    def test_prefix_select_missing_triple(self):
+        assert (
+            query_type(
+                "SELECT ?film ?filmLabel WHERE {\n  ?film ",
+                SPARQL_PARSER,
+                is_prefix=True,
+            )
+            == "select"
+        )
+
+    def test_prefix_select_at_property_position(self):
+        assert (
+            query_type(
+                "SELECT ?x WHERE { ?x ",
+                SPARQL_PARSER,
+                is_prefix=True,
+            )
+            == "select"
+        )
+
+    def test_prefix_construct(self):
+        assert (
+            query_type(
+                "CONSTRUCT { ?s ?p ?o } WHERE { ?s ",
+                SPARQL_PARSER,
+                is_prefix=True,
+            )
+            == "construct"
+        )
+
+    def test_prefix_ask(self):
+        assert (
+            query_type("ASK { ?s ", SPARQL_PARSER, is_prefix=True) == "ask"
+        )
+
+    def test_prefix_describe(self):
+        assert (
+            query_type(
+                "DESCRIBE ?x WHERE { ?x ",
+                SPARQL_PARSER,
+                is_prefix=True,
+            )
+            == "describe"
+        )
+
+    def test_prefix_select_with_subselect(self):
+        assert (
+            query_type(
+                "SELECT ?x WHERE { { SELECT ?film WHERE { ?film ",
+                SPARQL_PARSER,
+                is_prefix=True,
+            )
+            == "select"
+        )
+
+    def test_unparsable_returns_none(self):
+        assert query_type("NOT VALID SPARQL %%%", SPARQL_PARSER) is None
 
 
 class TestFixPrefixes:

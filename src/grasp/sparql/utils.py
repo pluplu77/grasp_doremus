@@ -479,19 +479,26 @@ def derive_constraint_query_from_prefix(
     return final_query, position
 
 
-def query_type(sparql: str, parser: LR1Parser, is_prefix: bool = False) -> str:
+def query_type(sparql: str, parser: LR1Parser, is_prefix: bool = False) -> str | None:
     try:
         parse, _ = parse_string(sparql + " " * is_prefix, parser, is_prefix=is_prefix)
     except Exception:
-        # if query is not parsable, return select as default
-        return "select"
+        return None
 
     query_type = find(parse, "QueryType")
-    assert query_type is not None, "Cannot find query type of SPARQL query"
+    if query_type is not None:
+        name = query_type["children"][0]["name"]
+        return name[:-5].lower()  # remove "Query" suffix
 
-    query_type = query_type["children"][0]
-    name = query_type["name"]
-    return name[:-5].lower()  # remove "Query" suffix
+    # Prefix parse trees don't build the QueryType wrapper node; infer from the
+    # outermost keyword token (CONSTRUCT/DESCRIBE/ASK can't appear in subselects)
+    if find(parse, "CONSTRUCT") is not None:
+        return "construct"
+    if find(parse, "DESCRIBE") is not None:
+        return "describe"
+    if find(parse, "ASK") is not None:
+        return "ask"
+    return "select"
 
 
 def ask_to_select(

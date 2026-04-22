@@ -577,7 +577,7 @@ class KgManager:
     ) -> dict[str, list[str]]:
         typ = query_type(sparql, self.sparql_parser)
         if typ != "select":
-            raise SPARQLException("SPARQL query is not a SELECT query")
+            raise SPARQLException("SPARQL query is not a SELECT query", sparql)
 
         self.logger.debug(
             f"Getting candidate IDs for index '{index_name}' with {sparql}"
@@ -585,13 +585,14 @@ class KgManager:
         result = self.execute_sparql(sparql, request_timeout, read_timeout, max_retries)
 
         if not isinstance(result, SelectResult):
-            raise SPARQLException("SPARQL query is not a SELECT query")
+            raise SPARQLException("SPARQL query is not a SELECT query", sparql)
         if result.num_columns != 1:
-            raise SPARQLException("SPARQL query must return a single column")
+            raise SPARQLException("SPARQL query must return a single column", sparql)
         if max_candidates is not None and len(result) > max_candidates:
             raise SPARQLException(
                 f"Got more than the maximum supported number of "
-                f"candidates ({max_candidates:,})"
+                f"candidates ({max_candidates:,})",
+                sparql,
             )
 
         self.logger.debug(
