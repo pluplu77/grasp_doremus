@@ -490,9 +490,14 @@ def setup_model_selection(
                 display_name = variant.replace(model_name + " (", "").replace(")", "")
                 checkbox_label = "default" if display_name == variant else display_name
 
-                selected = st.checkbox(
-                    checkbox_label, value=True, key=f"model_{variant}"
-                )
+                key = f"model_{variant}"
+                if key not in st.session_state:
+                    st.session_state[key] = (
+                        bool(compiled_regex.search(variant))
+                        if compiled_regex is not None
+                        else True
+                    )
+                selected = st.checkbox(checkbox_label, key=key)
 
                 if isinstance(selected_models, dict):
                     selected_models[variant] = selected
@@ -1573,11 +1578,14 @@ def show_comprehensive_view(available_data: dict) -> None:
     for kg in sorted(benchmark_by_kg.keys()):
         with st.sidebar.expander(f"**{kg}**", expanded=False):
             for benchmark in sorted(benchmark_by_kg[kg]):
-                selected = st.checkbox(
-                    benchmark,
-                    value=True,
-                    key=f"benchmark_{kg}_{benchmark}",
-                )
+                key = f"benchmark_{kg}_{benchmark}"
+                if key not in st.session_state:
+                    st.session_state[key] = (
+                        bool(compiled_regex.search(benchmark))
+                        if compiled_regex is not None
+                        else True
+                    )
+                selected = st.checkbox(benchmark, key=key)
                 selected_benchmarks[(kg, benchmark)] = selected
 
     # If no benchmarks selected, treat as all-selected for filtering
