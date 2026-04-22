@@ -1,4 +1,10 @@
+import pytest
+
 from grasp.sparql.utils import (
+    SPARQLException,
+    complete_prefix,
+    derive_constraint_query_from_prefix,
+    find_connected_top_level_triples,
     fix_prefixes,
     load_iri_and_literal_parser,
     load_sparql_parser,
@@ -17,18 +23,24 @@ def _fix(sparql: str, **kwargs) -> str:
     return fix_prefixes(sparql, SPARQL_PARSER, IRI_PARSER, PREFIXES, **kwargs)
 
 
+def _parse(sparql: str) -> dict:
+    return SPARQL_PARSER.parse(sparql)
+
+
+def _prefix_from_marked_query(sparql: str) -> str:
+    assert "<CUR>" in sparql, "Expected <CUR> marker in test query"
+    return sparql.split("<CUR>", 1)[0]
+
+
 class TestFixPrefixes:
     def test_replaces_iri_with_prefix(self):
         result = _fix("SELECT ?s WHERE { ?s <http://example.org/prop/p1> ?o }")
         assert result == (
-            "PREFIX wdt: <http://example.org/prop/>\n"
-            "SELECT ?s WHERE { ?s wdt:p1 ?o }"
+            "PREFIX wdt: <http://example.org/prop/>\nSELECT ?s WHERE { ?s wdt:p1 ?o }"
         )
 
     def test_preserves_spaces(self):
-        result = _fix(
-            "SELECT  ?s  WHERE  {  ?s  <http://example.org/prop/p1>  ?o  }"
-        )
+        result = _fix("SELECT  ?s  WHERE  {  ?s  <http://example.org/prop/p1>  ?o  }")
         assert result == (
             "PREFIX wdt: <http://example.org/prop/>\n"
             "SELECT  ?s  WHERE  {  ?s  wdt:p1  ?o  }"
@@ -42,9 +54,7 @@ class TestFixPrefixes:
         )
 
     def test_preserves_tabs(self):
-        result = _fix(
-            "SELECT\t?s\tWHERE\t{\n\t?s\t<http://example.org/prop/p1>\t?o\n}"
-        )
+        result = _fix("SELECT\t?s\tWHERE\t{\n\t?s\t<http://example.org/prop/p1>\t?o\n}")
         assert result == (
             "PREFIX wdt: <http://example.org/prop/>\n"
             "SELECT\t?s\tWHERE\t{\n\t?s\twdt:p1\t?o\n}"
@@ -52,12 +62,10 @@ class TestFixPrefixes:
 
     def test_existing_prefix(self):
         result = _fix(
-            "PREFIX wd: <http://example.org/entity/>\n"
-            "SELECT ?s WHERE { ?s wd:e1 ?o }"
+            "PREFIX wd: <http://example.org/entity/>\nSELECT ?s WHERE { ?s wd:e1 ?o }"
         )
         assert result == (
-            "PREFIX wd: <http://example.org/entity/>\n"
-            "SELECT ?s WHERE { ?s wd:e1 ?o }"
+            "PREFIX wd: <http://example.org/entity/>\nSELECT ?s WHERE { ?s wd:e1 ?o }"
         )
 
     def test_existing_prefix_whitespace_preserved(self):
@@ -76,8 +84,7 @@ class TestFixPrefixes:
 
     def test_remove_known(self):
         result = _fix(
-            "PREFIX wd: <http://example.org/entity/>\n"
-            "SELECT ?s WHERE { ?s wd:e1 ?o }",
+            "PREFIX wd: <http://example.org/entity/>\nSELECT ?s WHERE { ?s wd:e1 ?o }",
             remove_known=True,
         )
         assert result == "SELECT ?s WHERE { ?s wd:e1 ?o }"
@@ -113,3 +120,142 @@ class TestFixPrefixes:
             "  ?s wdt:p1 ?o\n"
             "}"
         )
+
+
+class TestFindConnectedTopLevelTriples:
+    def test_keeps_only_connected_component_of_selected_var(self):
+        parse = _parse(
+            "SELECT ?b WHERE { "
+            "?a <http://example.org/p1> ?b . "
+            "?b <http://example.org/p2> ?c . "
+            "?x <http://example.org/p3> ?y "
+            "}"
+        )
+
+        result = find_connected_top_level_triples(parse, "?b")
+
+        assert len(result) == 2
+        assert "?a <http://example.org/p1> ?b" in result[0]
+        assert "?b <http://example.org/p2> ?c" in result[1]
+        assert all("?x <http://example.org/p3> ?y" not in block for block in result)
+
+    def test_keeps_transitively_connected_triples(self):
+        parse = _parse(
+            "SELECT ?b WHERE { "
+            "?a <http://example.org/p1> ?b . "
+            "?b <http://example.org/p2> ?c . "
+            "?c <http://example.org/p3> ?d . "
+            "?x <http://example.org/p4> ?y "
+            "}"
+        )
+
+        result = find_connected_top_level_triples(parse, "?b")
+
+        assert len(result) == 3
+        assert any("?a <http://example.org/p1> ?b" in block for block in result)
+        assert any("?b <http://example.org/p2> ?c" in block for block in result)
+        assert any("?c <http://example.org/p3> ?d" in block for block in result)
+        assert all("?x <http://example.org/p4> ?y" not in block for block in result)
+
+    def test_returns_empty_when_selected_var_not_in_top_level_triples(self):
+        parse = _parse(
+            "SELECT ?z WHERE { "
+            "?a <http://example.org/p1> ?b . "
+            "?b <http://example.org/p2> ?c "
+            "}"
+        )
+
+        result = find_connected_top_level_triples(parse, "?z")
+
+        assert result == []
+
+
+class TestCompletePrefix:
+    def test_determines_subject_position_for_simple_triple_prefix(self):
+        _, position, _ = complete_prefix("SELECT ?x WHERE { ", SPARQL_PARSER)
+        assert position == "subject"
+
+    def test_determines_property_position_for_simple_triple_prefix(self):
+        _, position, _ = complete_prefix("SELECT ?x WHERE { ?s ", SPARQL_PARSER)
+        assert position == "property"
+
+    def test_determines_object_position_for_simple_triple_prefix(self):
+        _, position, _ = complete_prefix(
+            "SELECT ?x WHERE { ?s <http://example.org/p1> ",
+            SPARQL_PARSER,
+        )
+        assert position == "object"
+
+    def test_fails_within_filter_function_arguments(self):
+        with pytest.raises(SPARQLException):
+            complete_prefix(
+                "SELECT ?x WHERE { FILTER(CONTAINS(?label, ",
+                SPARQL_PARSER,
+            )
+
+    def test_fails_within_property_path(self):
+        with pytest.raises(SPARQLException):
+            complete_prefix(
+                "SELECT ?x WHERE { ?s <http://example.org/p1>/",
+                SPARQL_PARSER,
+            )
+
+
+class TestDeriveConstraintQueryFromPrefix:
+    def test_keeps_only_connected_component(self):
+        query = (
+            "SELECT ?b WHERE { "
+            "?a <http://example.org/p1> ?b . "
+            "?b <http://example.org/p2> <CUR> "
+            "}"
+        )
+
+        prefix = _prefix_from_marked_query(query)
+        result, _ = derive_constraint_query_from_prefix(prefix, SPARQL_PARSER)
+
+        assert "?a <http://example.org/p1> ?b" in result
+        assert "?b <http://example.org/p2>" in result
+        assert "<http://example.org/p3>" not in result
+
+    def test_drops_disconnected_triples_from_constraint_query(self):
+        query = (
+            "SELECT ?b WHERE { "
+            "?x <http://example.org/p3> ?y . "
+            "?a <http://example.org/p1> ?b . "
+            "?b <http://example.org/p2> <CUR> . "
+            "?z <http://example.org/p4> ?w "
+            "}"
+        )
+
+        prefix = _prefix_from_marked_query(query)
+        result, _ = derive_constraint_query_from_prefix(prefix, SPARQL_PARSER)
+
+        assert "?a <http://example.org/p1> ?b" in result
+        assert "?b <http://example.org/p2>" in result
+        assert "?x <http://example.org/p3> ?y" not in result
+        assert "?z <http://example.org/p4> ?w" not in result
+
+    def test_keeps_transitively_connected_triples_in_constraint_query(self):
+        query = (
+            "SELECT ?b WHERE { "
+            "?a <http://example.org/p1> ?b . "
+            "?b <http://example.org/p2> ?c . "
+            "?c <http://example.org/p3> <CUR> "
+            "}"
+        )
+
+        prefix = _prefix_from_marked_query(query)
+        result, _ = derive_constraint_query_from_prefix(prefix, SPARQL_PARSER)
+
+        assert "?a <http://example.org/p1> ?b" in result
+        assert "?b <http://example.org/p2> ?c" in result
+        assert "?c <http://example.org/p3>" in result
+
+    def test_raises_when_no_connected_top_level_triples_exist(self):
+        query = (
+            "SELECT ?z WHERE { ?a <http://example.org/p1> ?z . FILTER(?z != <CUR>) }"
+        )
+
+        prefix = _prefix_from_marked_query(query)
+        with pytest.raises(SPARQLException):
+            derive_constraint_query_from_prefix(prefix, SPARQL_PARSER)

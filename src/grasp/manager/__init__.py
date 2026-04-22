@@ -45,7 +45,7 @@ from grasp.sparql.utils import (
     REQUEST_TIMEOUT,
     SPARQLException,
     ask_to_select,
-    autocomplete_prefix,
+    derive_constraint_query_from_prefix,
     execute,
     find_longest_prefix,
     fix_prefixes,
@@ -730,12 +730,16 @@ class KgManager:
 
         return info
 
-    def autocomplete_prefix(
+    def derive_constraint_query_from_prefix(
         self,
         prefix: str,
         limit: int | None = None,
-    ) -> tuple[str, str, Position]:
-        return autocomplete_prefix(prefix, self.sparql_parser, limit)
+    ) -> tuple[str, Position]:
+        return derive_constraint_query_from_prefix(
+            prefix,
+            self.sparql_parser,
+            limit,
+        )
 
     def format_selections(self, selections: list[Selection]) -> str:
         rename_obj_type = [

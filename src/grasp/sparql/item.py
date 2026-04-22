@@ -7,8 +7,8 @@ from grasp.manager import KgManager
 from grasp.manager.utils import find_obj_type_from_prefixes, get_common_sparql_prefixes
 from grasp.sparql.types import Alternative, ObjType, Position, Selection
 from grasp.sparql.utils import (
-    autocomplete_prefix,
     find_all,
+    infer_position_from_prefix,
     parse_into_binding,
     parse_string,
 )
@@ -142,7 +142,7 @@ def _get_item(
     iri = binding.identifier()
 
     try:
-        *_, position = autocomplete_prefix(prefix, manager.sparql_parser)
+        position = infer_position_from_prefix(prefix, manager.sparql_parser)
         if position in [Position.SUBJECT, Position.OBJECT]:
             obj_types = [ObjType.ENTITY]
         else:

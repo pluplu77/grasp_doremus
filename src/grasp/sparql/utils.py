@@ -339,11 +339,10 @@ def normalize(sparql: str, parser: LR1Parser, is_prefix: bool = False) -> str:
     return parse_to_string(parse) + rest
 
 
-def autocomplete_prefix(
+def complete_prefix(
     prefix: str,
     parser: LR1Parser,
-    limit: int | None = None,
-) -> tuple[str, str, Position]:
+) -> tuple[dict, Position, str]:
     # autocomplete by adding 1 to 3 variables to the query,
     # completing and then parsing it to find the current position
     # in the query triple block
@@ -382,18 +381,9 @@ def autocomplete_prefix(
                 s += " )"
         return s
 
-    def find_top_level_triples(parse: dict) -> list[str]:
-        blocks = []
-        for triples in find_all(
-            parse,
-            "TriplesSameSubjectPath",
-            skip={"GraphPatternNotTriples"},
-        ):
-            blocks.append(parse_to_string(triples))
-        return blocks
-
     for i, position in enumerate(Position):
         vars = [uuid.uuid4().hex for _ in range(3 - i)]
+        current_var = f"?{vars[0]}"
 
         full_query = prefix.strip() + " " + " ".join(f"?{v}" for v in vars)
         full_query = close_brackets(full_query)
@@ -401,35 +391,90 @@ def autocomplete_prefix(
         # check if query is valid now
         try:
             parse, _ = parse_string(full_query, parser)
-            query_type = find(parse, "QueryType")
-            assert query_type is not None
-            query_type = query_type["children"][0]
-            # strip "Query" suffix
-            query_type = query_type["name"][:-5].lower()
         except Exception:
             continue
 
-        select_var = vars[0]
+        if not find_connected_top_level_triples(parse, current_var):
+            continue
 
-        triple_blocks = find_top_level_triples(parse)
-        if not any(select_var in block for block in triple_blocks):
-            # reset to empty query if selected var is not in triple blocks
-            # because then the result wouuld always be empty
-            triple_blocks = []
+        return parse, position, current_var
 
-        final_query = (
-            "SELECT DISTINCT ?"
-            + select_var
-            + " WHERE { "
-            + " . ".join(triple_blocks)
-            + " }"
+    raise SPARQLException("Failed to complete SPARQL prefix", prefix)
+
+
+def infer_position_from_prefix(
+    prefix: str,
+    parser: LR1Parser,
+) -> Position:
+    _, position, _ = complete_prefix(prefix, parser)
+    return position
+
+
+def find_connected_top_level_triples(
+    parse: dict,
+    select_var: str,
+) -> list[str]:
+    triple_blocks = list(
+        find_all(
+            parse,
+            "TriplesSameSubjectPath",
+            skip={"GraphPatternNotTriples"},
         )
-        if limit is not None:
-            final_query += f" LIMIT {limit}"
+    )
 
-        return final_query, query_type, position
+    def find_vars(sub_parse: dict) -> set[str]:
+        variables = set()
+        for var in find_all(sub_parse, "Var"):
+            children = var.get("children", [])
+            assert len(children) == 1, "Expected Var node to have exactly one child"
+            token = children[0]
+            value = token.get("value")
+            assert isinstance(value, str) and value.startswith("?"), (
+                f"Expected variable token value, got {value!r}"
+            )
+            variables.add(value)
+        return variables
 
-    raise SPARQLException("Failed to autocomplete prefix", prefix)
+    triple_var_sets = [find_vars(block) for block in triple_blocks]
+    if select_var not in set().union(*triple_var_sets):
+        return []
+
+    keep = set()
+    reachable_vars = {select_var}
+    changed = True
+    while changed:
+        changed = False
+        for i, var_set in enumerate(triple_var_sets):
+            if i in keep or not reachable_vars.intersection(var_set):
+                continue
+
+            keep.add(i)
+            reachable_vars.update(var_set)
+            changed = True
+
+    return [parse_to_string(triple_blocks[i]) for i in sorted(keep)]
+
+
+def derive_constraint_query_from_prefix(
+    prefix: str,
+    parser: LR1Parser,
+    limit: int | None = None,
+) -> tuple[str, Position]:
+    parse, position, select_var = complete_prefix(prefix, parser)
+
+    triple_blocks = find_connected_top_level_triples(parse, select_var)
+
+    if not triple_blocks:
+        # if there are no triple blocks, skip since we do not have constraints
+        raise SPARQLException("Failed to derive constraint query from prefix", prefix)
+
+    final_query = (
+        f"SELECT DISTINCT {select_var} WHERE {{ " + " . ".join(triple_blocks) + " }"
+    )
+    if limit is not None:
+        final_query += f" LIMIT {limit}"
+
+    return final_query, position
 
 
 def query_type(sparql: str, parser: LR1Parser, is_prefix: bool = False) -> str:
