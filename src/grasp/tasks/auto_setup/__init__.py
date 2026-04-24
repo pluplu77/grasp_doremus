@@ -235,7 +235,9 @@ and repeat, otherwise stop."""
             "If the user provides additional notes about the desired setup, make sure to follow them.",
             "Make the SPARQL queries as efficient as possible. For example, put VALUES { {IDS} } clauses "
             "in the info SPARQL inside each UNION, and avoid heavy string operations and string filters for the index "
-            "SPARQL. The info SPARQL should run in a fraction of a second, whereas "
+            "SPARQL. You also don't need to handle duplicates yourself in the SPARQL (e.g., via DISTINCT or GROUP BY), "
+            "as the indexing and info retrieval processes will take care of that. "
+            "The info SPARQL should run in a fraction of a second, whereas "
             "the index SPARQL is allowed to take many minutes or even hours on the full knowledge graph. "
             "The latter should be tested on a subset of the data (e.g., using VALUES) to stay "
             "within the lower time limits during development.",

@@ -155,11 +155,11 @@ def find_order_by(parse: dict) -> str:
     return parse_to_string(order_by)
 
 
-def find_select(parse: dict) -> str:
-    select = find(parse, "SelectClause")
-    if select is None:
-        raise ValueError("No SELECT clause found in query")
-    return parse_to_string(select)
+def find_solution_modifier(parse: dict) -> str:
+    sol_mod = find(parse, "SolutionModifier")
+    if sol_mod is None:
+        raise ValueError("No solution modifier found in query")
+    return parse_to_string(sol_mod)
 
 
 def validate_sparql_vars(parse: dict, required: set[str]):
@@ -177,33 +177,33 @@ def validate_order_by(parse: dict, target: str):
         raise ValueError(f"ORDER BY clause must be '{target}'")
 
 
-def validate_select(parse: dict, target: str):
-    select = find_select(parse)
+def validate_solution_modifier(parse: dict, target: str):
+    select = find_solution_modifier(parse)
     if select.replace(" ", "") != target.replace(" ", ""):
         raise ValueError(f"SELECT clause must be '{target}'")
 
 
 INDEX_SPARQL_VARS = {"id", "value", "tags"}
 INDEX_SPARQL_SELECT = "SELECT ?id ?value ?tags"
-INDEX_SPARQL_ORDER_BY = "ORDER BY DESC(?score) ?id DESC(?tags)"
+INDEX_SPARQL_SOL_MOD = "ORDER BY DESC(?score) ?id DESC(?tags)"
 
 
 def validate_index_sparql(manager: KgManager, sparql: str):
     parse, _ = parse_string(sparql, manager.sparql_parser)
 
     validate_sparql_vars(parse, INDEX_SPARQL_VARS)
-    validate_order_by(parse, INDEX_SPARQL_ORDER_BY)
-    validate_select(parse, INDEX_SPARQL_SELECT)
+    validate_order_by(parse, INDEX_SPARQL_SOL_MOD)
+    validate_solution_modifier(parse, INDEX_SPARQL_SELECT)
 
 
 INFO_SPARQL_VARS = {"id", "value", "type"}
 INFO_SPARQL_SELECT = "SELECT ?id ?value ?type"
-INFO_SPARQL_ORDER_BY = "ORDER BY ?id ?type ?value"
+INFO_SPARQL_SOL_MOD = "ORDER BY ?id ?type ?value"
 
 
 def validate_info_sparql(manager: KgManager, sparql: str):
     parse, _ = parse_string(sparql, manager.sparql_parser)
 
     validate_sparql_vars(parse, INFO_SPARQL_VARS)
-    validate_order_by(parse, INFO_SPARQL_ORDER_BY)
-    validate_select(parse, INFO_SPARQL_SELECT)
+    validate_order_by(parse, INFO_SPARQL_SOL_MOD)
+    validate_solution_modifier(parse, INFO_SPARQL_SELECT)
