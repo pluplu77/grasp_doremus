@@ -156,7 +156,13 @@ def generate(
     input = task.setup(input)
 
     # setup functions (after setup so tasks can configure based on input)
-    fns = kg_functions(managers, config.fn_set, config.list_k)
+    fns = kg_functions(
+        managers,
+        config.fn_set,
+        config.list_k,
+        config.search_k,
+        config.search_max_pages,
+    )
     fns.extend(task.function_definitions())
     yield {"type": "input", "input": input}
 

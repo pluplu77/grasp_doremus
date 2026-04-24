@@ -85,7 +85,9 @@ class GraspConfig(ModelConfig):
     sparql_read_timeout: float = 10.0
 
     # kg function parameters
-    search_top_k: int = 10
+    search_k: int = 10
+    # maximum page number allowed for search pagination
+    search_max_pages: int = 10
     # 10 total rows, 5 top and 5 bottom
     result_max_rows: int = 10
     # same for columns
