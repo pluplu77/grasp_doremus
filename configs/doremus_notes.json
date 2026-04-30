@@ -1,0 +1,7 @@
+[
+  {
+    "question": "Which works have been composed by Mozart?",
+    "answer": "Use the DOREMUS creation-event pattern. The work/expression is the object of efrbroo:R17_created, not the subject. Match Mozart via foaf:name \"Wolfgang Amadeus Mozart\".",
+    "sparql": "SELECT DISTINCT ?expression (SAMPLE(?title) AS ?title)\nWHERE {\n  ?expression a efrbroo:F22_Self-Contained_Expression ;\n              rdfs:label ?title .\n  ?expCreation efrbroo:R17_created ?expression ;\n               ecrm:P9_consists_of / ecrm:P14_carried_out_by ?composer .\n  ?composer foaf:name \"Wolfgang Amadeus Mozart\" .\n}\nGROUP BY ?expression\nORDER BY ?title"
+  }
+]
