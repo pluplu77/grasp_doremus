@@ -1,0 +1,7 @@
+{
+  "id": 48,
+  "question": "Give me the works written for oboe and orchestra after the 1900",
+  "file_source": "7.rq",
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work a efrbroo:F22_Self-Contained_Expression . ?work ecrm:P9_consists_of / ecrm:P14_carried_out_by ?composer . ?work rdfs:label \"oboe and orchestra\"@en . }",
+  "execution_result": "Got no rows and 1 columns in 0.09s"
+}

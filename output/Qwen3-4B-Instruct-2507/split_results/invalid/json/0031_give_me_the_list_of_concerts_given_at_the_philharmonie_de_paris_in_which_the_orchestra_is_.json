@@ -1,0 +1,15 @@
+{
+  "id": 31,
+  "question": "Give me the list of concerts given at the Philharmonie de Paris in which the orchestra is directed by the solo violin",
+  "file_source": "18.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0031_give_me_the_list_of_concerts_given_at_the_philharmonie_de_paris_in_which_the_orchestra_is_.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0031_give_me_the_list_of_concerts_given_at_the_philharmonie_de_paris_in_which_the_orchestra_is_.json",
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?concert WHERE { ?concert ecrm:P14_carried_out_by ?violinist . ?concert ecrm:P9_consists_of ?work . ?work efrbroo:R17_created ?composer . }",
+  "execution_result": "Got no rows and 1 columns in 0.95s",
+  "answer": null,
+  "output_type": "cancel"
+}

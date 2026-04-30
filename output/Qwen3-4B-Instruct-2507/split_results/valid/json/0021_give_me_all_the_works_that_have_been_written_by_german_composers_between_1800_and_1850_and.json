@@ -1,0 +1,7 @@
+{
+  "id": 21,
+  "question": "Give me all the works that have been written by German composers between 1800 and 1850 and performed at the Royal Albert Hall.",
+  "file_source": "5.rq",
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nSELECT ?work WHERE { ?work ecrm:P9_consists_of ?composition . ?composition ecrm:P14_carried_out_by ?composer . ?composer foaf:name ?composerName . ?composition ecrm:P100_has_time_span ?timeSpan . ?timeSpan ecrm:P115_has_duration ?duration . ?work ecrm:P113_has_location ?venue . FILTER ( ?composerName = 'Beethoven' || ?composerName = 'Schubert' || ?composerName = 'Mendelssohn' ) . FILTER ( ?duration >= '1800' && ?duration <= '1850' ) . FILTER ( ?venue = 'Royal Albert Hall' ) }",
+  "execution_result": "Got no rows and 1 columns in 0.23s"
+}

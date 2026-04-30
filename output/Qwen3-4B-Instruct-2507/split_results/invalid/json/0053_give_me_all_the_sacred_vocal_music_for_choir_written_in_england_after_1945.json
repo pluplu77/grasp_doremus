@@ -1,0 +1,15 @@
+{
+  "id": 53,
+  "question": "Give me all the sacred vocal music for choir written in England after 1945",
+  "file_source": "14.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0053_give_me_all_the_sacred_vocal_music_for_choir_written_in_england_after_1945.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0053_give_me_all_the_sacred_vocal_music_for_choir_written_in_england_after_1945.json",
+  "sparql": "SELECT ?work ?genre ?location ?creationDate WHERE { ?work a efrbroo:F22_Self-Contained_Expression . ?work efrbroo:R17_created ?creationEvent . ?creationEvent dct:created ?creationDate . ?work http://data.doremus.org/ontology#U12_has_genre ?genre . ?work http://data.doremus.org/ontology#U65_has_geographical_context ?location . ?location rdfs:label \"England\" . FILTER (xsd:gYear(?creationDate) > 1945) }",
+  "execution_result": "Error executing SPARQL query over doremus:\nfailed to parse input: no matching token found from position 204: 'doremus.org/ontology#U12_has_genre ?genre . ?work http://data.doremus.org/ontology#U65_has_geographical_context ?location . ?location rdfs:label \"England\" . FILTER (xsd:gYear(?creationDate) > 1945) }'",
+  "answer": null,
+  "output_type": "cancel"
+}

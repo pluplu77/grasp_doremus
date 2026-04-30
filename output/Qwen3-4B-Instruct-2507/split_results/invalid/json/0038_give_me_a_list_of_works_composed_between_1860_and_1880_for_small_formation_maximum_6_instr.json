@@ -1,0 +1,15 @@
+{
+  "id": 38,
+  "question": "Give me a list of works composed between 1860 and 1880, for small formation (maximum 6 instrumentalists) including 1 piano",
+  "file_source": "27.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0038_give_me_a_list_of_works_composed_between_1860_and_1880_for_small_formation_maximum_6_instr.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0038_give_me_a_list_of_works_composed_between_1860_and_1880_for_small_formation_maximum_6_instr.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

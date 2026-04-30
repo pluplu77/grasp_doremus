@@ -1,0 +1,15 @@
+{
+  "id": 7,
+  "question": "Give me all the performances in which a composer interprets his or her works",
+  "file_source": "15.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0007_give_me_all_the_performances_in_which_a_composer_interprets_his_or_her_works.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0007_give_me_all_the_performances_in_which_a_composer_interprets_his_or_her_works.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

@@ -1,0 +1,15 @@
+{
+  "id": 20,
+  "question": "Give me the list of the reductions of works of Wagner realized in the 20th century",
+  "file_source": "31.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0020_give_me_the_list_of_the_reductions_of_works_of_wagner_realized_in_the_20th_century.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0020_give_me_the_list_of_the_reductions_of_works_of_wagner_realized_in_the_20th_century.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

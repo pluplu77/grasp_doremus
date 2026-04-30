@@ -1,0 +1,15 @@
+{
+  "id": 40,
+  "question": "Give me the list of works of J.S. Bach between BWV 30 and BWV 70",
+  "file_source": "28.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0040_give_me_the_list_of_works_of_j_s_bach_between_bwv_30_and_bwv_70.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0040_give_me_the_list_of_works_of_j_s_bach_between_bwv_30_and_bwv_70.json",
+  "sparql": "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?work WHERE { ?work efrbroo:R17_created ?creation ; ecrm:P14_carried_out_by [ foaf:name 'J.S. Bach' ] }",
+  "execution_result": "Got no rows and 1 columns in 0.05s",
+  "answer": null,
+  "output_type": "cancel"
+}

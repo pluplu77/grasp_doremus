@@ -1,0 +1,15 @@
+{
+  "id": 8,
+  "question": "Give me the list of all the concerts recorded by Radio France at the Cité de la Musique between 1995 and 2014",
+  "file_source": "43.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0008_give_me_the_list_of_all_the_concerts_recorded_by_radio_france_at_the_cit_de_la_musique_bet.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0008_give_me_the_list_of_all_the_concerts_recorded_by_radio_france_at_the_cit_de_la_musique_bet.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

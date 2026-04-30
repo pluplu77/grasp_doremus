@@ -1,0 +1,15 @@
+{
+  "id": 5,
+  "question": "Give me a list of melodies of 20th century about gastronomy",
+  "file_source": "21.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0005_give_me_a_list_of_melodies_of_20th_century_about_gastronomy.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0005_give_me_a_list_of_melodies_of_20th_century_about_gastronomy.json",
+  "sparql": "SELECT ?expression WHERE { ?expression dct:description ?desc . FILTER (CONTAINS(STR(?desc), 'gastronomy') OR CONTAINS(STR(?desc), 'food') OR CONTAINS(STR(?desc), 'cuisine') OR CONTAINS(STR(?desc), 'dining')) }",
+  "execution_result": "Error executing SPARQL query over doremus:\nfailed to parse input: no matching token found from position 106: 'OR CONTAINS(STR(?desc), 'food') OR CONTAINS(STR(?desc), 'cuisine') OR CONTAINS(STR(?desc), 'dining')) }'",
+  "answer": null,
+  "output_type": "cancel"
+}

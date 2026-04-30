@@ -1,0 +1,15 @@
+{
+  "id": 27,
+  "question": "Give me all the sonatas for piano and violin whose duration is between 20 and 30 minutes",
+  "file_source": "40.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0027_give_me_all_the_sonatas_for_piano_and_violin_whose_duration_is_between_20_and_30_minutes.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0027_give_me_all_the_sonatas_for_piano_and_violin_whose_duration_is_between_20_and_30_minutes.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

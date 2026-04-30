@@ -1,0 +1,7 @@
+{
+  "id": 28,
+  "question": "Give me the works of chamber music that involves at most violin, clarinet and piano, except from the sonatas for violin and piano and clarinet and piano",
+  "file_source": "11.rq",
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work efrbroo:R17_created ?expression . ?expression ecrm:P9_consists_of ?instrument . ?instrument a efrbroo:F22_Self-Contained_Expression }",
+  "execution_result": "Got no rows and 1 columns in 0.34s"
+}

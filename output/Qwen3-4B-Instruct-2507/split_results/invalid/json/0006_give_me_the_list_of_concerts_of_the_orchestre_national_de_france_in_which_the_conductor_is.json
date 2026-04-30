@@ -1,0 +1,15 @@
+{
+  "id": 6,
+  "question": "Give me the list of concerts of the Orchestre National de France in which the conductor is also instrumental soloist (in the same concert)",
+  "file_source": "17.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0006_give_me_the_list_of_concerts_of_the_orchestre_national_de_france_in_which_the_conductor_is.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0006_give_me_the_list_of_concerts_of_the_orchestre_national_de_france_in_which_the_conductor_is.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

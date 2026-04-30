@@ -1,0 +1,7 @@
+{
+  "id": 22,
+  "question": "Which works have been written for string quartet?",
+  "file_source": "3.rq",
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?work WHERE { ?work ecrm:P14_carried_out_by <http://data.doremus.org/artist/30a8e0d8-562e-3bb6-989b-070b82921282> }",
+  "execution_result": "Got no rows and 1 columns in 0.02s"
+}

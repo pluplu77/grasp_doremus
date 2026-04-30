@@ -1,0 +1,15 @@
+{
+  "id": 11,
+  "question": "Give me the artists that have been recorded more than 10 times by Radio France",
+  "file_source": "38.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0011_give_me_the_artists_that_have_been_recorded_more_than_10_times_by_radio_france.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0011_give_me_the_artists_that_have_been_recorded_more_than_10_times_by_radio_france.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": "cancel"
+}

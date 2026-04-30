@@ -1,0 +1,15 @@
+{
+  "id": 24,
+  "question": "Give me all the recordings of opera aria whose library has at least one score",
+  "file_source": "50.rq",
+  "invalid_reason": "execution_error",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0024_give_me_all_the_recordings_of_opera_aria_whose_library_has_at_least_one_score.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0024_give_me_all_the_recordings_of_opera_aria_whose_library_has_at_least_one_score.json",
+  "sparql": "SELECT ?recording WHERE { VALUES ?expression ( http://data.doremus.org/expression/99b3e5db-5727-3f28-ac3d-6225023ae5d0 http://data.doremus.org/expression/f0d02911-5d29-3172-a6a8-46ea8f564a45 ) . ?recording ecrm:P9_consists_of ?expression . }",
+  "execution_result": "Error executing SPARQL query over doremus:\nfailed to parse input: no matching token found from position 59: 'doremus.org/expression/99b3e5db-5727-3f28-ac3d-6225023ae5d0 http://data.doremus.org/expression/f0d02911-5d29-3172-a6a8-46ea8f564a45 ) . ?recording ecrm:P9_consists_of ?expression . }'",
+  "answer": "The recordings of opera arias whose library has at least one score are not explicitly available in the current dataset. However, based on the available expressions (e.g., 'Aria sopra La Bergamasca' and 'A Maria Peña'), recordings that consist of these arias can be queried using the provided SPARQL query. The query returns recordings linked to these opera arias via the 'crm:P9_consists_of' relation. If no recordings are found, it may indicate that the data for such recordings is not fully available in DOREMUS.",
+  "output_type": "answer"
+}

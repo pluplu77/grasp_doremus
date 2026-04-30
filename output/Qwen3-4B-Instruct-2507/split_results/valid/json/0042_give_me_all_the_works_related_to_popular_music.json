@@ -1,0 +1,7 @@
+{
+  "id": 42,
+  "question": "Give me all the works related to popular music",
+  "file_source": "36.rq",
+  "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?expression WHERE { ?expression efrbroo:U12_has_genre ?genre . ?genre rdfs:label \"popular music\"@en . }",
+  "execution_result": "Got no rows and 1 columns in 0.02s"
+}

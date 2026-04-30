@@ -1,0 +1,15 @@
+{
+  "id": 30,
+  "question": "Could I find any music for flute and TWO bassoons ? an interesting combo",
+  "file_source": "mla.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0030_could_i_find_any_music_for_flute_and_two_bassoons_an_interesting_combo.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0030_could_i_find_any_music_for_flute_and_two_bassoons_an_interesting_combo.json",
+  "sparql": "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work efrbroo:R8_consists_of ?instrument . ?instrument foaf:name 'flute' }",
+  "execution_result": "Got no rows and 1 columns in 0.02s",
+  "answer": null,
+  "output_type": "cancel"
+}

@@ -1,0 +1,15 @@
+{
+  "id": 46,
+  "question": "Give me all the melodies written on French texts for average voice between 1870 and 1913.",
+  "file_source": "12.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0046_give_me_all_the_melodies_written_on_french_texts_for_average_voice_between_1870_and_1913.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0046_give_me_all_the_melodies_written_on_french_texts_for_average_voice_between_1870_and_1913.json",
+  "sparql": "PREFIX dct: <http://purl.org/dc/terms/>\nSELECT ?work WHERE { ?work dct:language \"fr\" }",
+  "execution_result": "Got no rows and 1 columns in 0.02s",
+  "answer": null,
+  "output_type": "cancel"
+}

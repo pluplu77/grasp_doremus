@@ -1,0 +1,15 @@
+{
+  "id": 2,
+  "question": "Give me all the recordings of opera aria whose library has no score",
+  "file_source": "51.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0002_give_me_all_the_recordings_of_opera_aria_whose_library_has_no_score.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0002_give_me_all_the_recordings_of_opera_aria_whose_library_has_no_score.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

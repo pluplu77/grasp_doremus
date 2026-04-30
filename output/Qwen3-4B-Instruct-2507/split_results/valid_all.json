@@ -1,0 +1,100 @@
+[
+  {
+    "id": 4,
+    "question": "Give me the list of the latest releases of DGG (Deutsche Grammophon Gesellschaft) in chamber music for strings",
+    "file_source": "49.rq",
+    "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work ?recording ?label WHERE { ?work rdfs:label \"Music for strings\"@en . ?work efrbroo:R8_consists_of ?ensemble . ?work efrbroo:R20_recorded ?recording . ?recording rdfs:label ?label . } LIMIT 10",
+    "execution_result": "Got no rows and 3 columns in 0.02s"
+  },
+  {
+    "id": 14,
+    "question": "Could I find any music for flute and TWO bassoons (strictly)? an interesting combo",
+    "file_source": "mla-strict.rq",
+    "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work a efrbroo:F22_Self-Contained_Expression . ?work ecrm:P14_carried_out_by ?instrument . ?instrument rdfs:label \"flute\"@en . ?work ecrm:P14_carried_out_by ?instrument2 . ?instrument2 rdfs:label \"basson\"@en . }",
+    "execution_result": "Got no rows and 1 columns in 0.03s"
+  },
+  {
+    "id": 15,
+    "question": "Give me all the operas of which the composer is also the librettist",
+    "file_source": "33.rq",
+    "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nSELECT ?work ?composer WHERE { ?work a efrbroo:F22_Self-Contained_Expression . ?work rdf:type ?operaType . ?operaType rdfs:label \"OPERA\" . ?work ecrm:P14_carried_out_by ?composer . ?work efrbroo:R17_created ?creationEvent . ?creationEvent ecrm:P14_carried_out_by ?composer . }",
+    "execution_result": "Got no rows and 2 columns in 0.21s"
+  },
+  {
+    "id": 21,
+    "question": "Give me all the works that have been written by German composers between 1800 and 1850 and performed at the Royal Albert Hall.",
+    "file_source": "5.rq",
+    "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nSELECT ?work WHERE { ?work ecrm:P9_consists_of ?composition . ?composition ecrm:P14_carried_out_by ?composer . ?composer foaf:name ?composerName . ?composition ecrm:P100_has_time_span ?timeSpan . ?timeSpan ecrm:P115_has_duration ?duration . ?work ecrm:P113_has_location ?venue . FILTER ( ?composerName = 'Beethoven' || ?composerName = 'Schubert' || ?composerName = 'Mendelssohn' ) . FILTER ( ?duration >= '1800' && ?duration <= '1850' ) . FILTER ( ?venue = 'Royal Albert Hall' ) }",
+    "execution_result": "Got no rows and 1 columns in 0.23s"
+  },
+  {
+    "id": 22,
+    "question": "Which works have been written for string quartet?",
+    "file_source": "3.rq",
+    "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?work WHERE { ?work ecrm:P14_carried_out_by <http://data.doremus.org/artist/30a8e0d8-562e-3bb6-989b-070b82921282> }",
+    "execution_result": "Got no rows and 1 columns in 0.02s"
+  },
+  {
+    "id": 26,
+    "question": "What works are linked to a particular work and what type of link connect them?",
+    "file_source": "4.rq",
+    "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work ?linkedWork ?linkType WHERE { ?work efrbroo:R8_consists_of ?linkedWork . }",
+    "execution_result": "Got 10,000 rows and 3 columns in 0.43s, showing the first 5 and last 5 rows below:\n| work                                                                                    | linkedWork                                                                                                 | linkType |\n| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------- |\n| N° 7 (http://data.doremus.org/publication/c2341c2d-259d-36d4-a926-6a6bae93118f/id/N° 7) | 1f4fb1f2 f921 3101 865c b571b0994314 (http://data.doremus.org/artist/1f4fb1f2-f921-3101-865c-b571b0994314) |          |\n| 294 (http://data.doremus.org/publication/226543bc-e3bb-3ae5-9797-10f6c54f1ed2/id/294)   | 1f4fb1f2 f921 3101 865c b571b0994314 (http://data.doremus.org/artist/1f4fb1f2-f921-3101-865c-b571b0994314) |          |\n| R49 (http://data.doremus.org/publication/f138b782-d2f1-3d62-b8bc-24321b646cf8/id/R49)   | b2079fac bbb6 3581 992d ccb0d2ef6107 (http://data.doremus.org/artist/b2079fac-bbb6-3581-992d-ccb0d2ef6107) |          |\n| 126 (http://data.doremus.org/publication/df24b323-4a61-3cb5-b495-17b2e26e1066/id/126)   | 8dbbec58 cd81 38f6 b2ee 3c8fd662e20f (http://data.doremus.org/artist/8dbbec58-cd81-38f6-b2ee-3c8fd662e20f) |          |\n| 395 (http://data.doremus.org/publication/e3f5af22-e08b-3cc0-84df-d234a5105895/id/395)   | 8dbbec58 cd81 38f6 b2ee 3c8fd662e20f (http://data.doremus.org/artist/8dbbec58-cd81-38f6-b2ee-3c8fd662e20f) |          |\n| ...                                                                                     | ...                                                                                                        | ...      |\n| http://data.doremus.org/publication/bfb0cf54-5613-358d-a0b9-5bc828eb6cb9/id/5267102     | http://data.doremus.org/artist/eba5452b-91f1-32cf-a35f-0ff3fa0e6ff5                                        |          |\n| http://data.doremus.org/publication/ac81a318-f82d-35bb-a33c-a096cc389021/id/4939022     | http://data.doremus.org/artist/eba5452b-91f1-32cf-a35f-0ff3fa0e6ff5                                        |          |\n| http://data.doremus.org/publication/2317aef0-7134-33f6-885a-4201dc11c25f/id/96860       | http://data.doremus.org/artist/eba5452b-91f1-32cf-a35f-0ff3fa0e6ff5                                        |          |\n| http://data.doremus.org/publication/cb3569a7-7be5-34b7-a1c0-738e67b9e286/id/8217302     | http://data.doremus.org/artist/eba5452b-91f1-32cf-a35f-0ff3fa0e6ff5                                        |          |\n| http://data.doremus.org/publication/562ce2fc-b4b3-3ae5-8baa-4bc516e5c66c/id/83111       | http://data.doremus.org/artist/eba5452b-91f1-32cf-a35f-0ff3fa0e6ff5                                        |          |"
+  },
+  {
+    "id": 28,
+    "question": "Give me the works of chamber music that involves at most violin, clarinet and piano, except from the sonatas for violin and piano and clarinet and piano",
+    "file_source": "11.rq",
+    "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work efrbroo:R17_created ?expression . ?expression ecrm:P9_consists_of ?instrument . ?instrument a efrbroo:F22_Self-Contained_Expression }",
+    "execution_result": "Got no rows and 1 columns in 0.34s"
+  },
+  {
+    "id": 33,
+    "question": "Give me all works for piano based on works of Schubert",
+    "file_source": "35.rq",
+    "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?work WHERE { ?work efrbroo:R17_created <http://data.doremus.org/track/1c4512e0-3c29-3ca6-bd58-69f46b74a5a4> . ?work rdfs:label ?label . FILTER (CONTAINS(STR(?label), 'Piano')) }",
+    "execution_result": "Got no rows and 1 columns in 0.02s"
+  },
+  {
+    "id": 34,
+    "question": "Give me the list of concerts performed at the Abbaye aux Dames de Saintes outside the festival period of Saintes",
+    "file_source": "37.rq",
+    "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?performance WHERE { ?performance ecrm:P14_carried_out_by ?location . ?location rdfs:label \"Abbaye aux Dames de Saintes\"@fr }",
+    "execution_result": "Got no rows and 1 columns in 0.13s"
+  },
+  {
+    "id": 42,
+    "question": "Give me all the works related to popular music",
+    "file_source": "36.rq",
+    "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?expression WHERE { ?expression efrbroo:U12_has_genre ?genre . ?genre rdfs:label \"popular music\"@en . }",
+    "execution_result": "Got no rows and 1 columns in 0.02s"
+  },
+  {
+    "id": 44,
+    "question": "Give me the list of the recordings made in 2014 by Harmonia Mundi with",
+    "file_source": "44.rq",
+    "sparql": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX dct: <http://purl.org/dc/terms/>\nPREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?work ?workLabel WHERE { ?work a efrbroo:F22_Self-Contained_Expression ; efrbroo:R17_created ?creationEvent ; dct:created \"2014\"^^xsd:gYear . ?creationEvent ecrm:P14_carried_out_by <http://data.doremus.org/artist/9d783254-9816-30ef-bb2a-f5ee89a07ea6> . }",
+    "execution_result": "Got no rows and 2 columns in 0.02s"
+  },
+  {
+    "id": 45,
+    "question": "Which works have been composed by Mozart?",
+    "file_source": "1.rq",
+    "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work a efrbroo:F22_Self-Contained_Expression ; ecrm:P14_carried_out_by <http://data.doremus.org/artist/4802a043-23bb-3b8d-a443-4a3bd22ccc63> . }",
+    "execution_result": "Got no rows and 1 columns in 0.02s"
+  },
+  {
+    "id": 48,
+    "question": "Give me the works written for oboe and orchestra after the 1900",
+    "file_source": "7.rq",
+    "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work a efrbroo:F22_Self-Contained_Expression . ?work ecrm:P9_consists_of / ecrm:P14_carried_out_by ?composer . ?work rdfs:label \"oboe and orchestra\"@en . }",
+    "execution_result": "Got no rows and 1 columns in 0.09s"
+  },
+  {
+    "id": 50,
+    "question": "Give me all the performances in which a composer directs one of his works",
+    "file_source": "16.rq",
+    "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?performance ?work ?composer WHERE { ?work efrbroo:R17_created ?composer . ?performance ecrm:P14_carried_out_by ?composer . ?performance efrbroo:R25_performed ?work . }",
+    "execution_result": "Got no rows and 3 columns in 0.24s"
+  }
+]

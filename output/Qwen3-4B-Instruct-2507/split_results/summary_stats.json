@@ -1,0 +1,20 @@
+{
+  "input": "output/Qwen3-4B-Instruct-2507/all_results.json",
+  "output_root": "output/Qwen3-4B-Instruct-2507/split_results",
+  "total": 53,
+  "valid_count": 14,
+  "invalid_count": 39,
+  "valid_frequency": 0.2641509433962264,
+  "invalid_frequency": 0.7358490566037735,
+  "status_counts": {
+    "ok": 53
+  },
+  "reason_counts": {
+    "execution_error": 5,
+    "missing_or_null_output": 20,
+    "valid": 14,
+    "output_type:cancel": 14
+  },
+  "valid_dir": "output/Qwen3-4B-Instruct-2507/split_results/valid/json",
+  "invalid_dir": "output/Qwen3-4B-Instruct-2507/split_results/invalid/json"
+}

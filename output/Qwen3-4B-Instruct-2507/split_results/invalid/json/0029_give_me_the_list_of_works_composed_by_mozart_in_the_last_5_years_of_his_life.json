@@ -1,0 +1,15 @@
+{
+  "id": 29,
+  "question": "Give me the list of works composed by Mozart in the last 5 years of his life",
+  "file_source": "25.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0029_give_me_the_list_of_works_composed_by_mozart_in_the_last_5_years_of_his_life.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0029_give_me_the_list_of_works_composed_by_mozart_in_the_last_5_years_of_his_life.json",
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT DISTINCT ?work WHERE { ?work ecrm:P14_carried_out_by <http://data.doremus.org/artist/4802a043-23bb-3b8d-a443-4a3bd22ccc63> }",
+  "execution_result": "Got 3,379 rows and 1 column in 0.08s, showing the first 5 and last 5 rows below:\n| work                                                                              |\n| --------------------------------------------------------------------------------- |\n| 1 (http://data.doremus.org/event/59aa4912-fc95-331d-93f2-cebac058a0e4/activity/1) |\n| 1 (http://data.doremus.org/event/d179c640-660f-37ac-91b1-d6543651d25f/activity/1) |\n| 1 (http://data.doremus.org/event/2123baac-0090-33b8-831d-45e7634c3679/activity/1) |\n| 1 (http://data.doremus.org/event/676a145e-6510-3574-8cbd-ec9834169baf/activity/1) |\n| 1 (http://data.doremus.org/event/0204aade-39bd-313c-b5c1-2ea1c8654458/activity/1) |\n| ...                                                                               |\n| 1 (http://data.doremus.org/event/b6a5544c-4dd1-3ee6-973b-580376f3d533/activity/1) |\n| 1 (http://data.doremus.org/event/11089096-209a-30ce-9258-ccba952a9788/activity/1) |\n| 1 (http://data.doremus.org/event/6858623c-8988-3005-9750-5364638200a3/activity/1) |\n| 1 (http://data.doremus.org/event/36a7e62c-a512-37e8-89bf-d64504bf1885/activity/1) |\n| 1 (http://data.doremus.org/event/4a88a764-6d47-343d-a2f3-01c4dbe83f6c/activity/1) |",
+  "answer": null,
+  "output_type": "cancel"
+}

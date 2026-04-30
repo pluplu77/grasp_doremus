@@ -1,0 +1,15 @@
+{
+  "id": 12,
+  "question": "Give me all the works interpreted on at least one mop different from the casting of the work",
+  "file_source": "30.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0012_give_me_all_the_works_interpreted_on_at_least_one_mop_different_from_the_casting_of_the_wo.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0012_give_me_all_the_works_interpreted_on_at_least_one_mop_different_from_the_casting_of_the_wo.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

@@ -1,0 +1,15 @@
+{
+  "id": 37,
+  "question": "Give me the cutting of all the recordings of Don Giovanni by Mozart",
+  "file_source": "45.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0037_give_me_the_cutting_of_all_the_recordings_of_don_giovanni_by_mozart.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0037_give_me_the_cutting_of_all_the_recordings_of_don_giovanni_by_mozart.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

@@ -1,0 +1,15 @@
+{
+  "id": 9,
+  "question": "Give me the list of the works that were created where they were composed",
+  "file_source": "26.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0009_give_me_the_list_of_the_works_that_were_created_where_they_were_composed.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0009_give_me_the_list_of_the_works_that_were_created_where_they_were_composed.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

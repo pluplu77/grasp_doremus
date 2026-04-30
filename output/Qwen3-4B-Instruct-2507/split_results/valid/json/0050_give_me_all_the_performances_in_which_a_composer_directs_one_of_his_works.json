@@ -1,0 +1,7 @@
+{
+  "id": 50,
+  "question": "Give me all the performances in which a composer directs one of his works",
+  "file_source": "16.rq",
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?performance ?work ?composer WHERE { ?work efrbroo:R17_created ?composer . ?performance ecrm:P14_carried_out_by ?composer . ?performance efrbroo:R25_performed ?work . }",
+  "execution_result": "Got no rows and 3 columns in 0.24s"
+}

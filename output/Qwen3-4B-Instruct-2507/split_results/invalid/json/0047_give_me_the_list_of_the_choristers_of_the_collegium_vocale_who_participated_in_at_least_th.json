@@ -1,0 +1,15 @@
+{
+  "id": 47,
+  "question": "Give me the list of the choristers of the Collegium Vocale who participated in at least three radio recordings of the choir in 2012",
+  "file_source": "41.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0047_give_me_the_list_of_the_choristers_of_the_collegium_vocale_who_participated_in_at_least_th.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0047_give_me_the_list_of_the_choristers_of_the_collegium_vocale_who_participated_in_at_least_th.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

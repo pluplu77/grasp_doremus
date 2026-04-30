@@ -1,0 +1,15 @@
+{
+  "id": 23,
+  "question": "Give me the flute sonatas that last less than or equal to 15 minutes",
+  "file_source": "39.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0023_give_me_the_flute_sonatas_that_last_less_than_or_equal_to_15_minutes.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0023_give_me_the_flute_sonatas_that_last_less_than_or_equal_to_15_minutes.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

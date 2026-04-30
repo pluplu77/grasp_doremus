@@ -1,0 +1,15 @@
+{
+  "id": 36,
+  "question": "Give me the name of the vocal soloist most recorded by Radio France in 2014",
+  "file_source": "42.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0036_give_me_the_name_of_the_vocal_soloist_most_recorded_by_radio_france_in_2014.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0036_give_me_the_name_of_the_vocal_soloist_most_recorded_by_radio_france_in_2014.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": "cancel"
+}

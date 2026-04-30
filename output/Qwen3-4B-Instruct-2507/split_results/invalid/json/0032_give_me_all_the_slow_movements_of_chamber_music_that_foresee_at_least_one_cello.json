@@ -1,0 +1,15 @@
+{
+  "id": 32,
+  "question": "Give me all the slow movements of chamber music that foresee at least one cello",
+  "file_source": "13.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0032_give_me_all_the_slow_movements_of_chamber_music_that_foresee_at_least_one_cello.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0032_give_me_all_the_slow_movements_of_chamber_music_that_foresee_at_least_one_cello.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

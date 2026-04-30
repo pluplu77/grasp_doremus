@@ -1,0 +1,7 @@
+{
+  "id": 4,
+  "question": "Give me the list of the latest releases of DGG (Deutsche Grammophon Gesellschaft) in chamber music for strings",
+  "file_source": "49.rq",
+  "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work ?recording ?label WHERE { ?work rdfs:label \"Music for strings\"@en . ?work efrbroo:R8_consists_of ?ensemble . ?work efrbroo:R20_recorded ?recording . ?recording rdfs:label ?label . } LIMIT 10",
+  "execution_result": "Got no rows and 3 columns in 0.02s"
+}

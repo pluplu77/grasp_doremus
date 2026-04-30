@@ -1,0 +1,7 @@
+{
+  "id": 33,
+  "question": "Give me all works for piano based on works of Schubert",
+  "file_source": "35.rq",
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?work WHERE { ?work efrbroo:R17_created <http://data.doremus.org/track/1c4512e0-3c29-3ca6-bd58-69f46b74a5a4> . ?work rdfs:label ?label . FILTER (CONTAINS(STR(?label), 'Piano')) }",
+  "execution_result": "Got no rows and 1 columns in 0.02s"
+}

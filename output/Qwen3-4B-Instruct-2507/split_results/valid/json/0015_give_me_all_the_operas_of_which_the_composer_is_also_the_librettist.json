@@ -1,0 +1,7 @@
+{
+  "id": 15,
+  "question": "Give me all the operas of which the composer is also the librettist",
+  "file_source": "33.rq",
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nSELECT ?work ?composer WHERE { ?work a efrbroo:F22_Self-Contained_Expression . ?work rdf:type ?operaType . ?operaType rdfs:label \"OPERA\" . ?work ecrm:P14_carried_out_by ?composer . ?work efrbroo:R17_created ?creationEvent . ?creationEvent ecrm:P14_carried_out_by ?composer . }",
+  "execution_result": "Got no rows and 2 columns in 0.21s"
+}

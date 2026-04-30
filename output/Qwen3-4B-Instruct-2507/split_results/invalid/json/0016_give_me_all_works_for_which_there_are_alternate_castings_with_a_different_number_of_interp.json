@@ -1,0 +1,15 @@
+{
+  "id": 16,
+  "question": "Give me all works for which there are alternate castings with a different number of interpreters (e.g. keyboard & orch / cello, oboe & orch)",
+  "file_source": "19.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0016_give_me_all_works_for_which_there_are_alternate_castings_with_a_different_number_of_interp.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0016_give_me_all_works_for_which_there_are_alternate_castings_with_a_different_number_of_interp.json",
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?work WHERE { ?work ecrm:P9_consists_of ?performance . ?performance ecrm:P14_carried_out_by ?interpreter . }",
+  "execution_result": "Got 10,000 rows and 1 column in 0.25s, showing the first 5 and last 5 rows below:\n| work                                                                                                            |\n| --------------------------------------------------------------------------------------------------------------- |\n| a4575c7c 49b5 38d5 b38d de8d4d7d6702 (http://data.doremus.org/event/a4575c7c-49b5-38d5-b38d-de8d4d7d6702)       |\n| f9f6fa6b c1db 3464 9f33 c00d506284e4 (http://data.doremus.org/event/f9f6fa6b-c1db-3464-9f33-c00d506284e4)       |\n| b92a4d30 bb8d 3ae5 be23 36de2966eef3 (http://data.doremus.org/event/b92a4d30-bb8d-3ae5-be23-36de2966eef3)       |\n| 1790bce7 6940 399b 95b3 5853f107481c (http://data.doremus.org/event/1790bce7-6940-399b-95b3-5853f107481c)       |\n| 78f41079 5c8d 3583 9535 c025ed00ad95 (http://data.doremus.org/event/78f41079-5c8d-3583-9535-c025ed00ad95)       |\n| ...                                                                                                             |\n| 0323e27d 3352 3d5c 8f90 38b1c1d076c9 (http://data.doremus.org/event/0323e27d-3352-3d5c-8f90-38b1c1d076c9)       |\n| 752fea36 129b 3d2e 915e 0b9452690d57 (http://data.doremus.org/performance/752fea36-129b-3d2e-915e-0b9452690d57) |\n| 0bebfe47 2639 38d9 8163 b54e109087d7 (http://data.doremus.org/event/0bebfe47-2639-38d9-8163-b54e109087d7)       |\n| 0bebfe47 2639 38d9 8163 b54e109087d7 (http://data.doremus.org/event/0bebfe47-2639-38d9-8163-b54e109087d7)       |\n| e39229c2 1f15 33b9 9f40 91035d5294a5 (http://data.doremus.org/event/e39229c2-1f15-33b9-9f40-91035d5294a5)       |",
+  "answer": null,
+  "output_type": "cancel"
+}

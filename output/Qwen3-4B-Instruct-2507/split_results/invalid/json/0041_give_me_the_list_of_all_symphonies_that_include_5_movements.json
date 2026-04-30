@@ -1,0 +1,15 @@
+{
+  "id": 41,
+  "question": "Give me the list of all symphonies that include 5 movements",
+  "file_source": "24.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0041_give_me_the_list_of_all_symphonies_that_include_5_movements.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0041_give_me_the_list_of_all_symphonies_that_include_5_movements.json",
+  "sparql": "SELECT ?symphony ?movement WHERE { ?symphony efrbroo:F22_Self-Contained_Expression . ?symphony efrbroo:R8_consists_of ?movement }",
+  "execution_result": "Error executing SPARQL query over doremus:\nfailed to parse input: parse error at position 83 for token . with content '.' (the input most likely does not follow the grammar)",
+  "answer": null,
+  "output_type": "cancel"
+}

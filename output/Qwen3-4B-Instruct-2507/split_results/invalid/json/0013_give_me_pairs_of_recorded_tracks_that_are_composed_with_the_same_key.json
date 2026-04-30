@@ -1,0 +1,15 @@
+{
+  "id": 13,
+  "question": "Give me pairs of recorded tracks that are composed with the same key",
+  "file_source": "48.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0013_give_me_pairs_of_recorded_tracks_that_are_composed_with_the_same_key.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0013_give_me_pairs_of_recorded_tracks_that_are_composed_with_the_same_key.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

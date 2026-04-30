@@ -1,0 +1,15 @@
+{
+  "id": 19,
+  "question": "Give me the list of the works of which at least one of the dedicatees is also a performer of the work",
+  "file_source": "23.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0019_give_me_the_list_of_the_works_of_which_at_least_one_of_the_dedicatees_is_also_a_performer_.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0019_give_me_the_list_of_the_works_of_which_at_least_one_of_the_dedicatees_is_also_a_performer_.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

@@ -1,0 +1,15 @@
+{
+  "id": 25,
+  "question": "Which works have been composed in 1836 ?",
+  "file_source": "2.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0025_which_works_have_been_composed_in_1836.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0025_which_works_have_been_composed_in_1836.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

@@ -1,0 +1,15 @@
+{
+  "id": 35,
+  "question": "Give me the name and the birth date of artists that played the oboe",
+  "file_source": "6.rq",
+  "invalid_reason": "output_type:cancel",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0035_give_me_the_name_and_the_birth_date_of_artists_that_played_the_oboe.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0035_give_me_the_name_and_the_birth_date_of_artists_that_played_the_oboe.json",
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?person ?birthDate WHERE { ?person efrbroo:R25_performed ?work . ?work efrbroo:U193_used_historical_instruments ?instrument . ?instrument efrbroo:R17_created ?expression . }",
+  "execution_result": "Got no rows and 2 columns in 0.02s",
+  "answer": null,
+  "output_type": "cancel"
+}

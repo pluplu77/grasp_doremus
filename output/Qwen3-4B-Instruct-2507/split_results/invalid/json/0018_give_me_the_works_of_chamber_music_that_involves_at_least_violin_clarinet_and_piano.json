@@ -1,0 +1,15 @@
+{
+  "id": 18,
+  "question": "Give me the works of chamber music that involves at least violin, clarinet and piano",
+  "file_source": "9.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0018_give_me_the_works_of_chamber_music_that_involves_at_least_violin_clarinet_and_piano.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0018_give_me_the_works_of_chamber_music_that_involves_at_least_violin_clarinet_and_piano.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

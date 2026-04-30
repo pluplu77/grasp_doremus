@@ -1,0 +1,15 @@
+{
+  "id": 51,
+  "question": "Among concerts and CDs, which works are often played after < other work > ?",
+  "file_source": "47.rq",
+  "invalid_reason": "missing_or_null_output",
+  "status": "ok",
+  "returncode": 0,
+  "error": null,
+  "raw_log": "output/Qwen3-4B-Instruct-2507/raw_logs/0051_among_concerts_and_cds_which_works_are_often_played_after_other_work.txt",
+  "per_question_json": "output/Qwen3-4B-Instruct-2507/per_question/0051_among_concerts_and_cds_which_works_are_often_played_after_other_work.json",
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

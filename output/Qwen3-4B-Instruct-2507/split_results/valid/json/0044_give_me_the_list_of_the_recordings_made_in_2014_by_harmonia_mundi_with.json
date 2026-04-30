@@ -1,0 +1,7 @@
+{
+  "id": 44,
+  "question": "Give me the list of the recordings made in 2014 by Harmonia Mundi with",
+  "file_source": "44.rq",
+  "sparql": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX dct: <http://purl.org/dc/terms/>\nPREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?work ?workLabel WHERE { ?work a efrbroo:F22_Self-Contained_Expression ; efrbroo:R17_created ?creationEvent ; dct:created \"2014\"^^xsd:gYear . ?creationEvent ecrm:P14_carried_out_by <http://data.doremus.org/artist/9d783254-9816-30ef-bb2a-f5ee89a07ea6> . }",
+  "execution_result": "Got no rows and 2 columns in 0.02s"
+}
