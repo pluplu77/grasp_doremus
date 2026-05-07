@@ -1,0 +1,353 @@
+{
+  "id": 57,
+  "csv_row_number": "58",
+  "question": "Give me performances held in Paris.",
+  "file_source": "q057.rq",
+  "status": "valid",
+  "error": null,
+  "returncode": 0,
+  "elapsed_seconds": 67.54543859139085,
+  "started_at": "2026-05-07T17:17:36.848045Z",
+  "finished_at": "2026-05-07T17:18:44.394550Z",
+  "command": [
+    "grasp",
+    "--log-level",
+    "DEBUG",
+    "run",
+    "configs/run_vllm.yaml"
+  ],
+  "parsed_output": {
+    "type": "output",
+    "task": "sparql-qa",
+    "output": {
+      "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?performance WHERE { ?performance a efrbroo:F31_Performance ;\n    <http://data.doremus.org/ontology#U65_has_geographical_context> <http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7> . }",
+      "kg": "doremus",
+      "selections": "Using entities:\n- Paris (http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7)\n- F31 Performance (efrbroo:F31_Performance)\n\nUsing properties:\n- U65 has geographical context (http://data.doremus.org/ontology#U65_has_geographical_context)",
+      "result": "Got 1 row and 1 column in 0.25s:\n| performance                                                                                                                                          |\n| ---------------------------------------------------------------------------------------------------------------------------------------------------- |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) |",
+      "endpoint": "https://doremus.ehrh.art/sparql",
+      "type": "answer",
+      "answer": "The performance held in Paris is '1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre' at Cité de la musique on May 4, 2009.",
+      "formatted": "The performance held in Paris is '1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre' at Cité de la musique on May 4, 2009.\n\nSPARQL query over doremus:\n```sparql\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?performance WHERE { ?performance a efrbroo:F31_Performance ;\n    <http://data.doremus.org/ontology#U65_has_geographical_context> <http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7> . }\n```\n\nUsing entities:\n- Paris (http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7)\n- F31 Performance (efrbroo:F31_Performance)\n\nUsing properties:\n- U65 has geographical context (http://data.doremus.org/ontology#U65_has_geographical_context)\n\nExecution result:\nGot 1 row and 1 column in 0.25s:\n| performance                                                                                                                                          |\n| ---------------------------------------------------------------------------------------------------------------------------------------------------- |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) |"
+    },
+    "elapsed": 50.2565592546016,
+    "error": null,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a question answering assistant. Your job is to generate a SPARQL query to answer a given user question.\n\nYou should follow a step-by-step approach to generate the SPARQL query:\n1. Determine possible entities and properties implied by the user question.\n2. Search for the entities and properties in the knowledge graphs. Where applicable, constrain the searches with already identified entities and properties.\n3. Gradually build up the SPARQL query using the identified entities and properties. Start with simple queries and add more complexity as needed. Execute intermediate queries to get feedback and to verify your assumptions. You may need to refine or rethink your current plan based on the query results and go back to step 2 if needed, possibly multiple times.\n4. Use the answer or cancel function to finalize your answer and stop the generation process.\n\nTypes of knowledge graph indices:\n- \"embedding\": Retrieves items by cosine similarity between their embeddings and the query embedding. The embedding model used depends on the index and may support text, images, or both.\n- \"fuzzy\": Retrieves items by overlap between their label words and the query keywords. The query keywords must not match label words exactly, but some fuzziness is allowed. The longer a query keyword is, the more it can deviate from a label word and still be considered a match, though it will also contribute less to the overall score. No special query operators like AND/OR are supported.\n\nAvailable knowledge graphs:\n- \"doremus\" at https://doremus.ehrh.art/sparql\n  Search indices:\n    - \"entities\" index (type=\"fuzzy\"): Entities indexed by their labels and synonyms\n    - \"properties\" index (type=\"embedding\", modalities=\"text\"): Properties indexed by their labels, synonyms, and IRIs\n  SPARQL prefixes:\n    - ecrm: http://erlangen-crm.org/current/\n    - efrbroo: http://erlangen-crm.org/efrbroo/\n\nCommon SPARQL prefixes:\n- bd: http://www.bigdata.com/rdf#\n- dc: http://purl.org/dc/elements/1.1/\n- dct: http://purl.org/dc/terms/\n- foaf: http://xmlns.com/foaf/0.1/\n- geo: http://www.opengis.net/ont/geosparql#\n- geof: http://www.opengis.net/def/function/geosparql/\n- geosparql: http://www.opengis.net/ont/geosparql#\n- gn: http://www.geonames.org/ontology#\n- hint: http://www.bigdata.com/queryHints#\n- owl: http://www.w3.org/2002/07/owl#\n- prov: http://www.w3.org/ns/prov#\n- qb: http://purl.org/linked-data/cube#\n- rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#\n- rdfs: http://www.w3.org/2000/01/rdf-schema#\n- schema: http://schema.org/\n- skos: http://www.w3.org/2004/02/skos/core#\n- void: http://rdfs.org/ns/void#\n- wikibase: http://wikiba.se/ontology#\n- xsd: http://www.w3.org/2001/XMLSchema#\n\nAll SPARQL prefixes above can be used implicitly in SPARQL queries and function calls.\n\nAdditional rules to follow:\n- Explain your thought process before each step and function call.\n- Do not ask the user for clarification, neither on the initial input nor on follow-up inputs or feedback. When the task input is incomplete or ambiguous, proceed based on reasonable assumptions.\n- Use IRIs returned in function call results as is in subsequent function calls. Shortening them to their prefixed form, and escaping or encoding special characters might lead to errors and unexpected or empty results.\n- Do not use \"SERVICE wikibase:label { bd:serviceParam wikibase:language ...\" in SPARQL queries. It is not SPARQL standard and unsupported by most SPARQL endpoints. Use rdfs:label or similar properties to get labels instead.\n- Always execute your final SPARQL query before giving an answer to make sure it returns the expected results.\n- The SPARQL query should always return the actual identifiers / IRIs of the items in its result. It additionally may return labels or other human-readable information, but they are optional and should be put within optional clauses unless explicitly requested by the user.\n- Do not stop early if there are still obvious improvements to be made to the SPARQL query. For example, keep refining your SPARQL query if its result contains irrelevant items or is missing items you expected.\n- Do not perform additional computation (e.g. filtering, sorting, calculations) on the result of the SPARQL query to determine the answer. All computation should be done solely within SPARQL.\n- For questions with a \"True\" or \"False\" answer the SPARQL query should be an ASK query."
+      },
+      {
+        "role": "user",
+        "content": "Give me performances held in Paris.\n"
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "id": "chatcmpl-a72b689cec1cab45",
+          "message": "I need to find performances held in Paris. Let me break this down step by step:\n\n1. First, I need to identify what constitutes a \"performance\" in the Doremus knowledge graph. Looking at the EFRBROO ontology, performances are likely related to \"F13 Performance\" or similar classes.\n\n2. I need to find entities related to Paris. Paris is a location, so I should search for entities with \"Paris\" in their label.\n\n3. I need to find the relationship between performances and locations. In the EFRBROO ontology, this would likely be through properties like \"P7_took_place_at\" or similar.\n\nLet me start by searching for entities related to Paris:",
+          "reasoning": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-b2f8f609ea3e2b47",
+              "name": "search_entity",
+              "args": {
+                "kg": "doremus",
+                "query": "Paris",
+                "page": 1
+              },
+              "result": "Top 10 entities alternatives:\n1. Paris (http://data.doremus.org/artist/151df096-7b01-3eb8-811f-e03efee13e20)\n2. Paris (http://data.doremus.org/artist/5805335b-413e-3fc2-90cf-3a4dbc5c11e4)\n3. Paris (http://data.doremus.org/artist/59df88d1-7bbb-3789-b6f7-4fb5b32d1bdc)\n4. Paris (http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7)\n5. Paris (http://data.doremus.org/expression/0663f16c-2224-395a-aaa6-a8e768e9536a)\n6. Paris (http://data.doremus.org/expression/095baabf-1841-3605-893f-8a511fcabd01)\n7. Paris (http://data.doremus.org/expression/1744f35f-32b7-3b41-842e-9ca8ea6da080)\n8. Paris (http://data.doremus.org/expression/185ee326-6bbe-3b7a-939e-2af5ce8dd969)\n9. Paris (http://data.doremus.org/expression/21a439c6-8216-3e08-8977-735d26e2f212)\n10. Paris (http://data.doremus.org/expression/2305a32c-34da-3e31-8d9f-f7a6e78bc205)",
+              "error": null
+            }
+          ],
+          "usage": {
+            "completion_tokens": 180,
+            "prompt_tokens": 3449,
+            "total_tokens": 3629,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "prompt_token_ids": null,
+          "token_ids": null,
+          "token_logprobs": null,
+          "token_texts": null
+        }
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "id": "chatcmpl-a2dbfc8dd99f4378",
+          "message": "I see that there are several entities related to \"Paris\" in the Doremus knowledge graph. These appear to be various types of entities including artists and expressions. However, I need to find performances held in Paris.\n\nLet me search for the concept of \"performance\" in the Doremus knowledge graph to understand how it's represented:",
+          "reasoning": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-a60aac992385ab08",
+              "name": "search_entity",
+              "args": {
+                "kg": "doremus",
+                "query": "performance",
+                "page": 1
+              },
+              "result": "Top 10 entities alternatives:\n1. Performance (http://data.doremus.org/expression/2550e79c-6197-3fa6-9977-e1125ac1ecb7)\n2. Performance (http://data.doremus.org/expression/a58b2982-5f08-3b77-8f98-1d7539a1e22f)\n3. Performance (http://data.doremus.org/track/5017a926-ece2-3270-8a00-3cafdf42093c)\n4. Performance 2 (http://data.doremus.org/publication/64fb3e59-23de-3f0f-84af-676ef4f2c2cc)\n5. High performance (http://data.doremus.org/publication/f5e53087-126a-3818-b7df-b2d99c838553)\n6. F31 Performance (efrbroo:F31_Performance)\n7. New Performance Group (http://data.doremus.org/artist/211f2c54-02a4-3a80-8de8-acca9faa94e3)\n8. Tempest. Performance audiovisuelle (http://data.doremus.org/expression/64648076-c9ec-394b-99a3-a156d0012599)\n9. M26 Foreseen Performance (http://data.doremus.org/ontology#M26_Foreseen_Performance)\n10. M28 Individual Performance (http://data.doremus.org/ontology#M28_Individual_Performance)",
+              "error": null
+            }
+          ],
+          "usage": {
+            "completion_tokens": 102,
+            "prompt_tokens": 4119,
+            "total_tokens": 4221,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "prompt_token_ids": null,
+          "token_ids": null,
+          "token_logprobs": null,
+          "token_texts": null
+        }
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "id": "chatcmpl-a9f011233804c16b",
+          "message": "I can see that \"F31 Performance\" is listed as a specific entity in the EFRBROO ontology. This is likely the correct class for performances. Let me check what properties are available for this entity to understand how to link performances to locations like Paris:",
+          "reasoning": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-a5cd370378ece502",
+              "name": "search_property_of_entity",
+              "args": {
+                "kg": "doremus",
+                "entity": "efrbroo:F31_Performance",
+                "query": "location",
+                "page": 1
+              },
+              "result": "Top 10 properties alternatives:\n1. label (rdfs:label)\n2. type (rdf:type)\n3. comment (rdfs:comment)\n4. subClassOf (rdfs:subClassOf), also known as \"sub Class Of\"",
+              "error": null
+            }
+          ],
+          "usage": {
+            "completion_tokens": 105,
+            "prompt_tokens": 4653,
+            "total_tokens": 4758,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "prompt_token_ids": null,
+          "token_ids": null,
+          "token_logprobs": null,
+          "token_texts": null
+        }
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "id": "chatcmpl-979d679f86ce7ce8",
+          "message": "I need to find the property that links performances to their locations. Let me search for properties related to location or place in the Doremus knowledge graph:",
+          "reasoning": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-b857f3cf87caac4d",
+              "name": "search_property",
+              "args": {
+                "kg": "doremus",
+                "query": "location",
+                "page": 1
+              },
+              "result": "Top 10 properties alternatives:\n1. range (rdfs:range)\n2. domain (rdfs:domain)\n3. label (rdfs:label)\n4. U65 has geographical context (http://data.doremus.org/ontology#U65_has_geographical_context)\n5. equivalentProperty (owl:equivalentProperty), also known as \"equivalent Property\"\n6. Language (dct:language, matched via \"language\"), also known as \"language\"\n7. has related (skos:related, matched via \"related\"), also known as \"related\"\n8. value (rdf:value)\n9. rest (rdf:rest)\n10. type (rdf:type)",
+              "error": null
+            }
+          ],
+          "usage": {
+            "completion_tokens": 65,
+            "prompt_tokens": 4824,
+            "total_tokens": 4889,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "prompt_token_ids": null,
+          "token_ids": null,
+          "token_logprobs": null,
+          "token_texts": null
+        }
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "id": "chatcmpl-bf9ab0fc2a48183e",
+          "message": "I found a promising property: \"U65 has geographical context\" (http://data.doremus.org/ontology#U65_has_geographical_context). This appears to be the property that links entities to their geographical context, which would include locations like Paris.\n\nNow I need to find performances that have Paris as their geographical context. Let me search for performances that have Paris as their geographical context using this property:",
+          "reasoning": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-9c24de9f68775886",
+              "name": "search_object_of_property",
+              "args": {
+                "kg": "doremus",
+                "property": "http://data.doremus.org/ontology#U65_has_geographical_context",
+                "query": "Paris",
+                "page": 1
+              },
+              "result": "Top 10 entities alternatives:\n1. Paris (http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7)\n2. Paris (http://sws.geonames.org/2988507/)",
+              "error": null
+            }
+          ],
+          "usage": {
+            "completion_tokens": 142,
+            "prompt_tokens": 5046,
+            "total_tokens": 5188,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "prompt_token_ids": null,
+          "token_ids": null,
+          "token_logprobs": null,
+          "token_texts": null
+        }
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "id": "chatcmpl-affbd262415028f3",
+          "message": "I see that Paris is identified as a context entity with the IRI http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7. Now I need to find performances that have this context as their geographical context.\n\nLet me construct a SPARQL query to find all performances (F31_Performance) that have Paris (http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7) as their geographical context using the U65_has_geographical_context property:",
+          "reasoning": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-bc106c123b6cf3ba",
+              "name": "execute",
+              "args": {
+                "kg": "doremus",
+                "sparql": "SELECT ?performance WHERE { ?performance a efrbroo:F31_Performance ;\n    <http://data.doremus.org/ontology#U65_has_geographical_context> <http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7> . }"
+              },
+              "result": "Got 1 row and 1 column in 0.24s:\n| performance                                                                                                                                          |\n| ---------------------------------------------------------------------------------------------------------------------------------------------------- |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) |",
+              "error": null
+            }
+          ],
+          "usage": {
+            "completion_tokens": 264,
+            "prompt_tokens": 5275,
+            "total_tokens": 5539,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "prompt_token_ids": null,
+          "token_ids": null,
+          "token_logprobs": null,
+          "token_texts": null
+        }
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "id": "chatcmpl-b8dfcc5b7e366f06",
+          "message": "I have found one performance held in Paris. Let me verify this result by checking the details of this performance to ensure it's correct:",
+          "reasoning": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-b6467ea2a56f9b8f",
+              "name": "list",
+              "args": {
+                "kg": "doremus",
+                "subject": "http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462",
+                "page": 1
+              },
+              "result": "Showing 10 triples from page 1:\n| subject                                                                                                                                              | property                                                                                     | object                                                                                                         |\n| ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | label (rdfs:label)                                                                           | 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre                                      |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | P2 has type (ecrm:P2_has_type)                                                               | concert                                                                                                        |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | included performed version of (efrbroo:R66_included_performed_version_of)                    | Lise (http://data.doremus.org/expression/092e1f21-a554-3802-a6e4-f48764f658f1)                                 |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | P4 has time-span (ecrm:P4_has_time-span)                                                     | 2009-05-04 (http://data.doremus.org/event/f2d22062-7fc1-33ca-aa28-e872aa9fb1ee/time)                           |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | U205 has cast detail (http://data.doremus.org/ontology#U205_has_cast_detail)                 | Jean-Paul Fouchécourt, chant; Jean-Claude Pennetier, piano; Didier Sandre, récitant                            |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | P7 took place at (ecrm:P7_took_place_at)                                                     | Cité de la musique (http://data.doremus.org/place/a54c7c26-ed3e-3312-87ae-3324614d454a)                        |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | performed (efrbroo:R25_performed)                                                            | 4d0f752f 113b 3230 9ce7 bc5c88101687 (http://data.doremus.org/expression/4d0f752f-113b-3230-9ce7-bc5c88101687) |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | type (rdf:type)                                                                              | Entity (prov:Entity)                                                                                           |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | P102 has title (ecrm:P102_has_title)                                                         | 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre                                      |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) | U65 has geographical context (http://data.doremus.org/ontology#U65_has_geographical_context) | Paris (http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7)                                   |",
+              "error": null
+            }
+          ],
+          "usage": {
+            "completion_tokens": 101,
+            "prompt_tokens": 5650,
+            "total_tokens": 5751,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "prompt_token_ids": null,
+          "token_ids": null,
+          "token_logprobs": null,
+          "token_texts": null
+        }
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "id": "chatcmpl-bd27eb438c6eda20",
+          "message": "I have confirmed that the performance \"1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre\" is indeed held in Paris, as it has the geographical context \"Paris\" (http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7).\n\nThe performance took place at Cité de la musique in Paris on May 4, 2009, and it's a concert featuring Jean-Paul Fouchécourt, Jean-Claude Pennetier, and Didier Sandre performing \"Lise\".\n\nNow I'll provide the final answer with the SPARQL query that retrieves this information:",
+          "reasoning": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-8877ee866f47c209",
+              "name": "answer",
+              "args": {
+                "kg": "doremus",
+                "sparql": "SELECT ?performance WHERE { ?performance a efrbroo:F31_Performance ;\n    <http://data.doremus.org/ontology#U65_has_geographical_context> <http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7> . }",
+                "answer": "The performance held in Paris is '1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre' at Cité de la musique on May 4, 2009."
+              },
+              "result": "Stopping",
+              "error": null
+            }
+          ],
+          "usage": {
+            "completion_tokens": 335,
+            "prompt_tokens": 7092,
+            "total_tokens": 7427,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "prompt_token_ids": null,
+          "token_ids": null,
+          "token_logprobs": null,
+          "token_texts": null
+        }
+      }
+    ],
+    "known": [
+      "http://data.doremus.org/track/5017a926-ece2-3270-8a00-3cafdf42093c",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+      "http://data.doremus.org/ontology#M26_Foreseen_Performance",
+      "http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7",
+      "http://erlangen-crm.org/efrbroo/R66_included_performed_version_of",
+      "http://data.doremus.org/ontology#U65_has_geographical_context",
+      "http://erlangen-crm.org/efrbroo/R25_performed",
+      "http://data.doremus.org/expression/a58b2982-5f08-3b77-8f98-1d7539a1e22f",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+      "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "http://data.doremus.org/expression/2550e79c-6197-3fa6-9977-e1125ac1ecb7",
+      "http://www.w3.org/2004/02/skos/core#related",
+      "http://www.w3.org/2000/01/rdf-schema#comment",
+      "http://data.doremus.org/ontology#U205_has_cast_detail",
+      "http://data.doremus.org/publication/64fb3e59-23de-3f0f-84af-676ef4f2c2cc",
+      "http://erlangen-crm.org/current/P102_has_title",
+      "http://www.w3.org/2000/01/rdf-schema#domain",
+      "http://erlangen-crm.org/current/P2_has_type",
+      "http://data.doremus.org/expression/092e1f21-a554-3802-a6e4-f48764f658f1",
+      "http://www.w3.org/2000/01/rdf-schema#range",
+      "http://data.doremus.org/expression/095baabf-1841-3605-893f-8a511fcabd01",
+      "http://data.doremus.org/artist/5805335b-413e-3fc2-90cf-3a4dbc5c11e4",
+      "http://data.doremus.org/expression/1744f35f-32b7-3b41-842e-9ca8ea6da080",
+      "http://erlangen-crm.org/current/P4_has_time-span",
+      "http://data.doremus.org/expression/0663f16c-2224-395a-aaa6-a8e768e9536a",
+      "http://data.doremus.org/event/f2d22062-7fc1-33ca-aa28-e872aa9fb1ee/time",
+      "http://data.doremus.org/expression/185ee326-6bbe-3b7a-939e-2af5ce8dd969",
+      "http://sws.geonames.org/2988507/",
+      "http://www.w3.org/2002/07/owl#equivalentProperty",
+      "http://data.doremus.org/artist/151df096-7b01-3eb8-811f-e03efee13e20",
+      "http://www.w3.org/2000/01/rdf-schema#label",
+      "http://data.doremus.org/artist/211f2c54-02a4-3a80-8de8-acca9faa94e3",
+      "http://data.doremus.org/expression/2305a32c-34da-3e31-8d9f-f7a6e78bc205",
+      "http://data.doremus.org/expression/4d0f752f-113b-3230-9ce7-bc5c88101687",
+      "http://erlangen-crm.org/current/P7_took_place_at",
+      "http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462",
+      "http://data.doremus.org/place/a54c7c26-ed3e-3312-87ae-3324614d454a",
+      "http://data.doremus.org/expression/21a439c6-8216-3e08-8977-735d26e2f212",
+      "http://data.doremus.org/ontology#M28_Individual_Performance",
+      "http://www.w3.org/ns/prov#Entity",
+      "http://data.doremus.org/expression/64648076-c9ec-394b-99a3-a156d0012599",
+      "http://data.doremus.org/artist/59df88d1-7bbb-3789-b6f7-4fb5b32d1bdc",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#value",
+      "http://purl.org/dc/terms/language",
+      "http://data.doremus.org/publication/f5e53087-126a-3818-b7df-b2d99c838553",
+      "http://erlangen-crm.org/efrbroo/F31_Performance"
+    ],
+    "id": "unknown"
+  },
+  "json_path": "output/Qwen3-30B-A3B-Instruct-2507/json/0057_Give me performances held in Paris..json",
+  "log_path": "output/Qwen3-30B-A3B-Instruct-2507/log/0057_Give me performances held in Paris..log"
+}

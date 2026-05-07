@@ -1,0 +1,22 @@
+{
+  "id": 29,
+  "csv_row_number": "30",
+  "question": "Give me the list of concerts given at the Philharmonie de Paris in which the orchestra is directed by the solo violin",
+  "file_source": "q029.rq",
+  "status": "timeout",
+  "error": "Timed out after 900 seconds",
+  "returncode": -9,
+  "elapsed_seconds": 906.5450948467478,
+  "started_at": "2026-05-07T15:03:27.831922Z",
+  "finished_at": "2026-05-07T15:18:34.379145Z",
+  "command": [
+    "grasp",
+    "--log-level",
+    "DEBUG",
+    "run",
+    "configs/run_vllm.yaml"
+  ],
+  "parsed_output": null,
+  "json_path": "output/Qwen3-30B-A3B-Instruct-2507/json/0029_Give me the list of concerts given at the Philharmonie de Paris in which the orchestra is directed by the solo violin.json",
+  "log_path": "output/Qwen3-30B-A3B-Instruct-2507/log/0029_Give me the list of concerts given at the Philharmonie de Paris in which the orchestra is directed by the solo violin.log"
+}

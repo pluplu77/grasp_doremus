@@ -1,0 +1,22 @@
+{
+  "id": 43,
+  "csv_row_number": "44",
+  "question": "Where is Mozart born?",
+  "file_source": "q043.rq",
+  "status": "timeout",
+  "error": "Timed out after 900 seconds",
+  "returncode": -9,
+  "elapsed_seconds": 910.9866281813011,
+  "started_at": "2026-05-07T16:18:12.989552Z",
+  "finished_at": "2026-05-07T16:33:23.978395Z",
+  "command": [
+    "grasp",
+    "--log-level",
+    "DEBUG",
+    "run",
+    "configs/run_vllm.yaml"
+  ],
+  "parsed_output": null,
+  "json_path": "output/Qwen3-30B-A3B-Instruct-2507/json/0043_Where is Mozart born?.json",
+  "log_path": "output/Qwen3-30B-A3B-Instruct-2507/log/0043_Where is Mozart born?.log"
+}
