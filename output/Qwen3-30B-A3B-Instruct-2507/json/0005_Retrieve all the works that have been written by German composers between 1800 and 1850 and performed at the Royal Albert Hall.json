@@ -1,0 +1,22 @@
+{
+  "id": 5,
+  "csv_row_number": "6",
+  "question": "Retrieve all the works that have been written by German composers between 1800 and 1850 and performed at the Royal Albert Hall",
+  "file_source": "q005.rq",
+  "status": "timeout",
+  "error": "Timed out after 900 seconds",
+  "returncode": -9,
+  "elapsed_seconds": 1235.7353802965954,
+  "started_at": "2026-05-07T12:56:09.765080Z",
+  "finished_at": "2026-05-07T13:16:45.504268Z",
+  "command": [
+    "grasp",
+    "--log-level",
+    "DEBUG",
+    "run",
+    "configs/run_vllm.yaml"
+  ],
+  "parsed_output": null,
+  "json_path": "output/Qwen3-30B-A3B-Instruct-2507/json/0005_Retrieve all the works that have been written by German composers between 1800 and 1850 and performed at the Royal Albert Hall.json",
+  "log_path": "output/Qwen3-30B-A3B-Instruct-2507/log/0005_Retrieve all the works that have been written by German composers between 1800 and 1850 and performed at the Royal Albert Hall.log"
+}

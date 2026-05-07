@@ -1,7 +1,10 @@
+
 /homes/wei/miniconda3/envs/grasp-v2/lib/python3.12/site-packages/torch/cuda/__init__.py:180: UserWarning: CUDA initialization: The NVIDIA driver on your system is too old (found version 12080). Please update your GPU driver by downloading and installing a new version from the URL: http://www.nvidia.com/Download/index.aspx Alternatively, go to: https://pytorch.org to install a PyTorch version that has been compiled with your version of the CUDA driver. (Triggered internally at /pytorch/c10/cuda/CUDAFunctions.cpp:119.)
   return torch._C._cuda_getDeviceCount() > 0
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Loading weights:   0%|          | 0/310 [00:00<?, ?it/s]Loading weights: 100%|██████████| 310/310 [00:00<00:00, 8143.36it/s]
+
+Loading weights:   0%|          | 0/310 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 310/310 [00:00<00:00, 8143.36it/s]
 /homes/wei/miniconda3/envs/grasp-v2/lib/python3.12/site-packages/search_rdf/model/embedding.py:24: FutureWarning: The `get_sentence_embedding_dimension` method has been renamed to `get_embedding_dimension`.
   self.dim: int = self.encoder.get_sentence_embedding_dimension()  # type: ignore
 [2026-04-28 17:49:11,976] {GRASP - DEBUG} CONFIG

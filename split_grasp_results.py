@@ -152,7 +152,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--input",
-        default="output/Qwen3-4B-Instruct-2507/all_results.json",
+        default="output/Qwen3-30B-A3B-Instruct-2507/all_results.json",
         help="Path to all_results.json.",
     )
     parser.add_argument(

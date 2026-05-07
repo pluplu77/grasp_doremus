@@ -1,6 +1,6 @@
-model: env(MODEL:Qwen/Qwen3-4B-Instruct-2507)
+model: env(MODEL:Qwen/Qwen3-30B-A3B-Instruct-2507)
 model_provider: env(MODEL_PROVIDER:openai/completions)
-model_endpoint: env(MODEL_ENDPOINT:http://localhost:8000/v1)
+model_endpoint: env(MODEL_ENDPOINT:http://helix02:8000/v1)
 model_api_key: env(OPENAI_API_KEY:EMPTY)
 
 model_kwargs: {}
@@ -12,9 +12,9 @@ feedback: env(FEEDBACK:false)
 know_before_use: env(KNOW_BEFORE_USE:false)
 notes_file: env(NOTES_FILE:null)
 
-sparql_connection_timeout: env(SPARQL_CONNECTION_TIMEOUT:6.0)
-sparql_query_timeout: env(SPARQL_QUERY_TIMEOUT:30.0)
-sparql_read_timeout: env(SPARQL_READ_TIMEOUT:10.0)
+sparql_connection_timeout: env(SPARQL_CONNECTION_TIMEOUT:20.0)
+sparql_query_timeout: env(SPARQL_QUERY_TIMEOUT:120.0)
+sparql_read_timeout: env(SPARQL_READ_TIMEOUT:60.0)
 
 fn_set: env(FN_SET:all)
 list_k: env(LIST_K:10)
@@ -34,18 +34,19 @@ knowledge_graphs:
     notes_file: env(KG_NOTES_FILE:null)
     indices: env(KG_INDICES:[])
     info:
-      endpoint: env(KG_ENDPOINT:https://qlever.dev/api/doremus)
+      endpoint: env(KG_ENDPOINT:https://doremus.ehrh.art/spqrql)
+      headers:
+        Accept: application/sparql-results+json
+      params:
+        default-graph-uri: ""
+        format: application/sparql-results+json
+        timeout: "0"
+        signal_void: "on"
       prefixes:
         efrbroo: http://erlangen-crm.org/efrbroo/
         ecrm: http://erlangen-crm.org/current/
         foaf: http://xmlns.com/foaf/0.1/
         rdfs: http://www.w3.org/2000/01/rdf-schema#
         rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
-      description: >
-        DOREMUS is a music knowledge graph. Musical works are modeled as
-        efrbroo:F22_Self-Contained_Expression. To find works composed by a
-        composer, use a creation event:
-        ?expCreation efrbroo:R17_created ?expression ;
-                     ecrm:P9_consists_of / ecrm:P14_carried_out_by ?composer .
-        Composer names are matched with foaf:name, for example
-        foaf:name "Wolfgang Amadeus Mozart".
+        dct: http://purl.org/dc/terms/
+        skos: http://www.w3.org/2004/02/skos/core#
