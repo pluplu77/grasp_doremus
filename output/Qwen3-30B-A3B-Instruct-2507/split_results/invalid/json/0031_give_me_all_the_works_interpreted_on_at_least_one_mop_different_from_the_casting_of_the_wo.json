@@ -1,0 +1,15 @@
+{
+  "id": 31,
+  "question": "Give me all the works interpreted on at least one mop different from the casting of the work",
+  "file_source": "q031.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work a efrbroo:F12_Work . }",
+  "execution_result": "Got no rows and 1 columns in 0.22s",
+  "answer": null,
+  "output_type": "cancel"
+}

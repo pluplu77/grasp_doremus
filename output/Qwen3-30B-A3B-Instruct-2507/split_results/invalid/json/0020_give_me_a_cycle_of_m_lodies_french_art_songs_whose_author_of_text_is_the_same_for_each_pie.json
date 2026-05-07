@@ -1,0 +1,15 @@
+{
+  "id": 20,
+  "question": "Give me a cycle of mélodies (French art songs) whose author of text is the same for each piece.",
+  "file_source": "q020.rq",
+  "invalid_reason": "script_status:missing_or_null_output",
+  "status": "missing_or_null_output",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

@@ -1,0 +1,15 @@
+{
+  "id": 29,
+  "question": "Give me the list of concerts given at the Philharmonie de Paris in which the orchestra is directed by the solo violin",
+  "file_source": "q029.rq",
+  "invalid_reason": "script_status:timeout",
+  "status": "timeout",
+  "returncode": -9,
+  "error": "Timed out after 900 seconds",
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

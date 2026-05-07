@@ -1,0 +1,15 @@
+{
+  "id": 53,
+  "question": "Find artists with 'Simone' in their name.",
+  "file_source": "q053.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?artist ?label WHERE { VALUES ?artist { <http://data.doremus.org/artist/ade1b146-6344-3fcd-9d6f-8f7dfe1692da> <http://data.doremus.org/artist/00674d92-6d2b-3962-958d-5b19bdb26348> } ?artist rdfs:label ?label }",
+  "execution_result": "Got 4 rows and 2 columns in 0.25s:\n| artist                                                                            | label       |\n| --------------------------------------------------------------------------------- | ----------- |\n| Simone (http://data.doremus.org/artist/ade1b146-6344-3fcd-9d6f-8f7dfe1692da)      | Simone      |\n| Simone (http://data.doremus.org/artist/ade1b146-6344-3fcd-9d6f-8f7dfe1692da)      | Simone      |\n| Simone Rist (http://data.doremus.org/artist/00674d92-6d2b-3962-958d-5b19bdb26348) | Simone Rist |\n| Simone Rist (http://data.doremus.org/artist/00674d92-6d2b-3962-958d-5b19bdb26348) | Simone Rist |",
+  "answer": "The artists with 'Simone' in their name are Simone (http://data.doremus.org/artist/ade1b146-6344-3fcd-9d6f-8f7dfe1692da) and Simone Rist (http://data.doremus.org/artist/00674d92-6d2b-3962-958d-5b19bdb26348).",
+  "output_type": "answer"
+}

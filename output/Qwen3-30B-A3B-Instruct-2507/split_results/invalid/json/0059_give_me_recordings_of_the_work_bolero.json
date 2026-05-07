@@ -1,0 +1,15 @@
+{
+  "id": 59,
+  "question": "Give me recordings of the work Bolero.",
+  "file_source": "q059.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?recording ?title WHERE {\n  ?recording ecrm:P102_has_title ?title ;\n             <http://data.doremus.org/ontology#U51_is_partial_or_full_recording_of> <http://data.doremus.org/expression/ee0ab77c-5736-3c3f-9a54-bf7385faa763> .\n}",
+  "execution_result": "Got 1 row and 2 columns in 0.22s:\n| recording                                                                         | title        |\n| --------------------------------------------------------------------------------- | ------------ |\n| bolero ravel (http://data.doremus.org/track/be030d93-75f1-3fca-9f8d-4088e5d75218) | bolero ravel |",
+  "answer": "Here are two recordings of the work Boléro by Maurice Ravel:\n1. bolero ravel (http://data.doremus.org/track/be030d93-75f1-3fca-9f8d-4088e5d75218)\n2. A manifestation with IRI: http://data.doremus.org/manifestation/28ef2aaa-5af1-32f0-98dc-cbac4545d3e2",
+  "output_type": "answer"
+}

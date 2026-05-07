@@ -1,0 +1,25 @@
+{
+  "input": "output/Qwen3-30B-A3B-Instruct-2507/all_results.json",
+  "output_root": "output/Qwen3-30B-A3B-Instruct-2507/split_results",
+  "total": 64,
+  "valid_count": 0,
+  "invalid_count": 64,
+  "valid_frequency": 0.0,
+  "invalid_frequency": 1.0,
+  "status_counts": {
+    "valid": 26,
+    "missing_or_null_output": 16,
+    "timeout": 3,
+    "cancel": 16,
+    "execution_error": 3
+  },
+  "reason_counts": {
+    "script_status:valid": 26,
+    "script_status:missing_or_null_output": 16,
+    "script_status:timeout": 3,
+    "script_status:cancel": 16,
+    "script_status:execution_error": 3
+  },
+  "valid_dir": "output/Qwen3-30B-A3B-Instruct-2507/split_results/valid/json",
+  "invalid_dir": "output/Qwen3-30B-A3B-Instruct-2507/split_results/invalid/json"
+}

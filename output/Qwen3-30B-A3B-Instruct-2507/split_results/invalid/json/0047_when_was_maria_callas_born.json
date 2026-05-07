@@ -1,0 +1,15 @@
+{
+  "id": 47,
+  "question": "When was Maria Callas born?",
+  "file_source": "q047.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?birthYear WHERE { <http://data.doremus.org/artist/60f784a6-2927-38e4-9379-e4bf4fc695b2> ecrm:P98i_was_born ?birthEvent . ?birthEvent ecrm:P4_has_time-span ?timeSpan . ?timeSpan rdfs:label ?birthYear }",
+  "execution_result": "Got 125 rows and 1 column in 0.49s, showing the first 5 and last 5 rows below:\n| birthYear  |\n| ---------- |\n| 1923       |\n| 1923       |\n| 1923       |\n| 1923       |\n| 1923-12-02 |\n| ...        |\n| 1923       |\n| 1923       |\n| 1923       |\n| 1923       |\n| 1923-12-02 |",
+  "answer": "Maria Callas was born in 1923.",
+  "output_type": "answer"
+}

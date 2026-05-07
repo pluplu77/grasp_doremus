@@ -1,0 +1,15 @@
+{
+  "id": 4,
+  "question": "What works are linked to a particular work and what type of link connect them?",
+  "file_source": "q004.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?linkedWork ?linkType WHERE {\n  ?work efrbroo:R25_performed ?linkedWork .\n  ?work skos:related ?linkedWork .\n  BIND(skos:related AS ?linkType)\n} LIMIT 10",
+  "execution_result": "Got no rows and 2 columns in 0.26s",
+  "answer": "Works are linked to a particular work through the 'has related' (skos:related) property, which indicates a general relationship between works.",
+  "output_type": "answer"
+}

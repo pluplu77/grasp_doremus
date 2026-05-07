@@ -1,0 +1,15 @@
+{
+  "id": 44,
+  "question": "Find works with 'Moonlight' in the title.",
+  "file_source": "q044.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "SELECT ?work WHERE { VALUES ?work { <http://data.doremus.org/expression/35f40dd5-e9a4-3987-9af6-1b3e43166da1> <http://data.doremus.org/expression/094cf804-4d33-39bf-8e43-4fadf875d379> <http://data.doremus.org/expression/27ad4f20-c16a-3335-bbef-770a28512882> } }",
+  "execution_result": "Got 3 rows and 1 column in 0.23s:\n| work                                                                                        |\n| ------------------------------------------------------------------------------------------- |\n| Moonlight (http://data.doremus.org/expression/35f40dd5-e9a4-3987-9af6-1b3e43166da1)         |\n| Moonlight fantasy (http://data.doremus.org/expression/094cf804-4d33-39bf-8e43-4fadf875d379) |\n| In moonlight (http://data.doremus.org/expression/27ad4f20-c16a-3335-bbef-770a28512882)      |",
+  "answer": "The works with 'Moonlight' in the title are: Moonlight (http://data.doremus.org/expression/35f40dd5-e9a4-3987-9af6-1b3e43166da1), Moonlight fantasy (http://data.doremus.org/expression/094cf804-4d33-39bf-8e43-4fadf875d379), and In moonlight (http://data.doremus.org/expression/27ad4f20-c16a-3335-bbef-770a28512882).",
+  "output_type": "answer"
+}

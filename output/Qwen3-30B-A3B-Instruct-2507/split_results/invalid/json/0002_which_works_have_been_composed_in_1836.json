@@ -1,0 +1,15 @@
+{
+  "id": 2,
+  "question": "Which works have been composed in 1836 ?",
+  "file_source": "q002.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?work WHERE { ?work efrbroo:R17_created ?event . ?event ecrm:P4_has_time-span ?interval . ?interval a ecrm:E52_Time-Span . ?interval ecrm:P4_has_time-span ?date . FILTER(?date = \"1836\"^^xsd:gYear) }",
+  "execution_result": "Got no rows and 1 columns in 0.26s",
+  "answer": "There are no works in the Doremus knowledge graph that were composed in 1836.",
+  "output_type": "answer"
+}

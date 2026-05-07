@@ -1,0 +1,15 @@
+{
+  "id": 25,
+  "question": "Find musical works that are specifically categorized by their geographical context.",
+  "file_source": "q025.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "SELECT DISTINCT ?musicalWork WHERE { ?musicalWork <http://data.doremus.org/ontology#U65_has_geographical_context> ?geographicalContext . FILTER (STRSTARTS(STR(?musicalWork), \"http://data.doremus.org/expression/\")) }",
+  "execution_result": "Got 6,116 rows and 1 column in 0.67s, showing the first 5 and last 5 rows below:\n| musicalWork                                                                                        |\n| -------------------------------------------------------------------------------------------------- |\n| Plage 2 (http://data.doremus.org/expression/083ef857-94e8-3f6d-838e-d58f7f47028a)                  |\n| Plage 4 (http://data.doremus.org/expression/c840e982-d3b5-3779-a0c0-5d1d71b094a3)                  |\n| Plage 1 (http://data.doremus.org/expression/ef007629-664d-38a7-b388-4ed3449b9920)                  |\n| Canto al Olofin (http://data.doremus.org/expression/bb5bd304-3fb6-3160-80aa-72df72be8d07)          |\n| Canto Acara (http://data.doremus.org/expression/9b94b850-d111-3427-87df-c2487b40f65a)              |\n| ...                                                                                                |\n| Fuego, fuego (http://data.doremus.org/expression/6c0dd76b-3ac9-3bda-af2a-62d9a3c6eb37)             |\n| La culpa y amor de Pedro (http://data.doremus.org/expression/b6c39598-6a43-393b-a522-6e4be377eaa9) |\n| Mirenle, mis senores (http://data.doremus.org/expression/c5841df0-adc3-38d5-a077-70cd5813dcfd)     |\n| Atencion (http://data.doremus.org/expression/27bd3a36-5fa7-3b0f-b6bb-d720c46aa8c6)                 |\n| Atencion (http://data.doremus.org/expression/42972be9-de5c-37f7-8203-2ac9fa4397fd)                 |",
+  "answer": "Musical works that are specifically categorized by their geographical context include Plage 2 (Cuba), Plage 1 (Kerala), Canto al Olofin (Nigeria), and many others, as represented by expressions in the Doremus knowledge graph.",
+  "output_type": "answer"
+}

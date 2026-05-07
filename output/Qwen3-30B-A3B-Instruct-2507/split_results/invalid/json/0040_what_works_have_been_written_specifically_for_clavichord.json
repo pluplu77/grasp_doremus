@@ -1,0 +1,15 @@
+{
+  "id": 40,
+  "question": "What works have been written specifically for clavichord?",
+  "file_source": "q040.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?work WHERE { ?work rdfs:label ?label . FILTER(CONTAINS(LCASE(?label), \"clavichord\")) }",
+  "execution_result": "Got 7 rows and 1 column in 17.85s:\n| work                                                                       |\n| -------------------------------------------------------------------------- |\n| http://data.doremus.org/artist/6b3653b2-e253-3c12-ac51-f889c699d120        |\n| http://data.doremus.org/artist/da8df5c5-0575-3f0f-8db7-ed5b1a607dcd        |\n| http://data.doremus.org/expression/126cefdd-dd7a-36c9-872e-c5a83c61cb9c    |\n| http://data.doremus.org/publication/e3f2a0a6-153d-3a1b-be8e-5c3543aec5fb   |\n| http://data.doremus.org/manifestation/dd68a9be-4eac-3968-ab6a-1badb434539b |\n| http://data.doremus.org/publication/e9586e55-2b91-3fce-891b-c4d4d951876c   |\n| http://data.doremus.org/manifestation/050e7d24-e44e-390e-a7d0-86163ce2ba31 |",
+  "answer": null,
+  "output_type": "cancel"
+}

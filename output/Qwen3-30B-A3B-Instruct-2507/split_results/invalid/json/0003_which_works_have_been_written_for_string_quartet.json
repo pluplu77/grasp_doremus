@@ -1,0 +1,15 @@
+{
+  "id": 3,
+  "question": "Which works have been written for string quartet?",
+  "file_source": "q003.rq",
+  "invalid_reason": "script_status:missing_or_null_output",
+  "status": "missing_or_null_output",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

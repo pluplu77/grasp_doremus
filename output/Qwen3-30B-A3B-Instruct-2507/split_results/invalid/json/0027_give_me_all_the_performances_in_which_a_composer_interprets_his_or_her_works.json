@@ -1,0 +1,15 @@
+{
+  "id": 27,
+  "question": "Give me all the performances in which a composer interprets his or her works",
+  "file_source": "q027.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX dct: <http://purl.org/dc/terms/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT DISTINCT ?performance WHERE { \n  ?performance a efrbroo:F31_Performance .\n  ?performance efrbroo:R25_performed ?performer .\n  ?performance efrbroo:R9i_realises ?work .\n  ?work dct:creator ?composer .\n  FILTER(?performer = ?composer)\n}",
+  "execution_result": "Got no rows and 1 columns in 0.25s",
+  "answer": "Let me try to find a work that has a creator by searching for a specific work that might have a composer. Let me search for works by a known composer to see if I can find any relationships.\n\nLet me search for works by a well-known composer like Beethoven to see if I can find any composer relationships in the data. I'll search for \"Beethoven\" in the knowledge graph to find works by him.",
+  "output_type": "answer"
+}

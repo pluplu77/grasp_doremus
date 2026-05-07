@@ -1,0 +1,15 @@
+{
+  "id": 43,
+  "question": "Where is Mozart born?",
+  "file_source": "q043.rq",
+  "invalid_reason": "script_status:timeout",
+  "status": "timeout",
+  "returncode": -9,
+  "error": "Timed out after 900 seconds",
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

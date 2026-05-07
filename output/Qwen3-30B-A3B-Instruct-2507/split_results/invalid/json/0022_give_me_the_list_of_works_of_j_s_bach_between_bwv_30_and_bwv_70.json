@@ -1,0 +1,15 @@
+{
+  "id": 22,
+  "question": "Give me the list of works of J.S. Bach between BWV 30 and BWV 70",
+  "file_source": "q022.rq",
+  "invalid_reason": "script_status:missing_or_null_output",
+  "status": "missing_or_null_output",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

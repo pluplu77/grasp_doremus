@@ -1,0 +1,15 @@
+{
+  "id": 24,
+  "question": "Give me all works for piano based on works of Schubert",
+  "file_source": "q024.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work efrbroo:R2_is_derivative_of <http://data.doremus.org/track/1c4512e0-3c29-3ca6-bd58-69f46b74a5a4> }",
+  "execution_result": "Got no rows and 1 columns in 0.35s",
+  "answer": null,
+  "output_type": "cancel"
+}

@@ -1,0 +1,15 @@
+{
+  "id": 41,
+  "question": "Show me the Operas composed by Giuseppe Verdi in 1853.",
+  "file_source": "q041.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX dct: <http://purl.org/dc/terms/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { <http://data.doremus.org/artist/b82c0771-5280-39af-ad2e-8ace2f4ebda3> efrbroo:R17i_was_created_by ?work . ?work dct:created ?date . FILTER (year(?date) = 1853) }",
+  "execution_result": "Got no rows and 1 columns in 0.22s",
+  "answer": null,
+  "output_type": "cancel"
+}

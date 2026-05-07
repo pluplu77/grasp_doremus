@@ -1,0 +1,15 @@
+{
+  "id": 56,
+  "question": "List works composed by Erik Satie.",
+  "file_source": "q056.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX dct: <http://purl.org/dc/terms/>\nSELECT ?work WHERE { <http://data.doremus.org/artist/c536e11e-7871-3469-b913-1883b0b60e98> dct:creator ?work . ?work a efrbroo:F23_Expression . }",
+  "execution_result": "Got no rows and 1 columns in 0.26s",
+  "answer": null,
+  "output_type": "cancel"
+}

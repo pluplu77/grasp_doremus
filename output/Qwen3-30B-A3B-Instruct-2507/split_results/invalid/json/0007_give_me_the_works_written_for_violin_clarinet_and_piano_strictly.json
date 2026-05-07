@@ -1,0 +1,15 @@
+{
+  "id": 7,
+  "question": "Give me the works written for violin, clarinet and piano (strictly)",
+  "file_source": "q007.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX dct: <http://purl.org/dc/terms/>\nSELECT ?work WHERE { ?work efrbroo:R25_performed ?performance . ?performance ecrm:P1_is_identified_by ?identifier . ?identifier dct:identifier \"http://data.bnf.fr/ark:/12148/cb11938184j\" }",
+  "execution_result": "Got no rows and 1 columns in 0.47s",
+  "answer": null,
+  "output_type": "cancel"
+}

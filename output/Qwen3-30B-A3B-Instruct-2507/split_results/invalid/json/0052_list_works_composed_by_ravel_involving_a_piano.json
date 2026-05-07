@@ -1,0 +1,15 @@
+{
+  "id": 52,
+  "question": "List works composed by Ravel involving a Piano.",
+  "file_source": "q052.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { <http://data.doremus.org/artist/1b1205f9-b99a-3bb8-ba77-256689af2e00> efrbroo:R17_created ?work . }",
+  "execution_result": "Got no rows and 1 columns in 0.29s",
+  "answer": "I'm still not getting results for works by Ravel. Let me try a different approach. Let me search for the entity of Maurice Ravel again and check if there are any properties that might connect him to works through other means, such as performances or other relationships. Let me try to find any works that are associated with Ravel by searching for expressions that have Ravel as a creator, but this time I'll use a more general approach by looking for any expressions that are created by Ravel, not just scores. Let me try this query:",
+  "output_type": "answer"
+}

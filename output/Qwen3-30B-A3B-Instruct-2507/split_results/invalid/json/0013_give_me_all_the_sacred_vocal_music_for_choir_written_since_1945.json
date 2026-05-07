@@ -1,0 +1,15 @@
+{
+  "id": 13,
+  "question": "Give me all the sacred vocal music for choir written since 1945",
+  "file_source": "q013.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX dct: <http://purl.org/dc/terms/>\nSELECT DISTINCT ?work ?type WHERE {\n  ?work dct:created ?date .\n  FILTER(?date > \"1945-12-31\"^^xsd:date)\n  ?work rdf:type ?type\n}\nLIMIT 10",
+  "execution_result": "Got 10 rows and 2 columns in 0.26s:\n| work                                                  | type                     |\n| ----------------------------------------------------- | ------------------------ |\n| about.rdf (http://sws.geonames.org/1009673/about.rdf) | Document (foaf:Document) |\n| about.rdf (http://sws.geonames.org/1252529/about.rdf) | Document (foaf:Document) |\n| about.rdf (http://sws.geonames.org/1258899/about.rdf) | Document (foaf:Document) |\n| about.rdf (http://sws.geonames.org/1264527/about.rdf) | Document (foaf:Document) |\n| about.rdf (http://sws.geonames.org/161325/about.rdf)  | Document (foaf:Document) |\n| about.rdf (http://sws.geonames.org/1650535/about.rdf) | Document (foaf:Document) |\n| about.rdf (http://sws.geonames.org/1835848/about.rdf) | Document (foaf:Document) |\n| about.rdf (http://sws.geonames.org/1857910/about.rdf) | Document (foaf:Document) |\n| about.rdf (http://sws.geonames.org/2031269/about.rdf) | Document (foaf:Document) |\n| about.rdf (http://sws.geonames.org/2127376/about.rdf) | Document (foaf:Document) |",
+  "answer": "I'm not having success finding creation dates for the sacred vocal music entities either. Let me try a different approach. Let me search for all works that have a creation date after 1945 and see if any of them are sacred vocal music for choir.\n\nLet me search for works with creation date after 1945 and see if any of them have the label \"sacred vocal music\" or \"choir\" in their information.\n\nLet me execute a query to find all works with creation date after 1945 and see what types of works are returned.\n\nI'll use a more general query to find works with creation date after 1945 and then check if any are sacred vocal music for choir.\n\nLet me execute a query to find works with creation date after 1945 and see what types they are.\n\nI'll use the following query to find works with creation date after 1945:\n\n```sparql\nSELECT DISTINCT ?work ?type WHERE {\n  ?work dct:created ?date .\n  FILTER(?date > \"1945-12-31\"^^xsd:date)\n  ?work rdf:type ?type\n}\nLIMIT 10\n```",
+  "output_type": "answer"
+}

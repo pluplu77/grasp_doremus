@@ -1,0 +1,15 @@
+{
+  "id": 39,
+  "question": "List all Symphonies composed by Louise Farrenc.",
+  "file_source": "q039.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?symphony WHERE { ?symphony a <http://data.doremus.org/expression/1cd199bf-42d8-33ad-a331-518d2a284e77> . <http://data.doremus.org/artist/1d78b116-b274-3a8f-88dd-a32e77f30ee9> ecrm:P128_is_subject_of ?symphony . }",
+  "execution_result": "Got no rows and 1 columns in 0.27s",
+  "answer": null,
+  "output_type": "cancel"
+}

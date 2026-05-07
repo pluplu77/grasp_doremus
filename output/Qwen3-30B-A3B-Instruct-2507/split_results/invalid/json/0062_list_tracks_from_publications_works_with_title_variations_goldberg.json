@@ -1,0 +1,15 @@
+{
+  "id": 62,
+  "question": "List tracks from publications(works) with title 'Variations Goldberg'.",
+  "file_source": "q062.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?track WHERE { <http://data.doremus.org/expression/0c910ea7-81bb-3185-b649-61e0b0aaeef7> efrbroo:R10_has_member ?track . }",
+  "execution_result": "Got no rows and 1 columns in 0.29s",
+  "answer": "I see that \"has member\" (efrbroo:R10_has_member) is a relevant property that might connect expressions to their tracks. Let me check if the \"Variations Goldberg BWV 988\" expression has any members (tracks) using this property.\n\nLet me query for all members (tracks) of the \"Variations Goldberg BWV 988\" expression using the \"has member\" property. I'll use a SPARQL query to find this information directly.\n\nLet me execute a SPARQL query to find all tracks that are members of the \"Variations Goldberg BWV 988\" expression using the efrbroo:R10_has_member property.",
+  "output_type": "answer"
+}

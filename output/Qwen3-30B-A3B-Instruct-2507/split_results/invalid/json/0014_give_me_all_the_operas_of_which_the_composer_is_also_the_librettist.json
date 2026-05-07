@@ -1,0 +1,15 @@
+{
+  "id": 14,
+  "question": "Give me all the operas of which the composer is also the librettist",
+  "file_source": "q014.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?component\nWHERE {\n  <http://data.doremus.org/expression/0578c731-d003-373b-8c17-a837dd5c109d> efrbroo:R5_has_component ?component\n}",
+  "execution_result": "Got 1 row and 1 column in 0.27s:\n| component                                                                                                |\n| -------------------------------------------------------------------------------------------------------- |\n| Il Fior Che Avevi A Me Tu Dato (http://data.doremus.org/expression/5363b115-c9b9-324b-b74c-8f4d3d55d33d) |",
+  "answer": "I found the property \"was created by\" (efrbroo:R17i_was_created_by) which links a work to its creator. This is the property I need.\n\nNow I need to find a property that links a work to its libretto. Let me try to find a property that links a work to its textual component or libretto.\n\nLet me search for properties related to the text of a work, specifically looking for a property that might link a work to its libretto.\n\nLet me search for properties that might link a work to its libretto in a more general way.\n\nLet me search for properties that might link a work to its libretto by looking at the properties of the component I found earlier.\n\nLet me check if there's a property that links the component to its creator.\n\nLet me search for properties of the component to see if it has a creator or any properties related to its creation.",
+  "output_type": "answer"
+}

@@ -1,0 +1,15 @@
+{
+  "id": 8,
+  "question": "Give me the works of suite genre that involves at least violin, clarinet and piano",
+  "file_source": "q008.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work efrbroo:R25_performed <http://data.doremus.org/0084c54a-0bbb-4fc7-8171-bdf95f8fa48c> . ?work efrbroo:R25_performed <http://www.mimo-db.eu/InstrumentsKeywords/3836> . ?work efrbroo:R25_performed <http://data.doremus.org/000bfcf0-a2b6-4853-aa25-0891ad20b628> }",
+  "execution_result": "Got no rows and 1 columns in 0.26s",
+  "answer": "I found the property \"U193 used historical instruments\" which might be relevant, but it's specifically for historical instruments. Let me try to find a different approach.\n\nLet me search for works that are categorized as \"suite\" by looking at the categorization of expressions. Let me search for expressions that have \"suite\" in their categorization, and then check if any of them include violin, clarinet, and piano as instruments.\n\nLet me search for expressions that are categorized as \"suite\" using the categorization property, and then check if they have the instruments I'm looking for. I'll use the property that links expressions to their categorization, which might be something like \"has genre\" or similar.\n\nLet me search for expressions that have \"suite\" as a genre, and then check if they include the instruments I'm looking for. I'll use the property \"U12 has genre\" that I found earlier, but this time I'll use it with the IRI for \"suite\" from the vocabulary.\n\nLet me try to find works that have the genre \"suite\" and then check if they include violin, clarinet, and piano as instruments. I'll use the property \"U12 has genre\" with the IRI http://data.doremus.org/vocabulary/redomi/genre/suite as the object, and then check for instruments in those works.\n\nLet me execute a SPARQL query to find works that have the genre \"suite\" and then check if they include violin, clarinet, and piano as instruments. I'll need to find a property that links works to their instruments. Let me search for properties related to \"instrument\" again, but this time I'll look for properties that might be used to link works to instruments.\n\nLet me search for properties related to \"instrument\" in a more general way, including properties that might be used to link works to their instrumentation.",
+  "output_type": "answer"
+}

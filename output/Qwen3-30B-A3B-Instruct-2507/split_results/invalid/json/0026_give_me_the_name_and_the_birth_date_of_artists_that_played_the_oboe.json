@@ -1,0 +1,15 @@
+{
+  "id": 26,
+  "question": "Give me the name and the birth date of artists that played the oboe",
+  "file_source": "q026.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?artist ?birthDate WHERE { ?artist a ecrm:E21_Person . ?artist ecrm:P102_has_title ?name . ?artist ecrm:P14_carried_out ?performance . ?performance efrbroo:R25_performed ?expression . ?expression ecrm:P102_has_title ?expressionTitle . FILTER CONTAINS(?expressionTitle, \"oboe\") . ?artist ecrm:P131_is_identified_by ?birthDate }",
+  "execution_result": "Got no rows and 2 columns in 0.29s",
+  "answer": null,
+  "output_type": "cancel"
+}

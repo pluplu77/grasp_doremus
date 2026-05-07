@@ -1,0 +1,15 @@
+{
+  "id": 49,
+  "question": "Which artists are known for playing the Trumpet?",
+  "file_source": "q049.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?artist WHERE { ?artist a efrbroo:F18_Artist ; rdfs:label ?label . FILTER (regex(?label, \"Trumpet Boy\", \"i\")) }",
+  "execution_result": "Got no rows and 1 columns in 0.27s",
+  "answer": "Trumpet Boy (Fernand Verstraete) is the only artist in the Doremus knowledge graph whose name directly references the trumpet, but the data does not confirm that they play the trumpet.",
+  "output_type": "answer"
+}

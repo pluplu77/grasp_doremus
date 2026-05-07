@@ -1,0 +1,15 @@
+{
+  "id": 36,
+  "question": "Give me all the recordings of Don Giovanni by Mozart",
+  "file_source": "q036.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX doremus: <http://data.doremus.org/ontology#>\nSELECT DISTINCT ?manifestation WHERE {\n  <http://data.doremus.org/track/fc7ef52d-4e18-3a10-99af-ed6391342ceb> doremus:U51_is_partial_or_full_recording_of ?manifestation\n}",
+  "execution_result": "Got 1 row and 1 column in 0.23s:\n| manifestation                                                                                                      |\n| ------------------------------------------------------------------------------------------------------------------ |\n| Don Giovanni K 527 : La ci darem la mano (http://data.doremus.org/expression/938b0d17-f29f-31ec-a16c-4ce28610074a) |",
+  "answer": "I need to try a different approach. Let me first search for the work \"Don Giovanni\" by Mozart using a more specific query, then find all manifestations that are recordings of this work.\n\nLet me search for the work \"Don Giovanni\" by Mozart using the entity I found earlier: \"Mozart Don Giovanni\" (http://data.doremus.org/track/fc7ef52d-4e18-3a10-99af-ed6391342ceb). Let me check its properties to see how it connects to recordings.\n\nLet me search for all objects of the U51 property for this entity to find all recordings (manifestations) of this work:",
+  "output_type": "answer"
+}

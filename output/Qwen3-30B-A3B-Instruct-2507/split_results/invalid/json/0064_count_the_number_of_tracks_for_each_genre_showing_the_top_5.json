@@ -1,0 +1,15 @@
+{
+  "id": 64,
+  "question": "Count the number of tracks for each genre, showing the top 5.",
+  "file_source": "q064.rq",
+  "invalid_reason": "script_status:execution_error",
+  "status": "execution_error",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "SELECT ?genre (COUNT(?expression) AS ?count) WHERE { ?expression \"U12 has genre\" ?genre } GROUP BY ?genre ORDER BY DESC(?count) LIMIT 5",
+  "execution_result": "Error executing SPARQL query over doremus:\nfailed to parse input: parse error at position 65 for token STRING_LITERAL2 with content '\"U12 has genre\"' (the input most likely does not follow the grammar)",
+  "answer": "I see that I can't use the property label directly in the query. Let me try to use the property URI with proper escaping. Let me try again with the property URI in a different format. Let me also check if there's a way to get the property by its label using the search functionality.\n\nLet me search for the property using its label to make sure I have the correct URI. Let me try to search for \"U12 has genre\" as a property.",
+  "output_type": "answer"
+}

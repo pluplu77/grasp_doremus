@@ -1,0 +1,15 @@
+{
+  "id": 60,
+  "question": "Give me works composed by Tommaso Albinoni in C major.",
+  "file_source": "q060.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { <http://data.doremus.org/artist/a82b0c56-ccdf-31b6-a8b4-ad065f3405e5> efrbroo:R17_created ?work . ?work ecrm:P168i_is_frequently_performed_in ?key . ?key rdfs:label \"C major\" . }",
+  "execution_result": "Got no rows and 1 columns in 0.34s",
+  "answer": null,
+  "output_type": "cancel"
+}

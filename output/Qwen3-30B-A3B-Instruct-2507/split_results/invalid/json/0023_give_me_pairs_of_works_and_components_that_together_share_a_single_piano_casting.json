@@ -1,0 +1,15 @@
+{
+  "id": 23,
+  "question": "Give me pairs of works and components that together share a single piano casting.",
+  "file_source": "q023.rq",
+  "invalid_reason": "script_status:missing_or_null_output",
+  "status": "missing_or_null_output",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": null,
+  "execution_result": null,
+  "answer": null,
+  "output_type": null
+}

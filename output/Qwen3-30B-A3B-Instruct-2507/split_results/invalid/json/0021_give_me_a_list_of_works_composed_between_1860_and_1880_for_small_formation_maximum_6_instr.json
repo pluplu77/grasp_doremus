@@ -1,0 +1,15 @@
+{
+  "id": 21,
+  "question": "Give me a list of works composed between 1860 and 1880, for small formation (maximum 6 instrumentalists) including 1 piano",
+  "file_source": "q021.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?work WHERE { ?work efrbroo:R17_created ?date . FILTER(?date >= \"1860-01-01\"^^xsd:date && ?date <= \"1880-12-31\"^^xsd:date) . ?work rdfs:label ?label . FILTER(CONTAINS(LCASE(?label), \"piano\")) }",
+  "execution_result": "Got no rows and 1 columns in 0.23s",
+  "answer": null,
+  "output_type": "cancel"
+}

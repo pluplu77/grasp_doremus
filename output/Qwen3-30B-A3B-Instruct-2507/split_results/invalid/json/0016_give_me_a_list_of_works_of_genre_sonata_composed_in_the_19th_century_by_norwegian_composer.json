@@ -1,0 +1,15 @@
+{
+  "id": 16,
+  "question": "Give me a list of works of genre sonata composed in the 19th century by Norwegian composers",
+  "file_source": "q016.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX dct: <http://purl.org/dc/terms/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT DISTINCT ?sonata WHERE { ?sonata <http://data.doremus.org/ontology#U12_has_genre> ?genre . ?genre rdfs:label ?genreLabel . FILTER (CONTAINS(?genreLabel, 'sonata')) . ?sonata efrbroo:R17_created ?creation . ?creation dct:created ?date . FILTER (YEAR(?date) >= 1801 && YEAR(?date) <= 1900) }",
+  "execution_result": "Got no rows and 1 columns in 0.46s",
+  "answer": null,
+  "output_type": "cancel"
+}

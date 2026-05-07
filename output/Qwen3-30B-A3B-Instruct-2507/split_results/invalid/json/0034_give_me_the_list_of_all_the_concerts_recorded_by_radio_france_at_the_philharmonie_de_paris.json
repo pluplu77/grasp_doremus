@@ -1,0 +1,15 @@
+{
+  "id": 34,
+  "question": "Give me the list of all the concerts recorded by Radio France at the Philharmonie de Paris between 1995 and 2014",
+  "file_source": "q034.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nPREFIX dct: <http://purl.org/dc/terms/>\nPREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?performance ?date WHERE {\n  ?performance ecrm:P7_took_place_at <http://data.doremus.org/place/bd21be9c-3f2b-3aa3-a460-114d579eabe6> .\n  ?performance efrbroo:R20_recorded <http://data.doremus.org/organization/Radio_France> .\n  ?performance dct:issued ?date\n  FILTER (YEAR(?date) >= 1995 && YEAR(?date) <= 2014)\n}",
+  "execution_result": "Got no rows and 2 columns in 0.29s",
+  "answer": "I was unable to find any concerts recorded by Radio France at the Philharmonie de Paris between 1995 and 2014 using the available data and properties. The knowledge graph may not contain this information or the data structure may be different than expected.",
+  "output_type": "answer"
+}

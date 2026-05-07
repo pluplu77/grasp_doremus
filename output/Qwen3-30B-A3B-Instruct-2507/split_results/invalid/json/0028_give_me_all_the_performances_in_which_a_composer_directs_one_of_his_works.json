@@ -1,0 +1,15 @@
+{
+  "id": 28,
+  "question": "Give me all the performances in which a composer directs one of his works",
+  "file_source": "q028.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?performance WHERE { ?performance a efrbroo:F31_Performance . }",
+  "execution_result": "Got 10,000 rows and 1 column in 0.57s, showing the first 5 and last 5 rows below:\n| performance                                                                                                     |\n| --------------------------------------------------------------------------------------------------------------- |\n| ddf0f907 7bbe 3c88 8522 29be2a41a72e (http://data.doremus.org/performance/ddf0f907-7bbe-3c88-8522-29be2a41a72e) |\n| 3c425df9 b5af 3217 be02 dc8be0d65db9 (http://data.doremus.org/performance/3c425df9-b5af-3217-be02-dc8be0d65db9) |\n| f6865049 933a 365b 8a03 60f90354e4de (http://data.doremus.org/performance/f6865049-933a-365b-8a03-60f90354e4de) |\n| 252e15c5 495a 33dc a2ff 7be063a65f7d (http://data.doremus.org/performance/252e15c5-495a-33dc-a2ff-7be063a65f7d) |\n| bcff7989 faff 3c7b af3b 0ab8ae975a77 (http://data.doremus.org/performance/bcff7989-faff-3c7b-af3b-0ab8ae975a77) |\n| ...                                                                                                             |\n| http://data.doremus.org/performance/f5144521-6dbc-3135-82c8-42af1decf57d                                        |\n| http://data.doremus.org/performance/872339f0-dc4f-30f7-b433-041179b34a39                                        |\n| http://data.doremus.org/performance/6a03f620-f2c3-3957-a593-f55169b4d584                                        |\n| http://data.doremus.org/performance/53dda60c-1fb9-3821-a6ba-3e2ed7c98ea7                                        |\n| http://data.doremus.org/performance/058fc951-be77-36fe-bf01-16ffca12d612                                        |",
+  "answer": null,
+  "output_type": "cancel"
+}

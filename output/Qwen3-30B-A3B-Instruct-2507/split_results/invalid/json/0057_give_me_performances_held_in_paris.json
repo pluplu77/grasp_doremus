@@ -1,0 +1,15 @@
+{
+  "id": 57,
+  "question": "Give me performances held in Paris.",
+  "file_source": "q057.rq",
+  "invalid_reason": "script_status:valid",
+  "status": "valid",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX efrbroo: <http://erlangen-crm.org/efrbroo/>\nSELECT ?performance WHERE { ?performance a efrbroo:F31_Performance ;\n    <http://data.doremus.org/ontology#U65_has_geographical_context> <http://data.doremus.org/context/c54563e5-dc9b-36a0-83df-52616f810ad7> . }",
+  "execution_result": "Got 1 row and 1 column in 0.25s:\n| performance                                                                                                                                          |\n| ---------------------------------------------------------------------------------------------------------------------------------------------------- |\n| 1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre (http://data.doremus.org/performance/b3ececd7-71e1-332b-9e12-31570e0d2462) |",
+  "answer": "The performance held in Paris is '1830, Paris : Jean-Paul Fouchécourt, Jean-Claude Pennetier, Didier Sandre' at Cité de la musique on May 4, 2009.",
+  "output_type": "answer"
+}

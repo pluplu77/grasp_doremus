@@ -1,0 +1,15 @@
+{
+  "id": 32,
+  "question": "Give me the artists that have been recorded more than 5 times by Radio France",
+  "file_source": "q032.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "SELECT ?artist WHERE { ?recording efrbroo:R20_recorded ?organization . ?organization <http://data.doremus.org/organization/Radio_France> . ?recording efrbroo:R25_performed ?artist } GROUP BY ?artist HAVING (COUNT(?recording) > 5)",
+  "execution_result": "Error executing SPARQL query over doremus:\nfailed to parse input: parse error at position 137 for token . with content '.' (the input most likely does not follow the grammar)",
+  "answer": null,
+  "output_type": "cancel"
+}

@@ -1,0 +1,15 @@
+{
+  "id": 9,
+  "question": "Give me the works of chamber genre that involves at most violin, clarinet and piano",
+  "file_source": "q009.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "SELECT ?work WHERE { ?work <http://data.doremus.org/ontology#U13_has_casting> ?casting . ?casting <rdfs:comment> ?comment . FILTER(CONTAINS(LCASE(?comment), 'violin') && CONTAINS(LCASE(?comment), 'clarinet') && CONTAINS(LCASE(?comment), 'piano')) } LIMIT 10",
+  "execution_result": "Got no rows and 1 columns in 0.22s",
+  "answer": null,
+  "output_type": "cancel"
+}

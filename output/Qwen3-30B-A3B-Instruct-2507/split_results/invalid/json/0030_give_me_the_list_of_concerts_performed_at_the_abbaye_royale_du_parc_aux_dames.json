@@ -1,0 +1,15 @@
+{
+  "id": 30,
+  "question": "Give me the list of concerts performed at the Abbaye Royale du Parc-aux-Dames",
+  "file_source": "q030.rq",
+  "invalid_reason": "script_status:cancel",
+  "status": "cancel",
+  "returncode": 0,
+  "error": null,
+  "raw_log": null,
+  "per_question_json": null,
+  "sparql": "PREFIX ecrm: <http://erlangen-crm.org/current/>\nSELECT ?performance WHERE { ?performance ecrm:P7_took_place_at <http://www.geonames.org/11185639/abbaye-royale-du-parc-aux-dames.html> }",
+  "execution_result": "Got no rows and 1 columns in 0.25s",
+  "answer": null,
+  "output_type": "cancel"
+}
